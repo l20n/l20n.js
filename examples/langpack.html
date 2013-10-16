@@ -14,50 +14,20 @@
 
     <!-- AMD setup -->
     <script src="lib/require.js"></script>
+    <script src="langpack/intl.js"></script>
+    <script src="langpack/service.js"></script>
     <script>
 
-      window.lps = null;
+      window.lps = new LPS();
 
-      function launch() {
-        lps = new LPS();
-      }
-
-      function registerApp() {
-        lps.registerApplication('music.gaiamobile.org', {
-          'version': 1.2,
-          'default_locale': 'en-US',
-          'languages': {
-            'en-US': 1,
-            'pl': 2,
-          }
-        });
-      }
-
-      function runApp() {
-        var uris = [
-        '/locales/{{locale}}/music.l20n',
-        '/locales/{{locale}}/foo.l20n',
-        ];
-        var requested = ['pl', 'en-US', 'fr', 'de']; // navigator.langauges
-
-        function cb2(resources) {
-          console.dir(resources);
+      lps.registerApplication('music.gaiamobile.org', {
+        'version': 1.2,
+        'default_locale': 'en-US',
+        'languages': {
+          'en-US': 1,
+          'pl': 2,
         }
-        function cb(fallbackChain) {
-          var locales = [];
-          for (var i in fallbackChain) {
-            if (fallbackChain[i]['source'] == 'service') {
-              locales.push(fallbackChain[i]['code']);
-            }
-          }
-          lps.getResources('music.gaiamobile.org',
-          uris,
-          locales,
-          cb2);
-        }
-
-        lps.negotiateLocales('music.gaiamobile.org', requested, cb);
-      }
+      });
 
       require.config({ 
         baseUrl: '../lib/',
