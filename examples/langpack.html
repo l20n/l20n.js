@@ -19,8 +19,7 @@
     <script>
 
       window.lps = new LPS();
-
-      lps.registerApplication('music.gaiamobile.org', {
+      lps.registerApplication('localhost', {
         'version': 1.2,
         'default_locale': 'en-US',
         'languages': {
@@ -28,20 +27,24 @@
           'pl': 2,
         }
       });
+      lps.tick(init);
 
-      require.config({ 
-        baseUrl: '../lib/',
-        paths: {
-          'l20n/platform': 'webapi/l20n/platform',
-          'l20n/html': '../bindings/l20n/html',
-        }
-      });
-      require(['l20n/html'], function(L20n) {
-        // L20n and document.l10n are now available
-        document.l10n.ready(function() {
-          console.log("Document's context is ready");
+      function init() {
+        require.config({ 
+          baseUrl: '../lib/',
+          paths: {
+            'l20n/platform': 'webapi/l20n/platform',
+            'l20n/html': '../bindings/l20n/html',
+          }
         });
-      });
+        require(['l20n/html'], function(L20n) {
+          // L20n and document.l10n are now available
+          document.l10n.ready(function() {
+            console.log("Document's context is ready");
+          });
+        });
+      }
+
     </script> 
   </head>
 

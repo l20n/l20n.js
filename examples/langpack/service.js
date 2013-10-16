@@ -1,4 +1,4 @@
-var SERVER = true;
+var SERVER = false;
 
 function LPS() {
   if (SERVER) {
@@ -102,9 +102,9 @@ LPS.prototype.updateRequestedLocales = function(langList) {
 }
 
 
-LPS.prototype.tick = function() {
+LPS.prototype.tick = function(cb) {
   console.log('tick');
-  this._syncAvailable(this._syncLangpacks);
+  this._syncAvailable(this._syncLangpacks.bind(this, cb));
 }
 
 LPS.prototype._syncAvailable = function(cb) {
@@ -136,7 +136,7 @@ LPS.prototype._syncAvailable = function(cb) {
   });
 }
 
-LPS.prototype._syncLangpacks = function() {
+LPS.prototype._syncLangpacks = function(cb) {
   var self = this;
   for (var uri in this.apps) {
     var availableLocales = [];
@@ -235,7 +235,7 @@ LPS.IO.getAvailable = function(serverUrl, uris, cb) {
   
   cb({
     'domains': {
-      "system.gaiamobile.org": {
+      "localhost": {
         "de": 1
       }
     },
