@@ -6,6 +6,7 @@ function LPS() {
   } else {
     this.serverURL = false;
   }
+
   this.apps = {};             // data from apps
   this.service = {};          // data from AMO
   this.langpacks = {};        // cached langpacks
@@ -66,8 +67,8 @@ LPS.prototype.negotiateLocales = function (uri, requested, cb) {
     if (self.apps[uri]['locales'][locale] &&
       (!self.service[uri]['locales'][locale] ||
        self.service[uri]['locales'][locale].version <= self.apps[uri]['locales'][locale].version)) {
-         source = 'local';
-       }
+      source = 'local';
+    }
     res.push({
       code: locale,
       source: source
