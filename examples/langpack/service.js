@@ -58,10 +58,16 @@ function runApp() {
 */
 /////////////////////////////////////
 
+  var SERVER = true;
 
   var Intl = require('./intl').Intl;
 
   function LPS() {
+    if (SERVER) {
+      this.serverURL = 'http://127.0.0.1:3000';
+    } else {
+      this.serverURL = false;
+    }
     this.apps = {};             // data from apps
     this.service = {};          // data from AMO
     this.langpacks = {};        // cached langpacks
@@ -168,7 +174,7 @@ LPS.prototype._syncAvailable = function(cb) {
   for (var uri in this.apps) {
     uris.push(uri);
   }
-  LPS.IO.getAvailable(uris.join(','), function(response) {
+  LPS.IO.getAvailable(this.serverURL, uris.join(','), function(response) {
     var domains = response.domains;
     for (var uri in domains) {
       for (var code in domains[uri]) {
@@ -221,7 +227,7 @@ LPS.prototype._syncLangpacks = function() {
     }
     for (var i in localesToDownload) {
       var code = localesToDownload[i];
-      LPS.IO.getLangpack(uri, this.apps[uri].version, code, function(res) {
+      LPS.IO.getLangpack(this.serverURL, uri, this.apps[uri].version, code, function(res) {
         if (!self.langpacks[uri]) {
           self.langpacks[uri] = {
             'locales': {},
@@ -255,11 +261,12 @@ LPS.prototype.addSystemLanguages = function(locales, cb) {
 }
 
 LPS.prototype.startTicks = function() {
-  this.I = setInterval(this.tick, 1000);
+  this.tick();
+  this.I = setInterval(this.tick.bind(this), 10000);
 }
 
 LPS.prototype.stopTicks = function() {
-  this.I = clearInterval(this.tick);
+  this.I = clearInterval(this.I);
 }
 
 ////////////////// Service - Server shim
@@ -267,7 +274,26 @@ LPS.prototype.stopTicks = function() {
 LPS.IO = function () {
 }
 
-LPS.IO.getAvailable = function(uris, cb) {
+LPS.IO.loadAsync = function(href, callback) {
+  var xhr = new XMLHttpRequest();
+  xhr.onerror = function() {
+    console.error('Failed to fetch file: ' + href, xhr.statusText);
+  };
+  xhr.onload = function() {
+    callback(xhr.response);
+  };
+  xhr.open('GET', href, true); // async
+  xhr.responseType = 'json';
+  xhr.send();
+}
+
+LPS.IO.getAvailable = function(serverUrl, uris, cb) {
+  if (serverUrl) {
+    var url = serverUrl + '/available?domains='+uris;
+    LPS.IO.loadAsync(url, cb);
+    return;
+  }
+  
   cb({
     'domains': {
       "system.gaiamobile.org": {
@@ -280,7 +306,11 @@ LPS.IO.getAvailable = function(uris, cb) {
   });
 }
 
-LPS.IO.getLangpack = function(domain, version, locale, cb) {
+LPS.IO.getLangpack = function(serverUrl, domain, version, locale, cb) {
+  if (serverUrl) {
+    return;
+  }
+
   cb({
     '/locales/{{locale}}/music.l20n': '<title "Hello world">',
     '/locales/{{locale}}/foo.l20n': '<foo "Foo">',
