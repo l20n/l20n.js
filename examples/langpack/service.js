@@ -66,6 +66,7 @@ function runApp() {
     this.service = {};          // data from AMO
     this.langpacks = {};        // cached langpacks
     this.requestedLocales = [];
+    this.systemLanguageNames = {};
     this.languageNames = {};
 
     this.I = null;
@@ -238,15 +239,18 @@ LPS.prototype._syncLangpacks = function() {
 }
 
 LPS.prototype.getSupportedLanguages = function(cb) {
-  cb(this.languageNames);
+  var languageNames = {};
+  for (var i in this.systemLanguageNames) {
+    languageNames[i] = this.systemLanguageNames[i];
+  }
+  for (var i in this.languageNames) {
+    languageNames[i] = this.languageNames[i];
+  }
+  cb(languageNames);
 }
 
 LPS.prototype.addSystemLanguages = function(locales, cb) {
-  for (var i in locales) {
-    if (!this.languageNames[i]) {
-      this.languageNames[i] = locales[i];
-    }
-  }
+  this.systemLanguageNames = locales;
   cb();
 }
 
