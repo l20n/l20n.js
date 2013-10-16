@@ -164,6 +164,8 @@ LPS.prototype._syncLangpacks = function(cb) {
         localesToDownload.push(code);
       }
     }
+    var downloadedLocales = 0;
+
     for (var i in localesToDownload) {
       var code = localesToDownload[i];
       LPS.IO.getLangpack(this.serverURL, uri, this.apps[uri].version, code, function(res) {
@@ -177,6 +179,10 @@ LPS.prototype._syncLangpacks = function(cb) {
         }
         for (var path in res) {
           self.langpacks[uri]['locales'][code][path] = res[path];
+        }
+        downloadedLocales++;
+        if (downloadedLocales == localesToDownload.length) {
+          cb();
         }
       });
     }
