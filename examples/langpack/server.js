@@ -15,7 +15,15 @@ var available = {
 
 app.get('/available', function(req, res){
   res.set('Access-Control-Allow-Origin', '*');
-  res.send(available[req.query.domain]);
+  var langs = {};
+
+  var domains = req.query.domains.split(',');
+  domains.forEach(function(d) {
+    if (available[d]) {
+      langs[d] = available[d];
+    }
+  });
+  res.send(langs);
 });
 
 app.get('/resource', function(req, res){
