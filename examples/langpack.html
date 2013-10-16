@@ -1,0 +1,106 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title data-l10n-id="title"></title>
+
+    <!-- L20n setup -->
+    <link rel="localization" href="locales/manifest.json">
+    <script type="application/l10n-data+json">
+      {
+        "build": "dev",
+        "mode": "multi"
+      }
+    </script>
+
+    <!-- AMD setup -->
+    <script src="lib/require.js"></script>
+    <script>
+
+      window.lps = null;
+
+      function launch() {
+        lps = new LPS();
+      }
+
+      function registerApp() {
+        lps.registerApplication('music.gaiamobile.org', {
+          'version': 1.2,
+          'default_locale': 'en-US',
+          'languages': {
+            'en-US': 1,
+            'pl': 2,
+          }
+        });
+      }
+
+      function runApp() {
+        var uris = [
+        '/locales/{{locale}}/music.l20n',
+        '/locales/{{locale}}/foo.l20n',
+        ];
+        var requested = ['pl', 'en-US', 'fr', 'de']; // navigator.langauges
+
+        function cb2(resources) {
+          console.dir(resources);
+        }
+        function cb(fallbackChain) {
+          var locales = [];
+          for (var i in fallbackChain) {
+            if (fallbackChain[i]['source'] == 'service') {
+              locales.push(fallbackChain[i]['code']);
+            }
+          }
+          lps.getResources('music.gaiamobile.org',
+          uris,
+          locales,
+          cb2);
+        }
+
+        lps.negotiateLocales('music.gaiamobile.org', requested, cb);
+      }
+
+      require.config({ 
+        baseUrl: '../lib/',
+        paths: {
+          'l20n/platform': 'webapi/l20n/platform',
+          'l20n/html': '../bindings/l20n/html',
+        }
+      });
+      require(['l20n/html'], function(L20n) {
+        // L20n and document.l10n are now available
+        document.l10n.ready(function() {
+          console.log("Document's context is ready");
+        });
+      });
+    </script> 
+  </head>
+
+  <body>
+    <h1 data-l10n-id="hello"></h1>
+    <p data-l10n-id="intro"></p>
+
+    <hr>
+    <p data-l10n-id="langNego"></p>
+
+    <hr>
+    <p data-l10n-id="screenWidth"></p>
+    <input type="button" data-l10n-id="button">
+
+    <hr>
+    <p data-l10n-id="more">
+      <a href="http://l20n.org"></a>
+    </p>
+    <small data-l10n-id="kthxbye"></small>
+
+    <script>
+      var button = document.querySelector('input');
+      button.addEventListener('click', function insert() {
+        var p = document.createElement('p');
+        p.setAttribute('data-l10n-id', 'currentWidth'); 
+        document.l10n.localizeNode(p); 
+        document.body.insertBefore(p, button.nextSibling);
+      });
+    </script>
+
+  </body>
+</html>
