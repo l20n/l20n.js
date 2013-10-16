@@ -13,6 +13,10 @@ var available = {
   }
 }
 
+var languageNames = {
+  'de': 'Deutsch',
+};
+
 app.get('/available', function(req, res){
   res.set('Access-Control-Allow-Origin', '*');
   var langs = {};
@@ -23,7 +27,10 @@ app.get('/available', function(req, res){
       langs[d] = available[d];
     }
   });
-  res.send(langs);
+  res.send({
+    'domains': langs,
+    'nativeNames': languageNames
+  });
 });
 
 app.get('/resource', function(req, res){
