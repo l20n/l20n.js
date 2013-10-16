@@ -1,9 +1,3 @@
-if (typeof define !== 'function') {
-  var define = require('amdefine')(module);
-}
-define(function (require, exports) {
-  'use strict';
-
 ///////////////////////////////////////////////////////
 
 // THAT'S HOW YOU USE THE API:
@@ -58,27 +52,27 @@ function runApp() {
 */
 /////////////////////////////////////
 
-  var SERVER = true;
+var SERVER = true;
 
-  var Intl = require('./intl').Intl;
+var Intl = require('./intl').Intl;
 
-  function LPS() {
-    if (SERVER) {
-      this.serverURL = 'http://127.0.0.1:3000';
-    } else {
-      this.serverURL = false;
-    }
-    this.apps = {};             // data from apps
-    this.service = {};          // data from AMO
-    this.langpacks = {};        // cached langpacks
-    this.requestedLocales = [];
-    this.systemLanguageNames = {};
-    this.languageNames = {};
-
-    this.I = null;
-
-    this.updateRequestedLocales([navigator.language]);
+function LPS() {
+  if (SERVER) {
+    this.serverURL = 'http://127.0.0.1:3000';
+  } else {
+    this.serverURL = false;
   }
+  this.apps = {};             // data from apps
+  this.service = {};          // data from AMO
+  this.langpacks = {};        // cached langpacks
+  this.requestedLocales = [];
+  this.systemLanguageNames = {};
+  this.languageNames = {};
+
+  this.I = null;
+
+  this.updateRequestedLocales([navigator.language]);
+}
 
 LPS.prototype.registerApplication = function(uri, manifest) {
   if (!this.apps[uri]) {
@@ -317,6 +311,3 @@ LPS.IO.getLangpack = function(serverUrl, domain, version, locale, cb) {
     '/locales/{{locale}}/notifications.l20n': '<up "Up!">',
   });
 }
-
-  exports.LPS = LPS;
-});
