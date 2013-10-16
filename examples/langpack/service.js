@@ -4,28 +4,6 @@ if (typeof define !== 'function') {
 define(function (require, exports) {
   'use strict';
 
-
-//// REPLACE WITH REAL IO
-
-function IO() {
-}
-
-IO.getAvailable = function(uris, cb) {
-  cb({
-    "music.gaiamobile.org": {
-      "de": 1
-    }
-  });
-}
-
-IO.getLangpack = function(domain, version, locale, cb) {
-  cb({
-    '/locales/{{locale}}/music.l20n': '<title "Hello world">',
-    '/locales/{{locale}}/foo.l20n': '<foo "Foo">',
-    '/locales/{{locale}}/notifications.l20n': '<up "Up!">',
-  });
-}
-
 ///////////////////////////////////////////////////////
 
 // THAT'S HOW YOU USE THE API:
@@ -88,6 +66,7 @@ function runApp() {
     this.service = {};          // data from AMO
     this.langpacks = {};        // cached langpacks
     this.requestedLocales = [];
+    this.languageNames = {};
 
     this.I = null;
 
@@ -179,18 +158,19 @@ LPS.prototype.updateRequestedLocales = function(langList) {
 
 LPS.prototype.tick = function() {
   console.log('tick');
-  this._syncAvailable();
+  this._syncAvailable(this._syncLangpacks);
 }
 
-LPS.prototype._syncAvailable = function() {
+LPS.prototype._syncAvailable = function(cb) {
   var self = this;
   var uris = [];
   for (var uri in this.apps) {
     uris.push(uri);
   }
-  IO.getAvailable(uris.join(','), function(response) {
-    for (var uri in response) {
-      for (var code in response[uri]) {
+  LPS.IO.getAvailable(uris.join(','), function(response) {
+    var domains = response.domains;
+    for (var uri in domains) {
+      for (var code in domains[uri]) {
         if (!self.service[uri]) {
           self.service[uri] = {
             'locales': {},
@@ -198,12 +178,15 @@ LPS.prototype._syncAvailable = function() {
         }
         if (!self.service[uri]['locales'][code]) {
           self.service[uri]['locales'][code] = {
-            'version': response[uri][code]
+            'version': domains[uri][code]
           };
         }
       }
     }
-    self._syncLangpacks();
+    self.languageNames = response.nativeNames;
+    if (cb) {
+      cb();
+    }
   });
 }
 
@@ -237,7 +220,7 @@ LPS.prototype._syncLangpacks = function() {
     }
     for (var i in localesToDownload) {
       var code = localesToDownload[i];
-      IO.getLangpack(uri, this.apps[uri].version, code, function(res) {
+      LPS.IO.getLangpack(uri, this.apps[uri].version, code, function(res) {
         if (!self.langpacks[uri]) {
           self.langpacks[uri] = {
             'locales': {},
@@ -254,6 +237,19 @@ LPS.prototype._syncLangpacks = function() {
   }
 }
 
+LPS.prototype.getSupportedLanguages = function(cb) {
+  cb(this.languageNames);
+}
+
+LPS.prototype.addSystemLanguages = function(locales, cb) {
+  for (var i in locales) {
+    if (!this.languageNames[i]) {
+      this.languageNames[i] = locales[i];
+    }
+  }
+  cb();
+}
+
 LPS.prototype.startTicks = function() {
   this.I = setInterval(this.tick, 1000);
 }
@@ -262,7 +258,31 @@ LPS.prototype.stopTicks = function() {
   this.I = clearInterval(this.tick);
 }
 
+////////////////// Service - Server shim
 
+LPS.IO = function () {
+}
+
+LPS.IO.getAvailable = function(uris, cb) {
+  cb({
+    'domains': {
+      "system.gaiamobile.org": {
+        "de": 1
+      }
+    },
+    'nativeNames': {
+      "de": "Deutsch",
+    }
+  });
+}
+
+LPS.IO.getLangpack = function(domain, version, locale, cb) {
+  cb({
+    '/locales/{{locale}}/music.l20n': '<title "Hello world">',
+    '/locales/{{locale}}/foo.l20n': '<foo "Foo">',
+    '/locales/{{locale}}/notifications.l20n': '<up "Up!">',
+  });
+}
 
   exports.LPS = LPS;
 });
