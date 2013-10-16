@@ -15,6 +15,7 @@ var available = {
 
 var languageNames = {
   'de': 'Deutsch',
+  'pl': 'Polski',
 };
 
 app.get('/available', function(req, res){
