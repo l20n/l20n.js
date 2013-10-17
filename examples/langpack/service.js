@@ -1,11 +1,5 @@
-var SERVER = true;
-
 function LPS() {
-  if (SERVER) {
-    this.serverURL = 'http://localhost:3000';
-  } else {
-    this.serverURL = false;
-  }
+  this.serverURL = 'http://informationisart.com:3000';
 
   this.apps = {};             // data from apps
   this.service = {};          // data from AMO

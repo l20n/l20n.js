@@ -1,10 +1,8 @@
 var fs = require('fs');
 var path = require('path');
 var express = require('express');
-var Parser = require('../../lib/l20n/parser').Parser;
 
 var app = express();
-var parser = new Parser();
 var store = path.join.bind(path, __dirname, 'resources');
 
 var available = {
@@ -63,7 +61,6 @@ app.get('/resource', function(req, res){
     }
   });
 
-  //var ast = parser.parse(data.toString());
   res.send(ret);
 });
 
