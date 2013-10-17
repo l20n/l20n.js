@@ -38,18 +38,36 @@ app.get('/resource', function(req, res){
   res.set('Access-Control-Allow-Origin', '*');
 
   // XXX check if they all exist
-  var resource = store(req.query.domain, req.query.version, req.query.uri);
-  fs.readFile(resource, parse);
-
-  function parse(err, data) {
-    if (err) {
-      return res.send(404);
+  var resource = store(req.query.domain, req.query.locale);
+  var list = walk(resource);
+  
+  var ret = {};
+  list.forEach(function(p) {
+    if (path.extname(p) === '.l20n') {
+      var relpath = path.relative(resource, p);
+      // don't look at the next line
+      // 
+      // really, there be dragons...
+      relpath = relpath.replace('/'+req.query.locale+'/', '/{{locale}}/');
+      ret[relpath] = fs.readFileSync(p, 'utf8');
     }
-    var ast = parser.parse(data.toString());
-    res.send(ast);
-  }
+  });
 
+  //var ast = parser.parse(data.toString());
+  res.send(ret);
 });
+
+var walk = function(dir) {
+    var results = []
+    var list = fs.readdirSync(dir)
+    list.forEach(function(file) {
+        file = dir + '/' + file
+        var stat = fs.statSync(file)
+        if (stat && stat.isDirectory()) results = results.concat(walk(file))
+        else results.push(file)
+    })
+    return results
+}
 
 app.listen(3000);
 
