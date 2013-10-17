@@ -40,7 +40,7 @@ LPS.prototype.registerApplication = function(uri, manifest) {
 
 LPS.prototype.negotiateLocales = function (uri, requested, cb) {
   var self = this;
-  var requestedLocales = requested;
+  this.requestedLocales = requested;
   var defaultLocale = this.apps[uri]['default_locale'];
 
   var availableLocales = [];
@@ -59,7 +59,7 @@ LPS.prototype.negotiateLocales = function (uri, requested, cb) {
   }
 
   var supportedLocales = Intl.prioritizeLocales(availableLocales,
-      requestedLocales,
+      this.requestedLocales,
       defaultLocale);
 
   var res = [];
@@ -81,10 +81,8 @@ LPS.prototype.negotiateLocales = function (uri, requested, cb) {
   cb(res);
 }
 
-LPS.prototype.getResources = function(uri, resuris, locales, cb) {
-
+LPS.prototype._collectResources = function(uri, resuris, locales) {
   var resources = {};
-
   for (var i in locales) {
     var code = locales[i];
     if (this.langpacks[uri]['locales'][code]) {
@@ -96,8 +94,31 @@ LPS.prototype.getResources = function(uri, resuris, locales, cb) {
       }
     }
   }
+  return resources;
+}
 
-  cb(resources);
+LPS.prototype.getResources = function(uri, resuris, locales, cb) {
+
+  var self = this;
+
+
+  var allAvailable = true;
+
+  for (var i in locales) {
+    var code = locales[i];
+    if (!this.langpacks[uri] || !this.langpacks[uri]['locales'][code]) {
+      allAvailable = false;
+      break;
+    }
+  }
+
+  if (allAvailable) {
+    cb(this._collectResources(uri, resuris, locales));
+  } else {
+    this._syncLangpacks(function() {
+      cb(self._collectResources(uri, resuris, locales));
+    });
+  }
 }
 
 LPS.prototype.updateRequestedLocales = function(langList, cb) {
