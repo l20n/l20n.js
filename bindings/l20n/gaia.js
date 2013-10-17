@@ -166,14 +166,7 @@ define(function (require) {
     });
 
     // add resources
-    var re = /{{\s*locale\s*}}/;
-    manifest.resources.forEach(function(uri) {
-      if (re.test(uri)) {
-        ctx.linkResource(uri.replace.bind(uri, re));
-      } else {
-        ctx.linkResource(uri);
-      }
-    });
+    manifest.resources.forEach(ctx.linkResource);
 
     // listen to language change events
     navigator.mozSettings.addObserver('language.current', function(event) {

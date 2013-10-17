@@ -158,14 +158,7 @@ define(function (require) {
     });
 
     // add resources
-    var re = /{{\s*locale\s*}}/;
-    manifest.resources.forEach(function(uri) {
-      if (re.test(uri)) {
-        ctx.linkResource(uri.replace.bind(uri, re));
-      } else {
-        ctx.linkResource(uri);
-      }
-    });
+    manifest.resources.forEach(ctx.linkResource);
 
     // For now we just take navigator.language, but we'd prefer to get a list 
     // of locales that the user can read sorted by user's preference, see:
