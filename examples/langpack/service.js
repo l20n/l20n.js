@@ -65,7 +65,8 @@ LPS.prototype.negotiateLocales = function (uri, requested, cb) {
   supportedLocales.forEach(function(locale) {
     var source = 'service';
     if (self.apps[uri]['locales'][locale] &&
-      (!self.service[uri]['locales'][locale] ||
+      (!self.service[uri] ||
+       !self.service[uri]['locales'][locale] ||
        self.service[uri]['locales'][locale].version <= self.apps[uri]['locales'][locale].version)) {
       source = 'local';
     }
