@@ -1,4 +1,4 @@
-var SERVER = false;
+var SERVER = true;
 
 function LPS() {
   if (SERVER) {
@@ -97,8 +97,9 @@ LPS.prototype.getResources = function(uri, resuris, locales, cb) {
   cb(resources);
 }
 
-LPS.prototype.updateRequestedLocales = function(langList) {
+LPS.prototype.updateRequestedLocales = function(langList, cb) {
   this.requestedLocales = langList;
+  this._syncLangpacks(cb);
 }
 
 
@@ -174,6 +175,12 @@ LPS.prototype._syncLangpacks = function(cb) {
     for (var i in localesToDownload) {
       var code = localesToDownload[i];
       LPS.IO.getLangpack(this.serverURL, uri, this.apps[uri].version, code, function(res) {
+        if (res === null) {
+          console.error('could not download langpack for '+uri+' for locale '+code);
+          if (cb) {
+            cb(false);
+          }
+        }
         if (!self.langpacks[uri]) {
           self.langpacks[uri] = {
             'locales': {},
@@ -188,7 +195,7 @@ LPS.prototype._syncLangpacks = function(cb) {
         downloadedLocales++;
         if (downloadedLocales == localesToDownload.length) {
           if (cb) {
-            cb();
+            cb(true);
           }
         }
       });
@@ -259,6 +266,12 @@ LPS.IO.getAvailable = function(serverUrl, uris, cb) {
 }
 
 LPS.IO.getLangpack = function(serverUrl, domain, version, locale, cb) {
+  if (serverUrl) {
+    var url = serverUrl + '/resource?domain='+domain+'&version='+version+'&locale='+locale;
+    LPS.IO.loadAsync(url, cb);
+    return;
+  }
+
   cb({
     '/locales/{{locale}}/music.l20n': '<title "Hello world">',
     '/locales/{{locale}}/foo.l20n': '<foo "Foo">',
