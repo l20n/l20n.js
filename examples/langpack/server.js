@@ -58,10 +58,10 @@ app.get('/resource', function(req, res){
       // 
       // really, there be dragons...
       relpath = relpath.replace('/'+req.query.locale+'/', '/{{locale}}/');
+      relpath = relpath.replace('.'+req.query.locale+'.', '.{{locale}}.');
       ret[relpath] = fs.readFileSync(p, 'utf8');
     }
   });
-  console.log(ret)
 
   //var ast = parser.parse(data.toString());
   res.send(ret);
