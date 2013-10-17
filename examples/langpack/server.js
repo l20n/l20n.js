@@ -39,6 +39,11 @@ app.get('/resource', function(req, res){
 
   // XXX check if they all exist
   var resource = store(req.query.domain, req.query.locale);
+
+  if (!fs.existsSync(resource)) {
+    res.send(404);
+    return;
+  }
   var list = walk(resource);
   
   var ret = {};
@@ -58,7 +63,7 @@ app.get('/resource', function(req, res){
 });
 
 var walk = function(dir) {
-    var results = []
+    var results = [];
     var list = fs.readdirSync(dir)
     list.forEach(function(file) {
         file = dir + '/' + file
