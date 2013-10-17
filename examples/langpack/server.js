@@ -8,7 +8,7 @@ var parser = new Parser();
 var store = path.join.bind(path, __dirname, 'resources');
 
 var available = {
-  'music.gaiamobile.org': {
+  'settings.gaiamobile.org': {
     de: 1.0,
   }
 }

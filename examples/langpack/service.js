@@ -165,6 +165,11 @@ LPS.prototype._syncLangpacks = function(cb) {
       }
     }
     var downloadedLocales = 0;
+    if (localesToDownload.length == 0) {
+      if (cb) {
+        cb();
+      }
+    }
 
     for (var i in localesToDownload) {
       var code = localesToDownload[i];
@@ -182,7 +187,9 @@ LPS.prototype._syncLangpacks = function(cb) {
         }
         downloadedLocales++;
         if (downloadedLocales == localesToDownload.length) {
-          cb();
+          if (cb) {
+            cb();
+          }
         }
       });
     }
@@ -252,10 +259,6 @@ LPS.IO.getAvailable = function(serverUrl, uris, cb) {
 }
 
 LPS.IO.getLangpack = function(serverUrl, domain, version, locale, cb) {
-  if (serverUrl) {
-    return;
-  }
-
   cb({
     '/locales/{{locale}}/music.l20n': '<title "Hello world">',
     '/locales/{{locale}}/foo.l20n': '<foo "Foo">',
