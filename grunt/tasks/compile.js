@@ -37,7 +37,7 @@ module.exports = function (grunt) {
       var project = copy.createCommonJsProject({
         roots: [
           root('bindings') ,
-          root('lib', 'client') ,
+          root('lib', 'webapi') ,
           root('lib'),
           // Look for dummy amdefine in build/ to make
           // the output prettier (bug 869210).
