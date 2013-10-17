@@ -1,11 +1,5 @@
 {
-  "locales": [
-    "en-US",
-    "fr",
-    "pl"
-  ],
-  "default_locale": "en-US",
   "resources": [
-    "./{{locale}}.lol"
+    "./{{locale}}/strings.l20n"
   ]
 }

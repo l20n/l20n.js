@@ -10,6 +10,9 @@ var store = path.join.bind(path, __dirname, 'resources');
 var available = {
   'settings.gaiamobile.org': {
     de: 1.0,
+  },
+  'localhost': {
+    pl: 3
   }
 }
 
@@ -50,6 +53,7 @@ app.get('/resource', function(req, res){
   list.forEach(function(p) {
     if (path.extname(p) === '.l20n') {
       var relpath = path.relative(resource, p);
+      relpath = path.resolve('/', relpath)
       // don't look at the next line
       // 
       // really, there be dragons...
@@ -57,6 +61,7 @@ app.get('/resource', function(req, res){
       ret[relpath] = fs.readFileSync(p, 'utf8');
     }
   });
+  console.log(ret)
 
   //var ast = parser.parse(data.toString());
   res.send(ret);

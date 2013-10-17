@@ -2,7 +2,7 @@ var SERVER = true;
 
 function LPS() {
   if (SERVER) {
-    this.serverURL = 'http://127.0.0.1:3000';
+    this.serverURL = 'http://localhost:3000';
   } else {
     this.serverURL = false;
   }
