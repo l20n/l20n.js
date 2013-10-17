@@ -50,9 +50,11 @@ LPS.prototype.negotiateLocales = function (uri, requested, cb) {
       availableLocales.push(code);
     }
   }
-  for (var code in this.service[uri]) {
-    if (availableLocales.indexOf(code) === -1) {
-      availableLocales.push(code);
+  if (this.service[uri]) {
+    for (var code in this.service[uri]['locales']) {
+      if (availableLocales.indexOf(code) === -1) {
+        availableLocales.push(code);
+      }
     }
   }
 
