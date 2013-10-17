@@ -3,6 +3,10 @@ node_js:
   - "0.10"
 before_script:
   - npm install -g grunt-cli
+branches:
+  only:
+    - master
+    - gaia
 notifications:
   irc:
     channels:
