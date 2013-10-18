@@ -42,6 +42,8 @@ app.get('/admin', function(req, res) {
 });
 
 app.post('/set', function(req, res) {
+  // XXX this should set versions and the enabled flag, instead of just 
+  // removing the locale
   if (req.body.enable) {
     client.sadd(req.body.origin, req.body.locale, done);
   } else {
@@ -58,20 +60,22 @@ app.get('/available', function(req, res){
   res.header('Cache-Control', 'no-cache, private, no-store, ' +
              'must-revalidate, max-stale=0, post-check=0, pre-check=0');
 
-  var langs = {};
+  var langs = {
+    domains: {},
+    nativeNames: {}
+  };
   var domains = req.query.domains.split(',');
   var domainsToCheck = domains.length;
   domains.forEach(function(d) {
-    langs[d] = {};
+    langs.domains[d] = {};
     client.smembers(d, function(err, locales) {
       for (var i in locales) {
-        langs[d][locales[i]] = 3  // XXX hardcode the version number for now
+        langs.domains[d][locales[i]] = 3  // XXX hardcode the version number for now
+        langs.nativeNames[locales[i]] = languageNames[locales[i]]  // XXX hardcode the version number for now
       }
       if (--domainsToCheck === 0) {
-        res.send({
-          'domains': langs,
-          'nativeNames': languageNames
-        });
+        console.log('  -- RESPOND', langs.nativeNames)
+        res.send(langs);
       }
     });
   });
