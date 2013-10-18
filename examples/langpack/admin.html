@@ -1,0 +1,57 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Langpack Server</title>
+  </head>
+  <body>
+
+    <h1>Langpack server</h1>
+
+    <label>
+      <input type="checkbox" id="de" checked="checked"> German<br>
+    </label>
+    <label>
+      <input type="checkbox" id="hu"> Hungarian<br>
+    </label>
+    <label>
+      <input type="checkbox" id="pl"> Polski<br>
+    </label>
+    
+    <script>
+      var url = '/set';
+      var checkboxes = document.getElementsByTagName('input');
+      Array.forEach(checkboxes, function(box) {
+        box.addEventListener('click', send);
+      })
+
+
+      function send(ev) {
+        var body = {
+          origin: 'settings.gaiamobile.org',
+          locale: ev.target.getAttribute('id'),
+          enable: ev.target.checked
+        }
+        body = JSON.stringify(body);
+        console.log(body)
+
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', url, true);
+        xhr.setRequestHeader("Accept", "application/json");
+        xhr.setRequestHeader("Content-type", "application/json");
+        xhr.overrideMimeType('text/plain');
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            callback(null, xhr.responseText);
+          } else {
+            callback(new Error('Not found: ' + url));
+          }
+        };
+        xhr.send(body);
+      }
+
+      function callback(err, res) {
+        console.log(res);
+      }
+    </script>
+  </body>
+</html>

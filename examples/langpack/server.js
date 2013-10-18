@@ -2,16 +2,8 @@ var fs = require('fs');
 var path = require('path');
 var express = require('express');
 
-var available = {
-  'settings.gaiamobile.org': {
-    de: 1.0,
-    pl: 1,
-    hu: 1,
-  },
-  'localhost': {
-    pl: 3
-  }
-}
+var redis = require('redis');
+var client = redis.createClient();
 
 var languageNames = {
   'de': 'Deutsch',
@@ -21,6 +13,9 @@ var languageNames = {
 
 var app = express();
 app.use(allowCrossDomain);
+app.use(express.bodyParser());
+app.set('views', __dirname);       
+app.engine('html', require('ejs').renderFile);
 
 function allowCrossDomain(req, res, next) {
   res.header('Access-Control-Allow-Origin', '*');
@@ -42,6 +37,21 @@ app.get('/', function(req, res) {
   res.send('Hello\n');
 });
 
+app.get('/admin', function(req, res) {
+  res.render('admin.html');
+});
+
+app.post('/set', function(req, res) {
+  if (req.body.enable) {
+    client.sadd(req.body.origin, req.body.locale, done);
+  } else {
+    client.srem(req.body.origin, req.body.locale, done);
+  }
+  function done(err) {
+    res.send('ok')
+  }
+});
+
 app.get('/available', function(req, res){
   console.log('AVAILABLE', req.query)
   res.header('Access-Control-Allow-Origin', '*');
@@ -50,14 +60,20 @@ app.get('/available', function(req, res){
 
   var langs = {};
   var domains = req.query.domains.split(',');
+  var domainsToCheck = domains.length;
   domains.forEach(function(d) {
-    if (available[d]) {
-      langs[d] = available[d];
-    }
-  });
-  res.send({
-    'domains': langs,
-    'nativeNames': languageNames
+    langs[d] = {};
+    client.smembers(d, function(err, locales) {
+      for (var i in locales) {
+        langs[d][locales[i]] = 3  // XXX hardcode the version number for now
+      }
+      if (--domainsToCheck === 0) {
+        res.send({
+          'domains': langs,
+          'nativeNames': languageNames
+        });
+      }
+    });
   });
 });
 
