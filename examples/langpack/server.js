@@ -35,15 +35,20 @@ function allowCrossDomain(req, res, next) {
 };
 
 app.get('/', function(req, res) {
+  console.log('HELLO', req.query)
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Cache-Control', 'no-cache, private, no-store, ' +
+             'must-revalidate, max-stale=0, post-check=0, pre-check=0');
   res.send('Hello\n');
 });
 
 app.get('/available', function(req, res){
-  console.log('AVAILABLE')
-  console.log(req.query)
-  res.set('Access-Control-Allow-Origin', '*');
-  var langs = {};
+  console.log('AVAILABLE', req.query)
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Cache-Control', 'no-cache, private, no-store, ' +
+             'must-revalidate, max-stale=0, post-check=0, pre-check=0');
 
+  var langs = {};
   var domains = req.query.domains.split(',');
   domains.forEach(function(d) {
     if (available[d]) {
@@ -59,9 +64,10 @@ app.get('/available', function(req, res){
 var store = path.join.bind(path, __dirname, 'resources');
 
 app.get('/resource', function(req, res){
-  console.log('RESOURCE')
-  console.log(req.query)
-  res.set('Access-Control-Allow-Origin', '*');
+  console.log('RESOURCE', req.query)
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Cache-Control', 'no-cache, private, no-store, ' +
+             'must-revalidate, max-stale=0, post-check=0, pre-check=0');
 
   // XXX check if they all exist
   var resource = store(req.query.domain, req.query.locale);
@@ -102,4 +108,5 @@ var walk = function(dir) {
 }
 
 app.listen(3000);
+console.log('  -- langpack server listening on port 3000');
 
