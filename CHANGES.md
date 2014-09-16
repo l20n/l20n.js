@@ -1,3 +1,19 @@
+1.0.1
+=====
+
+This is the first of the maintenance releases of the 1.0.x API.  This API 
+will not be compatible with 2.x and 3.x versions of L20n but will 
+receive small updates and fixes until early 2015.  See [the post in 
+tools-l10n](https://groups.google.com/forum/#!topic/mozilla.tools.l10n/MJ_sMgqOKT4) 
+for more information.
+
+Detailed changes:
+
+* Bug [942183](https::/bugzil.la/942183) - Fix error when localizeNode is done quickly after requestLocales. 
+
+(Full changelog: [1.0.0rc...1.0.1](https://github.com/l20n/l20n.js/compare/1.0.0rc...1.0.1))
+
+
 1.0.0 RC
 ========
 
