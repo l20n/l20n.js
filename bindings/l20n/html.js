@@ -5,6 +5,7 @@ define(function (require) {
 
   var L20n = require('../l20n');
   var io = require('./platform/io');
+  L20n.shims = {};
 
   // absolute URLs start with a slash or contain a colon (for schema)
   var reAbsolute = /^\/|:/;
@@ -35,6 +36,8 @@ define(function (require) {
       th: [ 'abbr']
     }
   };
+
+  var templateSupported = 'content' in document.createElement('template');
 
   // Start-up logic (pre-bootstrap)
   // =========================================================================
@@ -256,16 +259,23 @@ define(function (require) {
       return;
     }
     if (entity.value) {
-      // if there is no HTML in the translation nor no HTML entities are used, 
-      // just replace the textContent
+      // if there is no HTML in the translation nor no HTML entities are used
+      // or if the template element is not supported and no fallback was
+      // provided, just replace the textContent
       if (entity.value.indexOf('<') === -1 &&
-          entity.value.indexOf('&') === -1) {
+          entity.value.indexOf('&') === -1 ||
+          !templateSupported && typeof L20n.shims.getTemplate !== 'function') {
         node.textContent = entity.value;
       } else {
         // otherwise, start with an inert template element and move its 
         // children into `node` but such that `node`'s own children are not 
         // replaced
-        var translation = document.createElement('template');
+        var translation = templateSupported ?
+          document.createElement('template') :
+          // If <template> is not supported, fallback to an implementation
+          // provided from outside.
+          L20n.shims.getTemplate();
+
         translation.innerHTML = entity.value;
         // overlay the node with the DocumentFragment
         overlayElement(node, translation.content);

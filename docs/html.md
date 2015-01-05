@@ -197,3 +197,20 @@ Note that you currently _cannot_ use the manifest file _and_ manually add
 resources via `script` tags at the same time (bug [923670][]).
 
 [923670]: https://bugzil.la/923670
+
+
+L20n.shims
+----------
+
+This object contains a list of shims that might be optionally provided by an L20n
+user to make it work in an environment not supplying all necessary APIs by default.
+
+### getTemplate()
+
+If defined, this function will be used as a `<template>` polyfill in browsers
+that don't support native template element. It should return an object
+simulating the element returned by `document.createElement('template')`.
+
+The template element is used for overlaying nodes in more complex translations.
+If this function is not provided and the browser doesn't support the template
+element, L20n will treat all translated nodes as regular, non-overlayed ones.
