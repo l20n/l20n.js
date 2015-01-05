@@ -322,7 +322,7 @@ define(function (require) {
       }
 
       // otherwise just take this child's textContent
-      var text = new Text(childElement.textContent);
+      var text = document.createTextNode(childElement.textContent);
       result.appendChild(text);
     }
 
