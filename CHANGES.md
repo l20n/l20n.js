@@ -1,3 +1,15 @@
+1.0.2
+=====
+
+This release introduced a number of web-compatibility changes to accommodate 
+older browsers.
+
+* Bug [1117170](https://bugzil.la/1117170) - Use document.createTextNode for better web compat
+* Bug [942594](https://bugzil.la/942594) - Introduce a way for devs to provide 'template' shims.
+
+(Full changelog: [1.0.1...1.0.2](https://github.com/l20n/l20n.js/compare/1.0.1...1.0.2))
+
+
 1.0.1
 =====
 
@@ -9,7 +21,7 @@ for more information.
 
 Detailed changes:
 
-* Bug [942183](https::/bugzil.la/942183) - Fix error when localizeNode is done quickly after requestLocales. 
+* Bug [942183](https://bugzil.la/942183) - Fix error when localizeNode is done quickly after requestLocales. 
 
 (Full changelog: [1.0.0rc...1.0.1](https://github.com/l20n/l20n.js/compare/1.0.0rc...1.0.1))
 
