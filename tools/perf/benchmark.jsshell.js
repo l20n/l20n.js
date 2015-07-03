@@ -1,13 +1,11 @@
 load('../../dist/jsshell/l10n.js');
 
 var propertiesParser = L20n.PropertiesParser;
-var l20nParser = L20n.L20nParser;
 var env = {
   __plural: L20n.getPluralRule('en-US')
 };
 
 var propCode = read('./example.properties');
-var l20nCode = read('./example.l20n');
 var data = {
   "brandShortName": "BRANDSHORTNAME",
   "ssid": "SSID",
@@ -39,11 +37,6 @@ times.start = dateNow();
 var ast = propertiesParser.parse(null, propCode);
 times.parseEnd = dateNow();
 
-times.l20nParseStart = dateNow();
-
-var ast = l20nParser.parse(null, l20nCode);
-times.l20nParseEnd = dateNow();
-
 times.createEntries = dateNow();
 L20n.extendEntries(env, ast);
 times.createEntriesEnd = dateNow();
@@ -69,7 +62,6 @@ times.getEntityEnd = dateNow();
 */
 var results = {
   parseProp: micro(times.parseEnd - times.start),
-  parseL20n: micro(times.l20nParseEnd - times.l20nParseStart),
   createEntries: micro(times.createEntriesEnd - times.createEntries),
   format: micro(times.formatEnd - times.format),
   //getEntity: micro(times.getEntityEnd - times.getEntity),

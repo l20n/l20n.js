@@ -9,7 +9,6 @@ var colors = require('colors');
 
 var PropertiesParser =
   require('../src/lib/format/properties/parser');
-var L20nParser = require('../src/lib/format/l20n/parser');
 
 
 program
@@ -32,21 +31,13 @@ function logError(err) {
   console.warn(color(name, 'red') + message);
 }
 
-function print(type, err, data) {
+function print(err, data) {
   if (err) {
     return console.error('File not found: ' + err.path);
   }
   var ast;
   try {
-    switch (type) {
-      case 'properties':
-        ast = PropertiesParser.parse(null, data.toString());
-        break;
-      case 'l20n':
-        ast = L20nParser.parse(null, data.toString());
-        break;
-    }
-
+    ast = PropertiesParser.parse(null, data.toString());
   } catch (e) {
     console.log(e);
     logError(e);
@@ -62,8 +53,7 @@ function print(type, err, data) {
 }
 
 if (program.args.length) {
-  var type = program.args[0].substr(program.args[0].lastIndexOf('.') + 1);
-  fs.readFile(program.args[0], print.bind(null, type));
+  fs.readFile(program.args[0], print);
 } else {
   process.stdin.resume();
   process.stdin.on('data', print.bind(null, null));

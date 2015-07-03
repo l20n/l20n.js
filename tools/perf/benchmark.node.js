@@ -4,13 +4,11 @@ var L20n = require('../../src/bindings/node');
 var Context = require('../../src/lib/context').Context;
 
 var propParser = L20n.PropertiesParser;
-var l20nParser = L20n.L20nParser;
 var env = {
   __plural: L20n.getPluralRule('en-US')
 };
 
 var propCode = fs.readFileSync(__dirname + '/example.properties').toString();
-var l20nCode = fs.readFileSync(__dirname + '/example.l20n').toString();
 
 var data = {
   "brandShortName": "BRANDSHORTNAME",
@@ -43,11 +41,6 @@ var start = process.hrtime();
 var ast = propParser.parse(null, propCode);
 cumulative.parseEnd = process.hrtime(start);
 
-cumulative.l20nParseStart = process.hrtime(start);
-
-var ast = l20nParser.parse(null, l20nCode);
-cumulative.l20nParseEnd = process.hrtime(start);
-
 cumulative.createEntries = process.hrtime(start);
 L20n.extendEntries(env, ast);
 cumulative.createEntriesEnd = process.hrtime(start);
@@ -73,7 +66,6 @@ cumulative.getEntityEnd = process.hrtime(start);
 
 var results = {
   propParse: micro(cumulative.parseEnd),
-  l20nParse: micro(cumulative.l20nParseEnd) - micro(cumulative.l20nParseStart),
   createEntries: micro(cumulative.createEntriesEnd) - micro(cumulative.createEntries),
   format: micro(cumulative.formatEnd) - micro(cumulative.format),
   getEntity: micro(cumulative.getEntityEnd) - micro(cumulative.getEntity)
