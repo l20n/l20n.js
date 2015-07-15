@@ -46,18 +46,15 @@ export class View {
     return this.service.env.emit(...args);
   }
 
-  formatValue(id, args) {
+  format(id, args) {
     return this.service.languages.then(
-      langs => this.ctx.formatValue(langs, id, args));
-  }
-
-  formatEntity(id, args) {
-    return this.service.languages.then(
-      langs => this.ctx.formatEntity(langs, id, args));
+      langs => this.ctx.fetch(langs)).then(
+      langs => this.ctx.resolve(langs, id, args));
   }
 
   translateFragment(frag) {
     return this.service.languages.then(
+      langs => this.ctx.fetch(langs)).then(
       langs => translateFragment(this, langs, frag));
   }
 }
