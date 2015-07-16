@@ -11,12 +11,6 @@ module.exports = {
       },
       {
         expand: true,
-        cwd: 'dist/gaiabuild',
-        src: ['l10n.js', 'qps.js'],
-        dest: 'dist/gaia/build/l10n/'
-      },
-      {
-        expand: true,
         cwd: 'tests/',
         src: '**',
         dest: 'dist/gaia/apps/sharedtest/test/unit/l10n/'

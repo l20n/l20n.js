@@ -23,12 +23,6 @@ function strip(src) {
   return src;
 }
 
-function buildtimify(src) {
-  return src.replace(
-    /Runtime/g,
-    'Packaged');
-}
-
 var clientsideOpts = {
   separator: '',
   banner: '' +
@@ -38,10 +32,6 @@ var clientsideOpts = {
     '  /* jshint validthis:true */',
   footer: '\n})(this);\n',
   process: strip
-};
-
-var buildtimeOpts = {
-  process: buildtimify
 };
 
 module.exports = {
@@ -64,18 +54,6 @@ module.exports = {
       'src/runtime/web/index.js',
     ],
     dest: 'dist/web/l10n.js',
-  },
-  gaiabuild: {
-    options: buildtimeOpts,
-    files: {
-      'dist/gaiabuild/l10n.js': [
-        'src/bindings/gaiabuild/index.js'
-      ],
-      'dist/gaiabuild/qps.js': [
-        'src/lib/util.js',
-        'src/lib/pseudo.js'
-      ]
-    }
   },
   jsshell: {
     options: clientsideOpts,

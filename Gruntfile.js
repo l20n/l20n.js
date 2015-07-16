@@ -73,13 +73,11 @@ module.exports = function (grunt) {
   grunt.registerTask('test', ['mochaTest:dot']);
 
   grunt.registerTask('build', [
-    'concat:gaiabuild',
     'concat:web',
     'concat:jsshell',
   ]);
 
   grunt.registerTask('dist', [
-    'concat:gaiabuild',
     'concat:web',
     'copy:gaia'
   ]);
