@@ -40,6 +40,7 @@ module.exports = function (grunt) {
     shell: require('./build/shell'),
     uglify: require('./build/uglify'),
     watch: require('./build/watch'),
+    bump: require('./build/bump'),
   });
 
   // Add copies of watched tasks with an added filter option.

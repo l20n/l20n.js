@@ -1,6 +1,6 @@
 'use strict';
 
-// resolve relative to build/config
+// resolve relative to build/
 var path = require('path').resolve.bind(null, __dirname);
 
 var babel = {
