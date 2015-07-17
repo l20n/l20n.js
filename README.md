@@ -69,7 +69,7 @@ Localizing Web content with HTML Bindings
 You can take advantage of HTML bindings to localize your HTML documents with 
 L20n.  See [docs/html][] for documentation and examples.
 
-[docs/html]: https://github.com/l20n/l20n.js/blob/master/docs/html.md
+[docs/html]: https://github.com/l20n/l20n.js/blob/v3.x/docs/html.md
 
 
 The JavaScript API and documentation
@@ -78,7 +78,7 @@ The JavaScript API and documentation
 It is also possible to use L20n programmatically, for instance in order to 
 localize dynamic content.  Refer to [docs/api][] for more details.
 
-[docs/api]: https://github.com/l20n/l20n.js/blob/master/docs/api.md
+[docs/api]: https://github.com/l20n/l20n.js/blob/v3.x/docs/api.md
 
 
 Discuss

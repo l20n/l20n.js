@@ -14,7 +14,7 @@ are not backwards-compatible.  Please use [v3.x][] if you can.
 
 You can also use [bower][] to install L20n:
 
-    bower install l20n#v3.x
+    bower install l20n
 
 The `dist/` directory contains subdirectories with different variations of 
 L20n (called _runtimes_).  The `webcompat` runtime is best suited for webpages 
