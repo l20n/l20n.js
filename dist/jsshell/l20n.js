@@ -706,8 +706,10 @@
         }
       }
 
-      if ('other' in expr) {
-        return resolveValue(locals, ctx, lang, args, expr.other);
+      const defaultKey = expr.__default || 'other';
+
+      if (defaultKey in expr) {
+        return resolveValue(locals, ctx, lang, args, expr[defaultKey]);
       }
 
       throw new L10nError('Unresolvable value');

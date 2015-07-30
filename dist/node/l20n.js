@@ -1,4 +1,5 @@
-(function(e, a) { for(var i in a) e[i] = a[i]; }(this, /******/ (function(modules) { // webpackBootstrap
+module.exports =
+/******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 
@@ -46,37 +47,19 @@
 
 	'use strict';
 
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
 	var _io = __webpack_require__(1);
 
-	var _bindingsHtmlService = __webpack_require__(3);
+	var _libEnv = __webpack_require__(4);
 
-	var readyStates = {
-	  loading: 0,
-	  interactive: 1,
-	  complete: 2
+	exports.default = {
+	  fetch: _io.fetch,
+	  Env: _libEnv.Env
 	};
-
-	function whenInteractive(callback) {
-	  if (readyStates[document.readyState] >= readyStates.interactive) {
-	    return callback();
-	  }
-
-	  document.addEventListener('readystatechange', function onrsc() {
-	    if (readyStates[document.readyState] >= readyStates.interactive) {
-	      document.removeEventListener('readystatechange', onrsc);
-	      callback();
-	    }
-	  });
-	}
-
-	function init() {
-	  var service = new _bindingsHtmlService.Service(_io.fetch);
-	  window.addEventListener('languagechange', service);
-	  document.addEventListener('additionallanguageschange', service);
-	  document.l10n.languages = navigator.languages;
-	}
-
-	whenInteractive(init);
+	module.exports = exports.default;
 
 /***/ },
 /* 1 */
@@ -89,68 +72,35 @@
 	});
 	exports.fetch = fetch;
 
-	var _libErrors = __webpack_require__(2);
+	var _fs = __webpack_require__(2);
 
-	function load(type, url) {
+	var _libErrors = __webpack_require__(3);
+
+	function load(url) {
 	  return new Promise(function (resolve, reject) {
-	    var xhr = new XMLHttpRequest();
-
-	    if (xhr.overrideMimeType) {
-	      xhr.overrideMimeType(type);
-	    }
-
-	    xhr.open('GET', url, true);
-
-	    if (type === 'application/json') {
-	      xhr.responseType = 'json';
-	    }
-
-	    xhr.addEventListener('load', function io_onload(e) {
-	      if (e.target.status === 200 || e.target.status === 0) {
-	        resolve(e.target.response || e.target.responseText);
+	    (0, _fs.readFile)(url, function (err, data) {
+	      if (err) {
+	        reject(new _libErrors.L10nError(err.message));
 	      } else {
-	        reject(new _libErrors.L10nError('Not found: ' + url));
+	        resolve(data.toString());
 	      }
 	    });
-	    xhr.addEventListener('error', reject);
-	    xhr.addEventListener('timeout', reject);
-
-	    try {
-	      xhr.send(null);
-	    } catch (e) {
-	      if (e.name === 'NS_ERROR_FILE_NOT_FOUND') {
-	        reject(new _libErrors.L10nError('Not found: ' + url));
-	      } else {
-	        throw e;
-	      }
-	    }
 	  });
 	}
 
-	var io = {
-	  extra: function (code, ver, path, type) {
-	    return navigator.mozApps.getLocalizationResource(code, ver, path, type);
-	  },
-	  app: function (code, ver, path, type) {
-	    switch (type) {
-	      case 'text':
-	        return load('text/plain', path);
-	      case 'json':
-	        return load('application/json', path);
-	      default:
-	        throw new _libErrors.L10nError('Unknown file type: ' + type);
-	    }
-	  }
-	};
-
-	function fetch(ver, res, lang) {
+	function fetch(res, lang) {
 	  var url = res.replace('{locale}', lang.code);
-	  var type = res.endsWith('.json') ? 'json' : 'text';
-	  return io[lang.src](lang.code, ver, url, type);
+	  return res.endsWith('.json') ? load(url).then(JSON.parse) : load(url);
 	}
 
 /***/ },
 /* 2 */
+/***/ function(module, exports) {
+
+	module.exports = require("fs");
+
+/***/ },
+/* 3 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -169,97 +119,6 @@
 
 	L10nError.prototype = Object.create(Error.prototype);
 	L10nError.prototype.constructor = L10nError;
-
-/***/ },
-/* 3 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	exports.getAdditionalLanguages = getAdditionalLanguages;
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _libEnv = __webpack_require__(4);
-
-	var _view = __webpack_require__(12);
-
-	var _head = __webpack_require__(13);
-
-	var _langs = __webpack_require__(15);
-
-	var Service = (function () {
-	  function Service(fetch) {
-	    _classCallCheck(this, Service);
-
-	    var meta = (0, _head.getMeta)(document.head);
-	    this.defaultLanguage = meta.defaultLang;
-	    this.availableLanguages = meta.availableLangs;
-	    this.appVersion = meta.appVersion;
-
-	    this.env = new _libEnv.Env(this.defaultLanguage, fetch.bind(null, this.appVersion));
-	    this.views = [document.l10n = new _view.View(this, document)];
-
-	    this.env.addEventListener('deprecatewarning', function (err) {
-	      return console.warn(err);
-	    });
-	  }
-
-	  _createClass(Service, [{
-	    key: 'requestLanguages',
-	    value: function requestLanguages() {
-	      var requestedLangs = arguments.length <= 0 || arguments[0] === undefined ? navigator.languages : arguments[0];
-
-	      return changeLanguages.call(this, getAdditionalLanguages(), requestedLangs);
-	    }
-	  }, {
-	    key: 'handleEvent',
-	    value: function handleEvent(evt) {
-	      return changeLanguages.call(this, evt.detail || getAdditionalLanguages(), navigator.languages);
-	    }
-	  }]);
-
-	  return Service;
-	})();
-
-	exports.Service = Service;
-
-	function getAdditionalLanguages() {
-	  if (navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
-	    return navigator.mozApps.getAdditionalLanguages().catch(function () {
-	      return [];
-	    });
-	  }
-
-	  return Promise.resolve([]);
-	}
-
-	function translateViews(langs) {
-	  return Promise.all(this.views.map(function (view) {
-	    return _view.translate.call(view, langs);
-	  }));
-	}
-
-	function changeLanguages(additionalLangs, requestedLangs) {
-	  var _this = this;
-
-	  var prevLangs = this.languages || [];
-	  return this.languages = Promise.all([additionalLangs, prevLangs]).then(function (_ref) {
-	    var _ref2 = _slicedToArray(_ref, 2);
-
-	    var additionalLangs = _ref2[0];
-	    var prevLangs = _ref2[1];
-	    return (0, _langs.negotiateLanguages)(translateViews.bind(_this), _this.appVersion, _this.defaultLanguage, _this.availableLanguages, additionalLangs, prevLangs, requestedLangs);
-	  });
-	}
 
 /***/ },
 /* 4 */
@@ -403,7 +262,7 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _errors = __webpack_require__(2);
+	var _errors = __webpack_require__(3);
 
 	var _resolver = __webpack_require__(6);
 
@@ -540,7 +399,7 @@
 
 	exports.format = format;
 
-	var _errors = __webpack_require__(2);
+	var _errors = __webpack_require__(3);
 
 	var KNOWN_MACROS = ['plural'];
 	var MAX_PLACEABLE_LENGTH = 2500;
@@ -1173,7 +1032,7 @@
 	  value: true
 	});
 
-	var _errors = __webpack_require__(2);
+	var _errors = __webpack_require__(3);
 
 	var MAX_PLACEABLES = 100;
 
@@ -1403,7 +1262,7 @@
 
 	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
 
-	var _errors = __webpack_require__(2);
+	var _errors = __webpack_require__(3);
 
 	var MAX_PLACEABLES = 100;
 
@@ -2077,673 +1936,5 @@
 	  typeListeners.splice(pos, 1);
 	}
 
-/***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	exports.translate = translate;
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _bindingsHtmlHead = __webpack_require__(13);
-
-	var _dom = __webpack_require__(14);
-
-	var observerConfig = {
-	  attributes: true,
-	  characterData: false,
-	  childList: true,
-	  subtree: true,
-	  attributeFilter: ['data-l10n-id', 'data-l10n-args']
-	};
-
-	var View = (function () {
-	  function View(service, doc) {
-	    var _this = this;
-
-	    _classCallCheck(this, View);
-
-	    this.service = service;
-	    this.doc = doc;
-	    this.ctx = this.service.env.createContext((0, _bindingsHtmlHead.getResourceLinks)(doc.head));
-
-	    this.ready = new Promise(function (resolve) {
-	      var viewReady = function (evt) {
-	        doc.removeEventListener('DOMLocalized', viewReady);
-	        resolve(evt.detail.languages);
-	      };
-	      doc.addEventListener('DOMLocalized', viewReady);
-	    });
-
-	    var observer = new MutationObserver(onMutations.bind(this));
-	    this.observe = function () {
-	      return observer.observe(_this.doc, observerConfig);
-	    };
-	    this.disconnect = function () {
-	      return observer.disconnect();
-	    };
-
-	    this.observe();
-	  }
-
-	  _createClass(View, [{
-	    key: 'emit',
-	    value: function emit() {
-	      var _service$env;
-
-	      return (_service$env = this.service.env).emit.apply(_service$env, arguments);
-	    }
-	  }, {
-	    key: 'format',
-	    value: function format(id, args) {
-	      var _this2 = this;
-
-	      return this.service.languages.then(function (langs) {
-	        return _this2.ctx.fetch(langs);
-	      }).then(function (langs) {
-	        return _this2.ctx.resolve(langs, id, args);
-	      });
-	    }
-	  }, {
-	    key: 'translateFragment',
-	    value: function translateFragment(frag) {
-	      var _this3 = this;
-
-	      return this.service.languages.then(function (langs) {
-	        return _this3.ctx.fetch(langs);
-	      }).then(function (langs) {
-	        return (0, _dom.translateFragment)(_this3, langs, frag);
-	      });
-	    }
-	  }, {
-	    key: 'languages',
-	    get: function () {
-	      return this.service.languages;
-	    },
-	    set: function (langs) {
-	      return this.service.requestLanguages(langs);
-	    }
-	  }]);
-
-	  return View;
-	})();
-
-	exports.View = View;
-
-	View.prototype.setAttributes = _dom.setAttributes;
-	View.prototype.getAttributes = _dom.getAttributes;
-
-	function onMutations(mutations) {
-	  var _this4 = this;
-
-	  return this.service.languages.then(function (langs) {
-	    return (0, _dom.translateMutations)(_this4, langs, mutations);
-	  });
-	}
-
-	function translate(langs) {
-	  dispatchEvent(this.doc, 'supportedlanguageschange', langs);
-
-	  return this.ctx.fetch(langs).then(translateDocument.bind(this, langs));
-	}
-
-	function translateDocument(langs) {
-	  var view = this;
-	  var doc = this.doc;
-
-	  var setDOMLocalized = function () {
-	    doc.localized = true;
-	    dispatchEvent(doc, 'DOMLocalized', langs);
-	  };
-
-	  if (langs[0].code === doc.documentElement.getAttribute('lang')) {
-	    return Promise.resolve(setDOMLocalized());
-	  }
-
-	  return (0, _dom.translateFragment)(view, langs, doc.documentElement).then(function () {
-	    doc.documentElement.lang = langs[0].code;
-	    doc.documentElement.dir = langs[0].dir;
-	    setDOMLocalized();
-	  });
-	}
-
-	function dispatchEvent(root, name, langs) {
-	  var event = new CustomEvent(name, {
-	    bubbles: false,
-	    cancelable: false,
-	    detail: {
-	      languages: langs
-	    }
-	  });
-	  root.dispatchEvent(event);
-	}
-
-/***/ },
-/* 13 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
-	exports.getResourceLinks = getResourceLinks;
-	exports.getMeta = getMeta;
-
-	function getResourceLinks(head) {
-	  return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
-	    return decodeURI(el.getAttribute('href'));
-	  });
-	}
-
-	function getMeta(head) {
-	  var availableLangs = Object.create(null);
-	  var defaultLang = null;
-	  var appVersion = null;
-
-	  var els = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
-	  var _iteratorNormalCompletion = true;
-	  var _didIteratorError = false;
-	  var _iteratorError = undefined;
-
-	  try {
-	    for (var _iterator = els[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	      var el = _step.value;
-
-	      var _name = el.getAttribute('name');
-	      var content = el.getAttribute('content').trim();
-	      switch (_name) {
-	        case 'availableLanguages':
-	          availableLangs = getLangRevisionMap(availableLangs, content);
-	          break;
-	        case 'defaultLanguage':
-	          var _getLangRevisionTuple = getLangRevisionTuple(content),
-	              _getLangRevisionTuple2 = _slicedToArray(_getLangRevisionTuple, 2),
-	              lang = _getLangRevisionTuple2[0],
-	              rev = _getLangRevisionTuple2[1];
-
-	          defaultLang = lang;
-	          if (!(lang in availableLangs)) {
-	            availableLangs[lang] = rev;
-	          }
-	          break;
-	        case 'appVersion':
-	          appVersion = content;
-	      }
-	    }
-	  } catch (err) {
-	    _didIteratorError = true;
-	    _iteratorError = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion && _iterator['return']) {
-	        _iterator['return']();
-	      }
-	    } finally {
-	      if (_didIteratorError) {
-	        throw _iteratorError;
-	      }
-	    }
-	  }
-
-	  return {
-	    defaultLang: defaultLang,
-	    availableLangs: availableLangs,
-	    appVersion: appVersion
-	  };
-	}
-
-	function getLangRevisionMap(seq, str) {
-	  return str.split(',').reduce(function (seq, cur) {
-	    var _getLangRevisionTuple3 = getLangRevisionTuple(cur);
-
-	    var _getLangRevisionTuple32 = _slicedToArray(_getLangRevisionTuple3, 2);
-
-	    var lang = _getLangRevisionTuple32[0];
-	    var rev = _getLangRevisionTuple32[1];
-
-	    seq[lang] = rev;
-	    return seq;
-	  }, seq);
-	}
-
-	function getLangRevisionTuple(str) {
-	  var _str$trim$split = str.trim().split(':');
-
-	  var _str$trim$split2 = _slicedToArray(_str$trim$split, 2);
-
-	  var lang = _str$trim$split2[0];
-	  var rev = _str$trim$split2[1];
-
-	  return [lang, parseInt(rev)];
-	}
-
-/***/ },
-/* 14 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-	exports.setAttributes = setAttributes;
-	exports.getAttributes = getAttributes;
-	exports.translateMutations = translateMutations;
-	exports.translateFragment = translateFragment;
-	exports.translateElement = translateElement;
-
-	var _libErrors = __webpack_require__(2);
-
-	var reOverlay = /<|&#?\w+;/;
-
-	var allowed = {
-	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
-	  attributes: {
-	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
-	    a: ['download'],
-	    area: ['download', 'alt'],
-
-	    input: ['alt', 'placeholder'],
-	    menuitem: ['label'],
-	    menu: ['label'],
-	    optgroup: ['label'],
-	    option: ['label'],
-	    track: ['label'],
-	    img: ['alt'],
-	    textarea: ['placeholder'],
-	    th: ['abbr']
-	  }
-	};
-
-	function setAttributes(element, id, args) {
-	  element.setAttribute('data-l10n-id', id);
-	  if (args) {
-	    element.setAttribute('data-l10n-args', JSON.stringify(args));
-	  }
-	}
-
-	function getAttributes(element) {
-	  return {
-	    id: element.getAttribute('data-l10n-id'),
-	    args: JSON.parse(element.getAttribute('data-l10n-args'))
-	  };
-	}
-
-	function getTranslatables(element) {
-	  var nodes = [];
-
-	  if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
-	    nodes.push(element);
-	  }
-
-	  return nodes.concat.apply(nodes, element.querySelectorAll('*[data-l10n-id]'));
-	}
-
-	function translateMutations(view, langs, mutations) {
-	  var targets = new Set();
-
-	  var _iteratorNormalCompletion = true;
-	  var _didIteratorError = false;
-	  var _iteratorError = undefined;
-
-	  try {
-	    for (var _iterator = mutations[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	      var mutation = _step.value;
-
-	      switch (mutation.type) {
-	        case 'attributes':
-	          targets.add(mutation.target);
-	          break;
-	        case 'childList':
-	          var _iteratorNormalCompletion2 = true;
-	          var _didIteratorError2 = false;
-	          var _iteratorError2 = undefined;
-
-	          try {
-	            for (var _iterator2 = mutation.addedNodes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	              var addedNode = _step2.value;
-
-	              if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-	                targets.add(addedNode);
-	              }
-	            }
-	          } catch (err) {
-	            _didIteratorError2 = true;
-	            _iteratorError2 = err;
-	          } finally {
-	            try {
-	              if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-	                _iterator2['return']();
-	              }
-	            } finally {
-	              if (_didIteratorError2) {
-	                throw _iteratorError2;
-	              }
-	            }
-	          }
-
-	          break;
-	      }
-	    }
-	  } catch (err) {
-	    _didIteratorError = true;
-	    _iteratorError = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion && _iterator['return']) {
-	        _iterator['return']();
-	      }
-	    } finally {
-	      if (_didIteratorError) {
-	        throw _iteratorError;
-	      }
-	    }
-	  }
-
-	  if (targets.size === 0) {
-	    return;
-	  }
-
-	  var elements = [];
-
-	  targets.forEach(function (target) {
-	    return target.childElementCount ? elements.concat(getTranslatables(target)) : elements.push(target);
-	  });
-
-	  Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
-	}
-
-	function translateFragment(view, langs, frag) {
-	  var elements = getTranslatables(frag);
-	  return Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
-	}
-
-	function camelCaseToDashed(string) {
-	  if (string === 'ariaValueText') {
-	    return 'aria-valuetext';
-	  }
-
-	  return string.replace(/[A-Z]/g, function (match) {
-	    return '-' + match.toLowerCase();
-	  }).replace(/^-/, '');
-	}
-
-	function getElementTranslation(view, langs, elem) {
-	  var l10n = getAttributes(elem);
-
-	  return l10n.id ? view.ctx.resolve(langs, l10n.id, l10n.args) : false;
-	}
-
-	function translateElement(view, langs, elem) {
-	  return getElementTranslation(view, langs, elem).then(function (translation) {
-	    if (!translation) {
-	      return false;
-	    }
-
-	    view.disconnect();
-	    applyTranslation(view, elem, translation);
-	    view.observe();
-	  });
-	}
-
-	function applyTranslations(view, elements, translations) {
-	  view.disconnect();
-	  for (var i = 0; i < elements.length; i++) {
-	    if (translations[i] === false) {
-	      continue;
-	    }
-	    applyTranslation(view, elements[i], translations[i]);
-	  }
-	  view.observe();
-	}
-
-	function applyTranslation(view, element, translation) {
-	  var value = undefined;
-	  if (translation.attrs && translation.attrs.innerHTML) {
-	    value = translation.attrs.innerHTML;
-	    view.emit('deprecatewarning', new _libErrors.L10nError('L10n Deprecation Warning: using innerHTML in translations is unsafe ' + 'and will not be supported in future versions of l10n.js. ' + 'See https://bugzil.la/1027117'));
-	  } else {
-	    value = translation.value;
-	  }
-
-	  if (typeof value === 'string') {
-	    if (!reOverlay.test(value)) {
-	      element.textContent = value;
-	    } else {
-	      var tmpl = element.ownerDocument.createElement('template');
-	      tmpl.innerHTML = value;
-
-	      overlayElement(element, tmpl.content);
-	    }
-	  }
-
-	  for (var key in translation.attrs) {
-	    var attrName = camelCaseToDashed(key);
-	    if (isAttrAllowed({ name: attrName }, element)) {
-	      element.setAttribute(attrName, translation.attrs[key]);
-	    }
-	  }
-	}
-
-	function overlayElement(sourceElement, translationElement) {
-	  var result = translationElement.ownerDocument.createDocumentFragment();
-	  var k = undefined,
-	      attr = undefined;
-
-	  var childElement = undefined;
-	  while (childElement = translationElement.childNodes[0]) {
-	    translationElement.removeChild(childElement);
-
-	    if (childElement.nodeType === childElement.TEXT_NODE) {
-	      result.appendChild(childElement);
-	      continue;
-	    }
-
-	    var index = getIndexOfType(childElement);
-	    var sourceChild = getNthElementOfType(sourceElement, childElement, index);
-	    if (sourceChild) {
-	      overlayElement(sourceChild, childElement);
-	      result.appendChild(sourceChild);
-	      continue;
-	    }
-
-	    if (isElementAllowed(childElement)) {
-	      for (k = 0, attr; attr = childElement.attributes[k]; k++) {
-	        if (!isAttrAllowed(attr, childElement)) {
-	          childElement.removeAttribute(attr.name);
-	        }
-	      }
-	      result.appendChild(childElement);
-	      continue;
-	    }
-
-	    result.appendChild(translationElement.ownerDocument.createTextNode(childElement.textContent));
-	  }
-
-	  sourceElement.textContent = '';
-	  sourceElement.appendChild(result);
-
-	  if (translationElement.attributes) {
-	    for (k = 0, attr; attr = translationElement.attributes[k]; k++) {
-	      if (isAttrAllowed(attr, sourceElement)) {
-	        sourceElement.setAttribute(attr.name, attr.value);
-	      }
-	    }
-	  }
-	}
-
-	function isElementAllowed(element) {
-	  return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
-	}
-
-	function isAttrAllowed(attr, element) {
-	  var attrName = attr.name.toLowerCase();
-	  var tagName = element.tagName.toLowerCase();
-
-	  if (allowed.attributes.global.indexOf(attrName) !== -1) {
-	    return true;
-	  }
-
-	  if (!allowed.attributes[tagName]) {
-	    return false;
-	  }
-
-	  if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
-	    return true;
-	  }
-
-	  if (tagName === 'input' && attrName === 'value') {
-	    var type = element.type.toLowerCase();
-	    if (type === 'submit' || type === 'button' || type === 'reset') {
-	      return true;
-	    }
-	  }
-	  return false;
-	}
-
-	function getNthElementOfType(context, element, index) {
-	  var nthOfType = 0;
-	  for (var i = 0, child = undefined; child = context.children[i]; i++) {
-	    if (child.nodeType === child.ELEMENT_NODE && child.tagName === element.tagName) {
-	      if (nthOfType === index) {
-	        return child;
-	      }
-	      nthOfType++;
-	    }
-	  }
-	  return null;
-	}
-
-	function getIndexOfType(element) {
-	  var index = 0;
-	  var child = undefined;
-	  while (child = element.previousElementSibling) {
-	    if (child.tagName === element.tagName) {
-	      index++;
-	    }
-	  }
-	  return index;
-	}
-
-/***/ },
-/* 15 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-	exports.negotiateLanguages = negotiateLanguages;
-	exports.getDirection = getDirection;
-
-	var _libIntl = __webpack_require__(16);
-
-	var _libPseudo = __webpack_require__(10);
-
-	var rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
-
-	function negotiateLanguages(fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs, requestedLangs) {
-
-	  var allAvailableLangs = Object.keys(availableLangs).concat(additionalLangs || []).concat(Object.keys(_libPseudo.qps));
-	  var newLangs = (0, _libIntl.prioritizeLocales)(defaultLang, allAvailableLangs, requestedLangs);
-
-	  var langs = newLangs.map(function (code) {
-	    return {
-	      code: code,
-	      src: getLangSource(appVersion, availableLangs, additionalLangs, code),
-	      dir: getDirection(code)
-	    };
-	  });
-
-	  if (!arrEqual(prevLangs, newLangs)) {
-	    fn(langs);
-	  }
-
-	  return langs;
-	}
-
-	function getDirection(code) {
-	  return rtlList.indexOf(code) >= 0 ? 'rtl' : 'ltr';
-	}
-
-	function arrEqual(arr1, arr2) {
-	  return arr1.length === arr2.length && arr1.every(function (elem, i) {
-	    return elem === arr2[i];
-	  });
-	}
-
-	function getMatchingLangpack(appVersion, langpacks) {
-	  for (var i = 0, langpack = undefined; langpack = langpacks[i]; i++) {
-	    if (langpack.target === appVersion) {
-	      return langpack;
-	    }
-	  }
-	  return null;
-	}
-
-	function getLangSource(appVersion, availableLangs, additionalLangs, code) {
-	  if (additionalLangs && additionalLangs[code]) {
-	    var lp = getMatchingLangpack(appVersion, additionalLangs[code]);
-	    if (lp && (!(code in availableLangs) || parseInt(lp.revision) > availableLangs[code])) {
-	      return 'extra';
-	    }
-	  }
-
-	  if (code in _libPseudo.qps && !(code in availableLangs)) {
-	    return 'qps';
-	  }
-
-	  return 'app';
-	}
-
-/***/ },
-/* 16 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-	exports.prioritizeLocales = prioritizeLocales;
-
-	function prioritizeLocales(def, availableLangs, requested) {
-	  var supportedLocale = undefined;
-
-	  for (var i = 0; i < requested.length; i++) {
-	    var locale = requested[i];
-	    if (availableLangs.indexOf(locale) !== -1) {
-	      supportedLocale = locale;
-	      break;
-	    }
-	  }
-	  if (!supportedLocale || supportedLocale === def) {
-	    return [def];
-	  }
-
-	  return [supportedLocale, def];
-	}
-
 /***/ }
-/******/ ])));
+/******/ ]);

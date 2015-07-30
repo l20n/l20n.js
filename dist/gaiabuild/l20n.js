@@ -962,8 +962,8 @@ module.exports =
 	        this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), this);
 	      }
 
-	      return this.fetch(langs.slice(1)).then(function (langs) {
-	        return _this.resolve(langs, id, args);
+	      return this.fetch(langs.slice(1)).then(function (nextLangs) {
+	        return _this.resolve(nextLangs, id, args);
 	      });
 	    }
 	  }, {
@@ -1176,8 +1176,9 @@ module.exports =
 	    }
 	  }
 
-	  if ('other' in expr) {
-	    return resolveValue(locals, ctx, lang, args, expr.other);
+	  var defaultKey = expr.__default || 'other';
+	  if (defaultKey in expr) {
+	    return resolveValue(locals, ctx, lang, args, expr[defaultKey]);
 	  }
 
 	  throw new _errors.L10nError('Unresolvable value');
