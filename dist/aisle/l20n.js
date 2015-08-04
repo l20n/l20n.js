@@ -46,9 +46,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
 
@@ -62,9 +60,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -563,13 +559,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	exports.__esModule = true;
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
 
@@ -582,12 +572,9 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	    this.type = this.constructor.name;
 	  }
 
-	  _createClass(Node, [{
-	    key: 'setPosition',
-	    value: function setPosition(start, end) {
-	      this._pos = { start: start, end: end };
-	    }
-	  }]);
+	  Node.prototype.setPosition = function setPosition(start, end) {
+	    this._pos = { start: start, end: end };
+	  };
 
 	  return Node;
 	})();
@@ -598,7 +585,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Entry() {
 	    _classCallCheck(this, Entry);
 
-	    _get(Object.getPrototypeOf(Entry.prototype), 'constructor', this).call(this);
+	    _Node.call(this);
 	  }
 
 	  return Entry;
@@ -610,7 +597,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Identifier(name) {
 	    _classCallCheck(this, Identifier);
 
-	    _get(Object.getPrototypeOf(Identifier.prototype), 'constructor', this).call(this);
+	    _Node2.call(this);
 	    this.name = name;
 	  }
 
@@ -623,7 +610,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Variable(name) {
 	    _classCallCheck(this, Variable);
 
-	    _get(Object.getPrototypeOf(Variable.prototype), 'constructor', this).call(this);
+	    _Node3.call(this);
 	    this.name = name;
 	  }
 
@@ -636,7 +623,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Global(name) {
 	    _classCallCheck(this, Global);
 
-	    _get(Object.getPrototypeOf(Global.prototype), 'constructor', this).call(this);
+	    _Node4.call(this);
 	    this.name = name;
 	  }
 
@@ -649,7 +636,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Value() {
 	    _classCallCheck(this, Value);
 
-	    _get(Object.getPrototypeOf(Value.prototype), 'constructor', this).call(this);
+	    _Node5.call(this);
 	  }
 
 	  return Value;
@@ -661,7 +648,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function String(source, content) {
 	    _classCallCheck(this, String);
 
-	    _get(Object.getPrototypeOf(String.prototype), 'constructor', this).call(this);
+	    _Value.call(this);
 	    this.source = source;
 	    this.content = content;
 
@@ -677,7 +664,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Hash(items) {
 	    _classCallCheck(this, Hash);
 
-	    _get(Object.getPrototypeOf(Hash.prototype), 'constructor', this).call(this);
+	    _Value2.call(this);
 	    this.items = items;
 	  }
 
@@ -694,7 +681,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, Entity);
 
-	    _get(Object.getPrototypeOf(Entity.prototype), 'constructor', this).call(this);
+	    _Entry.call(this);
 	    this.id = id;
 	    this.value = value;
 	    this.index = index;
@@ -710,7 +697,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Resource() {
 	    _classCallCheck(this, Resource);
 
-	    _get(Object.getPrototypeOf(Resource.prototype), 'constructor', this).call(this);
+	    _Node6.call(this);
 	    this.body = [];
 	  }
 
@@ -725,7 +712,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, Attribute);
 
-	    _get(Object.getPrototypeOf(Attribute.prototype), 'constructor', this).call(this);
+	    _Node7.call(this);
 	    this.id = id;
 	    this.value = value;
 	    this.index = index;
@@ -740,7 +727,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function HashItem(id, value, defItem) {
 	    _classCallCheck(this, HashItem);
 
-	    _get(Object.getPrototypeOf(HashItem.prototype), 'constructor', this).call(this);
+	    _Node8.call(this);
 	    this.id = id;
 	    this.value = value;
 	    this.default = defItem;
@@ -755,7 +742,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Comment(body) {
 	    _classCallCheck(this, Comment);
 
-	    _get(Object.getPrototypeOf(Comment.prototype), 'constructor', this).call(this);
+	    _Entry2.call(this);
 	    this.body = body;
 	  }
 
@@ -768,7 +755,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function Expression() {
 	    _classCallCheck(this, Expression);
 
-	    _get(Object.getPrototypeOf(Expression.prototype), 'constructor', this).call(this);
+	    _Node9.call(this);
 	  }
 
 	  return Expression;
@@ -782,7 +769,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, PropertyExpression);
 
-	    _get(Object.getPrototypeOf(PropertyExpression.prototype), 'constructor', this).call(this);
+	    _Expression.call(this);
 	    this.idref = idref;
 	    this.exp = exp;
 	    this.computed = computed;
@@ -797,7 +784,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function CallExpression(callee, args) {
 	    _classCallCheck(this, CallExpression);
 
-	    _get(Object.getPrototypeOf(CallExpression.prototype), 'constructor', this).call(this);
+	    _Expression2.call(this);
 	    this.callee = callee;
 	    this.args = args;
 	  }
@@ -811,7 +798,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 	  function JunkEntry(content) {
 	    _classCallCheck(this, JunkEntry);
 
-	    _get(Object.getPrototypeOf(JunkEntry.prototype), 'constructor', this).call(this);
+	    _Entry3.call(this);
 	    this.content = content;
 	  }
 
@@ -844,9 +831,7 @@ define(function() { return /******/ (function(modules) { // webpackBootstrap
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.L10nError = L10nError;
 
 	function L10nError(message, id, lang) {

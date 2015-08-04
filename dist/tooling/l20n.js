@@ -47,38 +47,21 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	function _interopRequire(obj) { return obj && obj.__esModule ? obj['default'] : obj; }
 
 	var _webIo = __webpack_require__(1);
 
-	Object.defineProperty(exports, 'fetch', {
-	  enumerable: true,
-	  get: function get() {
-	    return _webIo.fetch;
-	  }
-	});
+	exports.fetch = _webIo.fetch;
 
 	var _bindingsHtmlService = __webpack_require__(3);
 
-	Object.defineProperty(exports, 'Service', {
-	  enumerable: true,
-	  get: function get() {
-	    return _bindingsHtmlService.Service;
-	  }
-	});
+	exports.Service = _bindingsHtmlService.Service;
 
 	var _bindingsHtmlView = __webpack_require__(12);
 
-	Object.defineProperty(exports, 'View', {
-	  enumerable: true,
-	  get: function get() {
-	    return _bindingsHtmlView.View;
-	  }
-	});
+	exports.View = _bindingsHtmlView.View;
 
 	var _libFormatL20nAstParser = __webpack_require__(17);
 
@@ -102,114 +85,44 @@ var L20n =
 
 	var _libContext = __webpack_require__(5);
 
-	Object.defineProperty(exports, 'Context', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libContext.Context;
-	  }
-	});
+	exports.Context = _libContext.Context;
 
 	var _libEnv = __webpack_require__(4);
 
-	Object.defineProperty(exports, 'Env', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libEnv.Env;
-	  }
-	});
+	exports.Env = _libEnv.Env;
 
 	var _libErrors = __webpack_require__(2);
 
-	Object.defineProperty(exports, 'L10nError', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libErrors.L10nError;
-	  }
-	});
+	exports.L10nError = _libErrors.L10nError;
 
 	var _libEvents = __webpack_require__(11);
 
-	Object.defineProperty(exports, 'emit', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libEvents.emit;
-	  }
-	});
-	Object.defineProperty(exports, 'addEventListener', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libEvents.addEventListener;
-	  }
-	});
-	Object.defineProperty(exports, 'removeEventListener', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libEvents.removeEventListener;
-	  }
-	});
+	exports.emit = _libEvents.emit;
+	exports.addEventListener = _libEvents.addEventListener;
+	exports.removeEventListener = _libEvents.removeEventListener;
 
 	var _libIntl = __webpack_require__(16);
 
-	Object.defineProperty(exports, 'prioritizeLocales', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libIntl.prioritizeLocales;
-	  }
-	});
+	exports.prioritizeLocales = _libIntl.prioritizeLocales;
 
 	var _libMocks = __webpack_require__(21);
 
-	Object.defineProperty(exports, 'MockContext', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libMocks.MockContext;
-	  }
-	});
-	Object.defineProperty(exports, 'lang', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libMocks.lang;
-	  }
-	});
+	exports.MockContext = _libMocks.MockContext;
+	exports.lang = _libMocks.lang;
 
 	var _libPlurals = __webpack_require__(7);
 
-	Object.defineProperty(exports, 'getPluralRule', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libPlurals.getPluralRule;
-	  }
-	});
+	exports.getPluralRule = _libPlurals.getPluralRule;
 
 	var _libPseudo = __webpack_require__(10);
 
-	Object.defineProperty(exports, 'walkEntry', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libPseudo.walkEntry;
-	  }
-	});
-	Object.defineProperty(exports, 'walkValue', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libPseudo.walkValue;
-	  }
-	});
-	Object.defineProperty(exports, 'qps', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libPseudo.qps;
-	  }
-	});
+	exports.walkEntry = _libPseudo.walkEntry;
+	exports.walkValue = _libPseudo.walkValue;
+	exports.qps = _libPseudo.qps;
 
 	var _libResolver = __webpack_require__(6);
 
-	Object.defineProperty(exports, 'format', {
-	  enumerable: true,
-	  get: function get() {
-	    return _libResolver.format;
-	  }
-	});
+	exports.format = _libResolver.format;
 
 /***/ },
 /* 1 */
@@ -217,9 +130,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.fetch = fetch;
 
 	var _libErrors = __webpack_require__(2);
@@ -288,9 +199,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.L10nError = L10nError;
 
 	function L10nError(message, id, lang) {
@@ -309,14 +218,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
+	exports.__esModule = true;
 	exports.getAdditionalLanguages = getAdditionalLanguages;
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
@@ -333,7 +235,7 @@ var L20n =
 	  function Service(fetch) {
 	    _classCallCheck(this, Service);
 
-	    var meta = (0, _head.getMeta)(document.head);
+	    var meta = _head.getMeta(document.head);
 	    this.defaultLanguage = meta.defaultLang;
 	    this.availableLanguages = meta.availableLangs;
 	    this.appVersion = meta.appVersion;
@@ -346,19 +248,15 @@ var L20n =
 	    });
 	  }
 
-	  _createClass(Service, [{
-	    key: 'requestLanguages',
-	    value: function requestLanguages() {
-	      var requestedLangs = arguments.length <= 0 || arguments[0] === undefined ? navigator.languages : arguments[0];
+	  Service.prototype.requestLanguages = function requestLanguages() {
+	    var requestedLangs = arguments.length <= 0 || arguments[0] === undefined ? navigator.languages : arguments[0];
 
-	      return changeLanguages.call(this, getAdditionalLanguages(), requestedLangs);
-	    }
-	  }, {
-	    key: 'handleEvent',
-	    value: function handleEvent(evt) {
-	      return changeLanguages.call(this, evt.detail || getAdditionalLanguages(), navigator.languages);
-	    }
-	  }]);
+	    return changeLanguages.call(this, getAdditionalLanguages(), requestedLangs);
+	  };
+
+	  Service.prototype.handleEvent = function handleEvent(evt) {
+	    return changeLanguages.call(this, evt.detail || getAdditionalLanguages(), navigator.languages);
+	  };
 
 	  return Service;
 	})();
@@ -386,11 +284,9 @@ var L20n =
 
 	  var prevLangs = this.languages || [];
 	  return this.languages = Promise.all([additionalLangs, prevLangs]).then(function (_ref) {
-	    var _ref2 = _slicedToArray(_ref, 2);
-
-	    var additionalLangs = _ref2[0];
-	    var prevLangs = _ref2[1];
-	    return (0, _langs.negotiateLanguages)(translateViews.bind(_this), _this.appVersion, _this.defaultLanguage, _this.availableLanguages, additionalLangs, prevLangs, requestedLangs);
+	    var additionalLangs = _ref[0];
+	    var prevLangs = _ref[1];
+	    return _langs.negotiateLanguages(translateViews.bind(_this), _this.appVersion, _this.defaultLanguage, _this.availableLanguages, additionalLangs, prevLangs, requestedLangs);
 	  });
 	}
 
@@ -400,12 +296,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
+	exports.__esModule = true;
 	exports.amendError = amendError;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -446,69 +337,63 @@ var L20n =
 	    this.removeEventListener = _events.removeEventListener.bind(this, listeners);
 	  }
 
-	  _createClass(Env, [{
-	    key: 'createContext',
-	    value: function createContext(resIds) {
-	      return new _context.Context(this, resIds);
+	  Env.prototype.createContext = function createContext(resIds) {
+	    return new _context.Context(this, resIds);
+	  };
+
+	  Env.prototype._parse = function _parse(syntax, lang, data) {
+	    var _this = this;
+
+	    var parser = parsers[syntax];
+	    if (!parser) {
+	      return data;
 	    }
-	  }, {
-	    key: '_parse',
-	    value: function _parse(syntax, lang, data) {
-	      var _this = this;
 
-	      var parser = parsers[syntax];
-	      if (!parser) {
-	        return data;
-	      }
+	    var emit = function (type, err) {
+	      return _this.emit(type, amendError(lang, err));
+	    };
+	    return parser.parse.call(parser, emit, data);
+	  };
 
-	      var emit = function (type, err) {
-	        return _this.emit(type, amendError(lang, err));
-	      };
-	      return parser.parse.call(parser, emit, data);
+	  Env.prototype._create = function _create(lang, entries) {
+	    if (lang.src !== 'qps') {
+	      return entries;
 	    }
-	  }, {
-	    key: '_create',
-	    value: function _create(lang, entries) {
-	      if (lang.src !== 'qps') {
-	        return entries;
-	      }
 
-	      var pseudoentries = Object.create(null);
-	      for (var key in entries) {
-	        pseudoentries[key] = (0, _pseudo.walkEntry)(entries[key], _pseudo.qps[lang.code].translate);
-	      }
-	      return pseudoentries;
+	    var pseudoentries = Object.create(null);
+	    for (var key in entries) {
+	      pseudoentries[key] = _pseudo.walkEntry(entries[key], _pseudo.qps[lang.code].translate);
 	    }
-	  }, {
-	    key: '_getResource',
-	    value: function _getResource(lang, res) {
-	      var _this2 = this;
+	    return pseudoentries;
+	  };
 
-	      var cache = this._resCache;
-	      var id = res + lang.code + lang.src;
+	  Env.prototype._getResource = function _getResource(lang, res) {
+	    var _this2 = this;
 
-	      if (cache[id]) {
-	        return cache[id];
-	      }
+	    var cache = this._resCache;
+	    var id = res + lang.code + lang.src;
 
-	      var syntax = res.substr(res.lastIndexOf('.') + 1);
-
-	      var saveEntries = function (data) {
-	        var entries = _this2._parse(syntax, lang, data);
-	        cache[id] = _this2._create(lang, entries);
-	      };
-
-	      var recover = function (err) {
-	        err.lang = lang;
-	        _this2.emit('fetcherror', err);
-	        cache[id] = err;
-	      };
-
-	      var langToFetch = lang.src === 'qps' ? { code: this.defaultLang, src: 'app' } : lang;
-
-	      return cache[id] = this.fetch(res, langToFetch).then(saveEntries, recover);
+	    if (cache[id]) {
+	      return cache[id];
 	    }
-	  }]);
+
+	    var syntax = res.substr(res.lastIndexOf('.') + 1);
+
+	    var saveEntries = function (data) {
+	      var entries = _this2._parse(syntax, lang, data);
+	      cache[id] = _this2._create(lang, entries);
+	    };
+
+	    var recover = function (err) {
+	      err.lang = lang;
+	      _this2.emit('fetcherror', err);
+	      cache[id] = err;
+	    };
+
+	    var langToFetch = lang.src === 'qps' ? { code: this.defaultLang, src: 'app' } : lang;
+
+	    return cache[id] = this.fetch(res, langToFetch).then(saveEntries, recover);
+	  };
 
 	  return Env;
 	})();
@@ -526,13 +411,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	exports.__esModule = true;
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -550,109 +429,97 @@ var L20n =
 	    this._resIds = resIds;
 	  }
 
-	  _createClass(Context, [{
-	    key: '_formatTuple',
-	    value: function _formatTuple(lang, args, entity, id, key) {
-	      try {
-	        return (0, _resolver.format)(this, lang, args, entity);
-	      } catch (err) {
-	        err.id = key ? id + '::' + key : id;
-	        err.lang = lang;
-	        this._env.emit('resolveerror', err, this);
-	        return [{ error: err }, err.id];
+	  Context.prototype._formatTuple = function _formatTuple(lang, args, entity, id, key) {
+	    try {
+	      return _resolver.format(this, lang, args, entity);
+	    } catch (err) {
+	      err.id = key ? id + '::' + key : id;
+	      err.lang = lang;
+	      this._env.emit('resolveerror', err, this);
+	      return [{ error: err }, err.id];
+	    }
+	  };
+
+	  Context.prototype._formatEntity = function _formatEntity(lang, args, entity, id) {
+	    var _formatTuple$call = this._formatTuple.call(this, lang, args, entity, id);
+
+	    var value = _formatTuple$call[1];
+
+	    var formatted = {
+	      value: value,
+	      attrs: null
+	    };
+
+	    if (entity.attrs) {
+	      formatted.attrs = Object.create(null);
+	      for (var key in entity.attrs) {
+	        var _formatTuple$call2 = this._formatTuple.call(this, lang, args, entity.attrs[key], id, key);
+
+	        var attrValue = _formatTuple$call2[1];
+
+	        formatted.attrs[key] = attrValue;
 	      }
 	    }
-	  }, {
-	    key: '_formatEntity',
-	    value: function _formatEntity(lang, args, entity, id) {
-	      var _formatTuple$call = this._formatTuple.call(this, lang, args, entity, id);
 
-	      var _formatTuple$call2 = _slicedToArray(_formatTuple$call, 2);
+	    return formatted;
+	  };
 
-	      var value = _formatTuple$call2[1];
-
-	      var formatted = {
-	        value: value,
-	        attrs: null
-	      };
-
-	      if (entity.attrs) {
-	        formatted.attrs = Object.create(null);
-	        for (var key in entity.attrs) {
-	          var _formatTuple$call3 = this._formatTuple.call(this, lang, args, entity.attrs[key], id, key);
-
-	          var _formatTuple$call32 = _slicedToArray(_formatTuple$call3, 2);
-
-	          var attrValue = _formatTuple$call32[1];
-
-	          formatted.attrs[key] = attrValue;
-	        }
-	      }
-
-	      return formatted;
+	  Context.prototype.fetch = function fetch(langs) {
+	    if (langs.length === 0) {
+	      return Promise.resolve(langs);
 	    }
-	  }, {
-	    key: 'fetch',
-	    value: function fetch(langs) {
-	      if (langs.length === 0) {
-	        return Promise.resolve(langs);
-	      }
 
-	      return Promise.all(this._resIds.map(this._env._getResource.bind(this._env, langs[0]))).then(function () {
-	        return langs;
-	      });
+	    return Promise.all(this._resIds.map(this._env._getResource.bind(this._env, langs[0]))).then(function () {
+	      return langs;
+	    });
+	  };
+
+	  Context.prototype.resolve = function resolve(langs, id, args) {
+	    var _this = this;
+
+	    var lang = langs[0];
+
+	    if (!lang) {
+	      this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in any language', id), this);
+	      return { value: id, attrs: null };
 	    }
-	  }, {
-	    key: 'resolve',
-	    value: function resolve(langs, id, args) {
-	      var _this = this;
 
-	      var lang = langs[0];
+	    var entity = this._getEntity(lang, id);
 
-	      if (!lang) {
-	        this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in any language', id), this);
-	        return { value: id, attrs: null };
-	      }
-
-	      var entity = this._getEntity(lang, id);
-
-	      if (entity) {
-	        return Promise.resolve(this._formatEntity(lang, args, entity, id));
-	      } else {
-	        this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), this);
-	      }
-
-	      return this.fetch(langs.slice(1)).then(function (nextLangs) {
-	        return _this.resolve(nextLangs, id, args);
-	      });
+	    if (entity) {
+	      return Promise.resolve(this._formatEntity(lang, args, entity, id));
+	    } else {
+	      this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), this);
 	    }
-	  }, {
-	    key: '_getEntity',
-	    value: function _getEntity(lang, id) {
-	      var cache = this._env._resCache;
 
-	      for (var i = 0, resId = undefined; resId = this._resIds[i]; i++) {
-	        var resource = cache[resId + lang.code + lang.src];
-	        if (resource instanceof _errors.L10nError) {
-	          continue;
-	        }
-	        if (id in resource) {
-	          return resource[id];
-	        }
+	    return this.fetch(langs.slice(1)).then(function (nextLangs) {
+	      return _this.resolve(nextLangs, id, args);
+	    });
+	  };
+
+	  Context.prototype._getEntity = function _getEntity(lang, id) {
+	    var cache = this._env._resCache;
+
+	    for (var i = 0, resId = undefined; resId = this._resIds[i]; i++) {
+	      var resource = cache[resId + lang.code + lang.src];
+	      if (resource instanceof _errors.L10nError) {
+	        continue;
 	      }
-	      return undefined;
-	    }
-	  }, {
-	    key: '_getMacro',
-	    value: function _getMacro(lang, id) {
-	      switch (id) {
-	        case 'plural':
-	          return (0, _plurals.getPluralRule)(lang.code);
-	        default:
-	          return undefined;
+	      if (id in resource) {
+	        return resource[id];
 	      }
 	    }
-	  }]);
+	    return undefined;
+	  };
+
+	  Context.prototype._getMacro = function _getMacro(lang, id) {
+	    switch (id) {
+	      case 'plural':
+	        return _plurals.getPluralRule(lang.code);
+	      default:
+	        return undefined;
+	    }
+	  };
 
 	  return Context;
 	})();
@@ -665,12 +532,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
+	exports.__esModule = true;
 	exports.format = format;
 
 	var _errors = __webpack_require__(2);
@@ -764,19 +626,15 @@ var L20n =
 
 	function interpolate(locals, ctx, lang, args, arr) {
 	  return arr.reduce(function (_ref, cur) {
-	    var _ref2 = _slicedToArray(_ref, 2);
-
-	    var localsSeq = _ref2[0];
-	    var valueSeq = _ref2[1];
+	    var localsSeq = _ref[0];
+	    var valueSeq = _ref[1];
 
 	    if (typeof cur === 'string') {
 	      return [localsSeq, valueSeq + cur];
 	    } else {
 	      var _subPlaceable = subPlaceable(locals, ctx, lang, args, cur.name);
 
-	      var _subPlaceable2 = _slicedToArray(_subPlaceable, 2);
-
-	      var value = _subPlaceable2[1];
+	      var value = _subPlaceable[1];
 
 	      return [localsSeq, valueSeq + value];
 	    }
@@ -850,9 +708,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.getPluralRule = getPluralRule;
 	var locales2rules = {
 	  'af': 3,
@@ -1302,9 +1158,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	var _errors = __webpack_require__(2);
 
@@ -1530,11 +1384,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+	exports.__esModule = true;
 
 	var _errors = __webpack_require__(2);
 
@@ -1832,11 +1682,9 @@ var L20n =
 	    while (true) {
 	      var _getHashItem = this.getHashItem();
 
-	      var _getHashItem2 = _slicedToArray(_getHashItem, 3);
-
-	      var key = _getHashItem2[0];
-	      var value = _getHashItem2[1];
-	      var def = _getHashItem2[2];
+	      var key = _getHashItem[0];
+	      var value = _getHashItem[1];
+	      var def = _getHashItem[2];
 
 	      items[key] = value;
 
@@ -2050,9 +1898,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.walkEntry = walkEntry;
 	exports.walkValue = walkValue;
 
@@ -2164,9 +2010,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.emit = emit;
 	exports.addEventListener = addEventListener;
 	exports.removeEventListener = removeEventListener;
@@ -2216,9 +2060,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
@@ -2246,7 +2088,7 @@ var L20n =
 
 	    this.service = service;
 	    this.doc = doc;
-	    this.ctx = this.service.env.createContext((0, _bindingsHtmlHead.getResourceLinks)(doc.head));
+	    this.ctx = this.service.env.createContext(_bindingsHtmlHead.getResourceLinks(doc.head));
 
 	    this.ready = new Promise(function (resolve) {
 	      var viewReady = function (evt) {
@@ -2267,36 +2109,33 @@ var L20n =
 	    this.observe();
 	  }
 
+	  View.prototype.emit = function emit() {
+	    var _service$env;
+
+	    return (_service$env = this.service.env).emit.apply(_service$env, arguments);
+	  };
+
+	  View.prototype.format = function format(id, args) {
+	    var _this2 = this;
+
+	    return this.service.languages.then(function (langs) {
+	      return _this2.ctx.fetch(langs);
+	    }).then(function (langs) {
+	      return _this2.ctx.resolve(langs, id, args);
+	    });
+	  };
+
+	  View.prototype.translateFragment = function translateFragment(frag) {
+	    var _this3 = this;
+
+	    return this.service.languages.then(function (langs) {
+	      return _this3.ctx.fetch(langs);
+	    }).then(function (langs) {
+	      return _dom.translateFragment(_this3, langs, frag);
+	    });
+	  };
+
 	  _createClass(View, [{
-	    key: 'emit',
-	    value: function emit() {
-	      var _service$env;
-
-	      return (_service$env = this.service.env).emit.apply(_service$env, arguments);
-	    }
-	  }, {
-	    key: 'format',
-	    value: function format(id, args) {
-	      var _this2 = this;
-
-	      return this.service.languages.then(function (langs) {
-	        return _this2.ctx.fetch(langs);
-	      }).then(function (langs) {
-	        return _this2.ctx.resolve(langs, id, args);
-	      });
-	    }
-	  }, {
-	    key: 'translateFragment',
-	    value: function translateFragment(frag) {
-	      var _this3 = this;
-
-	      return this.service.languages.then(function (langs) {
-	        return _this3.ctx.fetch(langs);
-	      }).then(function (langs) {
-	        return (0, _dom.translateFragment)(_this3, langs, frag);
-	      });
-	    }
-	  }, {
 	    key: 'languages',
 	    get: function () {
 	      return this.service.languages;
@@ -2318,7 +2157,7 @@ var L20n =
 	  var _this4 = this;
 
 	  return this.service.languages.then(function (langs) {
-	    return (0, _dom.translateMutations)(_this4, langs, mutations);
+	    return _dom.translateMutations(_this4, langs, mutations);
 	  });
 	}
 
@@ -2341,7 +2180,7 @@ var L20n =
 	    return Promise.resolve(setDOMLocalized());
 	  }
 
-	  return (0, _dom.translateFragment)(view, langs, doc.documentElement).then(function () {
+	  return _dom.translateFragment(view, langs, doc.documentElement).then(function () {
 	    doc.documentElement.lang = langs[0].code;
 	    doc.documentElement.dir = langs[0].dir;
 	    setDOMLocalized();
@@ -2365,14 +2204,13 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
+	exports.__esModule = true;
 	exports.getResourceLinks = getResourceLinks;
 	exports.getMeta = getMeta;
+
+	if (!NodeList.prototype[Symbol.iterator]) {
+	  NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
+	}
 
 	function getResourceLinks(head) {
 	  return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
@@ -2385,48 +2223,39 @@ var L20n =
 	  var defaultLang = null;
 	  var appVersion = null;
 
-	  var els = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
-	  var _iteratorNormalCompletion = true;
-	  var _didIteratorError = false;
-	  var _iteratorError = undefined;
+	  var metas = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
+	  for (var _iterator = metas, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+	    var _ref;
 
-	  try {
-	    for (var _iterator = els[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	      var el = _step.value;
-
-	      var _name = el.getAttribute('name');
-	      var content = el.getAttribute('content').trim();
-	      switch (_name) {
-	        case 'availableLanguages':
-	          availableLangs = getLangRevisionMap(availableLangs, content);
-	          break;
-	        case 'defaultLanguage':
-	          var _getLangRevisionTuple = getLangRevisionTuple(content),
-	              _getLangRevisionTuple2 = _slicedToArray(_getLangRevisionTuple, 2),
-	              lang = _getLangRevisionTuple2[0],
-	              rev = _getLangRevisionTuple2[1];
-
-	          defaultLang = lang;
-	          if (!(lang in availableLangs)) {
-	            availableLangs[lang] = rev;
-	          }
-	          break;
-	        case 'appVersion':
-	          appVersion = content;
-	      }
+	    if (_isArray) {
+	      if (_i >= _iterator.length) break;
+	      _ref = _iterator[_i++];
+	    } else {
+	      _i = _iterator.next();
+	      if (_i.done) break;
+	      _ref = _i.value;
 	    }
-	  } catch (err) {
-	    _didIteratorError = true;
-	    _iteratorError = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion && _iterator['return']) {
-	        _iterator['return']();
-	      }
-	    } finally {
-	      if (_didIteratorError) {
-	        throw _iteratorError;
-	      }
+
+	    var meta = _ref;
+
+	    var _name = meta.getAttribute('name');
+	    var content = meta.getAttribute('content').trim();
+	    switch (_name) {
+	      case 'availableLanguages':
+	        availableLangs = getLangRevisionMap(availableLangs, content);
+	        break;
+	      case 'defaultLanguage':
+	        var _getLangRevisionTuple = getLangRevisionTuple(content),
+	            lang = _getLangRevisionTuple[0],
+	            rev = _getLangRevisionTuple[1];
+
+	        defaultLang = lang;
+	        if (!(lang in availableLangs)) {
+	          availableLangs[lang] = rev;
+	        }
+	        break;
+	      case 'appVersion':
+	        appVersion = content;
 	    }
 	  }
 
@@ -2439,12 +2268,10 @@ var L20n =
 
 	function getLangRevisionMap(seq, str) {
 	  return str.split(',').reduce(function (seq, cur) {
-	    var _getLangRevisionTuple3 = getLangRevisionTuple(cur);
+	    var _getLangRevisionTuple2 = getLangRevisionTuple(cur);
 
-	    var _getLangRevisionTuple32 = _slicedToArray(_getLangRevisionTuple3, 2);
-
-	    var lang = _getLangRevisionTuple32[0];
-	    var rev = _getLangRevisionTuple32[1];
+	    var lang = _getLangRevisionTuple2[0];
+	    var rev = _getLangRevisionTuple2[1];
 
 	    seq[lang] = rev;
 	    return seq;
@@ -2454,10 +2281,8 @@ var L20n =
 	function getLangRevisionTuple(str) {
 	  var _str$trim$split = str.trim().split(':');
 
-	  var _str$trim$split2 = _slicedToArray(_str$trim$split, 2);
-
-	  var lang = _str$trim$split2[0];
-	  var rev = _str$trim$split2[1];
+	  var lang = _str$trim$split[0];
+	  var rev = _str$trim$split[1];
 
 	  return [lang, parseInt(rev)];
 	}
@@ -2468,9 +2293,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.setAttributes = setAttributes;
 	exports.getAttributes = getAttributes;
 	exports.translateMutations = translateMutations;
@@ -2527,61 +2350,44 @@ var L20n =
 	function translateMutations(view, langs, mutations) {
 	  var targets = new Set();
 
-	  var _iteratorNormalCompletion = true;
-	  var _didIteratorError = false;
-	  var _iteratorError = undefined;
+	  for (var _iterator = mutations, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+	    var _ref;
 
-	  try {
-	    for (var _iterator = mutations[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-	      var mutation = _step.value;
+	    if (_isArray) {
+	      if (_i >= _iterator.length) break;
+	      _ref = _iterator[_i++];
+	    } else {
+	      _i = _iterator.next();
+	      if (_i.done) break;
+	      _ref = _i.value;
+	    }
 
-	      switch (mutation.type) {
-	        case 'attributes':
-	          targets.add(mutation.target);
-	          break;
-	        case 'childList':
-	          var _iteratorNormalCompletion2 = true;
-	          var _didIteratorError2 = false;
-	          var _iteratorError2 = undefined;
+	    var mutation = _ref;
 
-	          try {
-	            for (var _iterator2 = mutation.addedNodes[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-	              var addedNode = _step2.value;
+	    switch (mutation.type) {
+	      case 'attributes':
+	        targets.add(mutation.target);
+	        break;
+	      case 'childList':
+	        for (var _iterator2 = mutation.addedNodes, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+	          var _ref2;
 
-	              if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-	                targets.add(addedNode);
-	              }
-	            }
-	          } catch (err) {
-	            _didIteratorError2 = true;
-	            _iteratorError2 = err;
-	          } finally {
-	            try {
-	              if (!_iteratorNormalCompletion2 && _iterator2['return']) {
-	                _iterator2['return']();
-	              }
-	            } finally {
-	              if (_didIteratorError2) {
-	                throw _iteratorError2;
-	              }
-	            }
+	          if (_isArray2) {
+	            if (_i2 >= _iterator2.length) break;
+	            _ref2 = _iterator2[_i2++];
+	          } else {
+	            _i2 = _iterator2.next();
+	            if (_i2.done) break;
+	            _ref2 = _i2.value;
 	          }
 
-	          break;
-	      }
-	    }
-	  } catch (err) {
-	    _didIteratorError = true;
-	    _iteratorError = err;
-	  } finally {
-	    try {
-	      if (!_iteratorNormalCompletion && _iterator['return']) {
-	        _iterator['return']();
-	      }
-	    } finally {
-	      if (_didIteratorError) {
-	        throw _iteratorError;
-	      }
+	          var addedNode = _ref2;
+
+	          if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
+	            targets.add(addedNode);
+	          }
+	        }
+	        break;
 	    }
 	  }
 
@@ -2701,12 +2507,9 @@ var L20n =
 	    }
 
 	    if (isElementAllowed(childElement)) {
-	      for (k = 0, attr; attr = childElement.attributes[k]; k++) {
-	        if (!isAttrAllowed(attr, childElement)) {
-	          childElement.removeAttribute(attr.name);
-	        }
-	      }
-	      result.appendChild(childElement);
+	      var sanitizedChild = childElement.ownerDocument.createElement(childElement.nodeName);
+	      overlayElement(sanitizedChild, childElement);
+	      result.appendChild(sanitizedChild);
 	      continue;
 	    }
 
@@ -2784,9 +2587,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.negotiateLanguages = negotiateLanguages;
 	exports.getDirection = getDirection;
 
@@ -2799,7 +2600,7 @@ var L20n =
 	function negotiateLanguages(fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs, requestedLangs) {
 
 	  var allAvailableLangs = Object.keys(availableLangs).concat(additionalLangs || []).concat(Object.keys(_libPseudo.qps));
-	  var newLangs = (0, _libIntl.prioritizeLocales)(defaultLang, allAvailableLangs, requestedLangs);
+	  var newLangs = _libIntl.prioritizeLocales(defaultLang, allAvailableLangs, requestedLangs);
 
 	  var langs = newLangs.map(function (code) {
 	    return {
@@ -2856,9 +2657,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.prioritizeLocales = prioritizeLocales;
 
 	function prioritizeLocales(def, availableLangs, requested) {
@@ -2884,9 +2683,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
@@ -3385,13 +3182,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	exports.__esModule = true;
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) subClass.__proto__ = superClass; }
 
@@ -3404,12 +3195,9 @@ var L20n =
 	    this.type = this.constructor.name;
 	  }
 
-	  _createClass(Node, [{
-	    key: 'setPosition',
-	    value: function setPosition(start, end) {
-	      this._pos = { start: start, end: end };
-	    }
-	  }]);
+	  Node.prototype.setPosition = function setPosition(start, end) {
+	    this._pos = { start: start, end: end };
+	  };
 
 	  return Node;
 	})();
@@ -3420,7 +3208,7 @@ var L20n =
 	  function Entry() {
 	    _classCallCheck(this, Entry);
 
-	    _get(Object.getPrototypeOf(Entry.prototype), 'constructor', this).call(this);
+	    _Node.call(this);
 	  }
 
 	  return Entry;
@@ -3432,7 +3220,7 @@ var L20n =
 	  function Identifier(name) {
 	    _classCallCheck(this, Identifier);
 
-	    _get(Object.getPrototypeOf(Identifier.prototype), 'constructor', this).call(this);
+	    _Node2.call(this);
 	    this.name = name;
 	  }
 
@@ -3445,7 +3233,7 @@ var L20n =
 	  function Variable(name) {
 	    _classCallCheck(this, Variable);
 
-	    _get(Object.getPrototypeOf(Variable.prototype), 'constructor', this).call(this);
+	    _Node3.call(this);
 	    this.name = name;
 	  }
 
@@ -3458,7 +3246,7 @@ var L20n =
 	  function Global(name) {
 	    _classCallCheck(this, Global);
 
-	    _get(Object.getPrototypeOf(Global.prototype), 'constructor', this).call(this);
+	    _Node4.call(this);
 	    this.name = name;
 	  }
 
@@ -3471,7 +3259,7 @@ var L20n =
 	  function Value() {
 	    _classCallCheck(this, Value);
 
-	    _get(Object.getPrototypeOf(Value.prototype), 'constructor', this).call(this);
+	    _Node5.call(this);
 	  }
 
 	  return Value;
@@ -3483,7 +3271,7 @@ var L20n =
 	  function String(source, content) {
 	    _classCallCheck(this, String);
 
-	    _get(Object.getPrototypeOf(String.prototype), 'constructor', this).call(this);
+	    _Value.call(this);
 	    this.source = source;
 	    this.content = content;
 
@@ -3499,7 +3287,7 @@ var L20n =
 	  function Hash(items) {
 	    _classCallCheck(this, Hash);
 
-	    _get(Object.getPrototypeOf(Hash.prototype), 'constructor', this).call(this);
+	    _Value2.call(this);
 	    this.items = items;
 	  }
 
@@ -3516,7 +3304,7 @@ var L20n =
 
 	    _classCallCheck(this, Entity);
 
-	    _get(Object.getPrototypeOf(Entity.prototype), 'constructor', this).call(this);
+	    _Entry.call(this);
 	    this.id = id;
 	    this.value = value;
 	    this.index = index;
@@ -3532,7 +3320,7 @@ var L20n =
 	  function Resource() {
 	    _classCallCheck(this, Resource);
 
-	    _get(Object.getPrototypeOf(Resource.prototype), 'constructor', this).call(this);
+	    _Node6.call(this);
 	    this.body = [];
 	  }
 
@@ -3547,7 +3335,7 @@ var L20n =
 
 	    _classCallCheck(this, Attribute);
 
-	    _get(Object.getPrototypeOf(Attribute.prototype), 'constructor', this).call(this);
+	    _Node7.call(this);
 	    this.id = id;
 	    this.value = value;
 	    this.index = index;
@@ -3562,7 +3350,7 @@ var L20n =
 	  function HashItem(id, value, defItem) {
 	    _classCallCheck(this, HashItem);
 
-	    _get(Object.getPrototypeOf(HashItem.prototype), 'constructor', this).call(this);
+	    _Node8.call(this);
 	    this.id = id;
 	    this.value = value;
 	    this.default = defItem;
@@ -3577,7 +3365,7 @@ var L20n =
 	  function Comment(body) {
 	    _classCallCheck(this, Comment);
 
-	    _get(Object.getPrototypeOf(Comment.prototype), 'constructor', this).call(this);
+	    _Entry2.call(this);
 	    this.body = body;
 	  }
 
@@ -3590,7 +3378,7 @@ var L20n =
 	  function Expression() {
 	    _classCallCheck(this, Expression);
 
-	    _get(Object.getPrototypeOf(Expression.prototype), 'constructor', this).call(this);
+	    _Node9.call(this);
 	  }
 
 	  return Expression;
@@ -3604,7 +3392,7 @@ var L20n =
 
 	    _classCallCheck(this, PropertyExpression);
 
-	    _get(Object.getPrototypeOf(PropertyExpression.prototype), 'constructor', this).call(this);
+	    _Expression.call(this);
 	    this.idref = idref;
 	    this.exp = exp;
 	    this.computed = computed;
@@ -3619,7 +3407,7 @@ var L20n =
 	  function CallExpression(callee, args) {
 	    _classCallCheck(this, CallExpression);
 
-	    _get(Object.getPrototypeOf(CallExpression.prototype), 'constructor', this).call(this);
+	    _Expression2.call(this);
 	    this.callee = callee;
 	    this.args = args;
 	  }
@@ -3633,7 +3421,7 @@ var L20n =
 	  function JunkEntry(content) {
 	    _classCallCheck(this, JunkEntry);
 
-	    _get(Object.getPrototypeOf(JunkEntry.prototype), 'constructor', this).call(this);
+	    _Entry3.call(this);
 	    this.content = content;
 	  }
 
@@ -3666,9 +3454,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	var _errors = __webpack_require__(2);
 
@@ -3884,9 +3670,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	exports.default = function () {
 	  this.serialize = function (ast) {
@@ -4009,9 +3793,7 @@ var L20n =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.createEntriesFromSource = createEntriesFromSource;
 	exports.MockContext = MockContext;
 
@@ -4043,7 +3825,7 @@ var L20n =
 	  this._getMacro = function (lang, id) {
 	    switch (id) {
 	      case 'plural':
-	        return (0, _plurals.getPluralRule)(lang.code);
+	        return _plurals.getPluralRule(lang.code);
 	      default:
 	        return undefined;
 	    }

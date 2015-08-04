@@ -47,9 +47,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	var _io = __webpack_require__(1);
 
@@ -67,9 +65,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.fetch = fetch;
 
 	var _fs = __webpack_require__(2);
@@ -78,7 +74,7 @@ module.exports =
 
 	function load(url) {
 	  return new Promise(function (resolve, reject) {
-	    (0, _fs.readFile)(url, function (err, data) {
+	    _fs.readFile(url, function (err, data) {
 	      if (err) {
 	        reject(new _libErrors.L10nError(err.message));
 	      } else {
@@ -105,9 +101,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.L10nError = L10nError;
 
 	function L10nError(message, id, lang) {
@@ -126,12 +120,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
+	exports.__esModule = true;
 	exports.amendError = amendError;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -172,69 +161,63 @@ module.exports =
 	    this.removeEventListener = _events.removeEventListener.bind(this, listeners);
 	  }
 
-	  _createClass(Env, [{
-	    key: 'createContext',
-	    value: function createContext(resIds) {
-	      return new _context.Context(this, resIds);
+	  Env.prototype.createContext = function createContext(resIds) {
+	    return new _context.Context(this, resIds);
+	  };
+
+	  Env.prototype._parse = function _parse(syntax, lang, data) {
+	    var _this = this;
+
+	    var parser = parsers[syntax];
+	    if (!parser) {
+	      return data;
 	    }
-	  }, {
-	    key: '_parse',
-	    value: function _parse(syntax, lang, data) {
-	      var _this = this;
 
-	      var parser = parsers[syntax];
-	      if (!parser) {
-	        return data;
-	      }
+	    var emit = function (type, err) {
+	      return _this.emit(type, amendError(lang, err));
+	    };
+	    return parser.parse.call(parser, emit, data);
+	  };
 
-	      var emit = function (type, err) {
-	        return _this.emit(type, amendError(lang, err));
-	      };
-	      return parser.parse.call(parser, emit, data);
+	  Env.prototype._create = function _create(lang, entries) {
+	    if (lang.src !== 'qps') {
+	      return entries;
 	    }
-	  }, {
-	    key: '_create',
-	    value: function _create(lang, entries) {
-	      if (lang.src !== 'qps') {
-	        return entries;
-	      }
 
-	      var pseudoentries = Object.create(null);
-	      for (var key in entries) {
-	        pseudoentries[key] = (0, _pseudo.walkEntry)(entries[key], _pseudo.qps[lang.code].translate);
-	      }
-	      return pseudoentries;
+	    var pseudoentries = Object.create(null);
+	    for (var key in entries) {
+	      pseudoentries[key] = _pseudo.walkEntry(entries[key], _pseudo.qps[lang.code].translate);
 	    }
-	  }, {
-	    key: '_getResource',
-	    value: function _getResource(lang, res) {
-	      var _this2 = this;
+	    return pseudoentries;
+	  };
 
-	      var cache = this._resCache;
-	      var id = res + lang.code + lang.src;
+	  Env.prototype._getResource = function _getResource(lang, res) {
+	    var _this2 = this;
 
-	      if (cache[id]) {
-	        return cache[id];
-	      }
+	    var cache = this._resCache;
+	    var id = res + lang.code + lang.src;
 
-	      var syntax = res.substr(res.lastIndexOf('.') + 1);
-
-	      var saveEntries = function (data) {
-	        var entries = _this2._parse(syntax, lang, data);
-	        cache[id] = _this2._create(lang, entries);
-	      };
-
-	      var recover = function (err) {
-	        err.lang = lang;
-	        _this2.emit('fetcherror', err);
-	        cache[id] = err;
-	      };
-
-	      var langToFetch = lang.src === 'qps' ? { code: this.defaultLang, src: 'app' } : lang;
-
-	      return cache[id] = this.fetch(res, langToFetch).then(saveEntries, recover);
+	    if (cache[id]) {
+	      return cache[id];
 	    }
-	  }]);
+
+	    var syntax = res.substr(res.lastIndexOf('.') + 1);
+
+	    var saveEntries = function (data) {
+	      var entries = _this2._parse(syntax, lang, data);
+	      cache[id] = _this2._create(lang, entries);
+	    };
+
+	    var recover = function (err) {
+	      err.lang = lang;
+	      _this2.emit('fetcherror', err);
+	      cache[id] = err;
+	    };
+
+	    var langToFetch = lang.src === 'qps' ? { code: this.defaultLang, src: 'app' } : lang;
+
+	    return cache[id] = this.fetch(res, langToFetch).then(saveEntries, recover);
+	  };
 
 	  return Env;
 	})();
@@ -252,13 +235,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+	exports.__esModule = true;
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
@@ -276,109 +253,97 @@ module.exports =
 	    this._resIds = resIds;
 	  }
 
-	  _createClass(Context, [{
-	    key: '_formatTuple',
-	    value: function _formatTuple(lang, args, entity, id, key) {
-	      try {
-	        return (0, _resolver.format)(this, lang, args, entity);
-	      } catch (err) {
-	        err.id = key ? id + '::' + key : id;
-	        err.lang = lang;
-	        this._env.emit('resolveerror', err, this);
-	        return [{ error: err }, err.id];
+	  Context.prototype._formatTuple = function _formatTuple(lang, args, entity, id, key) {
+	    try {
+	      return _resolver.format(this, lang, args, entity);
+	    } catch (err) {
+	      err.id = key ? id + '::' + key : id;
+	      err.lang = lang;
+	      this._env.emit('resolveerror', err, this);
+	      return [{ error: err }, err.id];
+	    }
+	  };
+
+	  Context.prototype._formatEntity = function _formatEntity(lang, args, entity, id) {
+	    var _formatTuple$call = this._formatTuple.call(this, lang, args, entity, id);
+
+	    var value = _formatTuple$call[1];
+
+	    var formatted = {
+	      value: value,
+	      attrs: null
+	    };
+
+	    if (entity.attrs) {
+	      formatted.attrs = Object.create(null);
+	      for (var key in entity.attrs) {
+	        var _formatTuple$call2 = this._formatTuple.call(this, lang, args, entity.attrs[key], id, key);
+
+	        var attrValue = _formatTuple$call2[1];
+
+	        formatted.attrs[key] = attrValue;
 	      }
 	    }
-	  }, {
-	    key: '_formatEntity',
-	    value: function _formatEntity(lang, args, entity, id) {
-	      var _formatTuple$call = this._formatTuple.call(this, lang, args, entity, id);
 
-	      var _formatTuple$call2 = _slicedToArray(_formatTuple$call, 2);
+	    return formatted;
+	  };
 
-	      var value = _formatTuple$call2[1];
-
-	      var formatted = {
-	        value: value,
-	        attrs: null
-	      };
-
-	      if (entity.attrs) {
-	        formatted.attrs = Object.create(null);
-	        for (var key in entity.attrs) {
-	          var _formatTuple$call3 = this._formatTuple.call(this, lang, args, entity.attrs[key], id, key);
-
-	          var _formatTuple$call32 = _slicedToArray(_formatTuple$call3, 2);
-
-	          var attrValue = _formatTuple$call32[1];
-
-	          formatted.attrs[key] = attrValue;
-	        }
-	      }
-
-	      return formatted;
+	  Context.prototype.fetch = function fetch(langs) {
+	    if (langs.length === 0) {
+	      return Promise.resolve(langs);
 	    }
-	  }, {
-	    key: 'fetch',
-	    value: function fetch(langs) {
-	      if (langs.length === 0) {
-	        return Promise.resolve(langs);
-	      }
 
-	      return Promise.all(this._resIds.map(this._env._getResource.bind(this._env, langs[0]))).then(function () {
-	        return langs;
-	      });
+	    return Promise.all(this._resIds.map(this._env._getResource.bind(this._env, langs[0]))).then(function () {
+	      return langs;
+	    });
+	  };
+
+	  Context.prototype.resolve = function resolve(langs, id, args) {
+	    var _this = this;
+
+	    var lang = langs[0];
+
+	    if (!lang) {
+	      this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in any language', id), this);
+	      return { value: id, attrs: null };
 	    }
-	  }, {
-	    key: 'resolve',
-	    value: function resolve(langs, id, args) {
-	      var _this = this;
 
-	      var lang = langs[0];
+	    var entity = this._getEntity(lang, id);
 
-	      if (!lang) {
-	        this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in any language', id), this);
-	        return { value: id, attrs: null };
-	      }
-
-	      var entity = this._getEntity(lang, id);
-
-	      if (entity) {
-	        return Promise.resolve(this._formatEntity(lang, args, entity, id));
-	      } else {
-	        this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), this);
-	      }
-
-	      return this.fetch(langs.slice(1)).then(function (nextLangs) {
-	        return _this.resolve(nextLangs, id, args);
-	      });
+	    if (entity) {
+	      return Promise.resolve(this._formatEntity(lang, args, entity, id));
+	    } else {
+	      this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), this);
 	    }
-	  }, {
-	    key: '_getEntity',
-	    value: function _getEntity(lang, id) {
-	      var cache = this._env._resCache;
 
-	      for (var i = 0, resId = undefined; resId = this._resIds[i]; i++) {
-	        var resource = cache[resId + lang.code + lang.src];
-	        if (resource instanceof _errors.L10nError) {
-	          continue;
-	        }
-	        if (id in resource) {
-	          return resource[id];
-	        }
+	    return this.fetch(langs.slice(1)).then(function (nextLangs) {
+	      return _this.resolve(nextLangs, id, args);
+	    });
+	  };
+
+	  Context.prototype._getEntity = function _getEntity(lang, id) {
+	    var cache = this._env._resCache;
+
+	    for (var i = 0, resId = undefined; resId = this._resIds[i]; i++) {
+	      var resource = cache[resId + lang.code + lang.src];
+	      if (resource instanceof _errors.L10nError) {
+	        continue;
 	      }
-	      return undefined;
-	    }
-	  }, {
-	    key: '_getMacro',
-	    value: function _getMacro(lang, id) {
-	      switch (id) {
-	        case 'plural':
-	          return (0, _plurals.getPluralRule)(lang.code);
-	        default:
-	          return undefined;
+	      if (id in resource) {
+	        return resource[id];
 	      }
 	    }
-	  }]);
+	    return undefined;
+	  };
+
+	  Context.prototype._getMacro = function _getMacro(lang, id) {
+	    switch (id) {
+	      case 'plural':
+	        return _plurals.getPluralRule(lang.code);
+	      default:
+	        return undefined;
+	    }
+	  };
 
 	  return Context;
 	})();
@@ -391,12 +356,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
-
+	exports.__esModule = true;
 	exports.format = format;
 
 	var _errors = __webpack_require__(3);
@@ -490,19 +450,15 @@ module.exports =
 
 	function interpolate(locals, ctx, lang, args, arr) {
 	  return arr.reduce(function (_ref, cur) {
-	    var _ref2 = _slicedToArray(_ref, 2);
-
-	    var localsSeq = _ref2[0];
-	    var valueSeq = _ref2[1];
+	    var localsSeq = _ref[0];
+	    var valueSeq = _ref[1];
 
 	    if (typeof cur === 'string') {
 	      return [localsSeq, valueSeq + cur];
 	    } else {
 	      var _subPlaceable = subPlaceable(locals, ctx, lang, args, cur.name);
 
-	      var _subPlaceable2 = _slicedToArray(_subPlaceable, 2);
-
-	      var value = _subPlaceable2[1];
+	      var value = _subPlaceable[1];
 
 	      return [localsSeq, valueSeq + value];
 	    }
@@ -576,9 +532,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.getPluralRule = getPluralRule;
 	var locales2rules = {
 	  'af': 3,
@@ -1028,9 +982,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 
 	var _errors = __webpack_require__(3);
 
@@ -1256,11 +1208,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i['return']) _i['return'](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError('Invalid attempt to destructure non-iterable instance'); } }; })();
+	exports.__esModule = true;
 
 	var _errors = __webpack_require__(3);
 
@@ -1558,11 +1506,9 @@ module.exports =
 	    while (true) {
 	      var _getHashItem = this.getHashItem();
 
-	      var _getHashItem2 = _slicedToArray(_getHashItem, 3);
-
-	      var key = _getHashItem2[0];
-	      var value = _getHashItem2[1];
-	      var def = _getHashItem2[2];
+	      var key = _getHashItem[0];
+	      var value = _getHashItem[1];
+	      var def = _getHashItem[2];
 
 	      items[key] = value;
 
@@ -1776,9 +1722,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.walkEntry = walkEntry;
 	exports.walkValue = walkValue;
 
@@ -1890,9 +1834,7 @@ module.exports =
 
 	'use strict';
 
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
+	exports.__esModule = true;
 	exports.emit = emit;
 	exports.addEventListener = addEventListener;
 	exports.removeEventListener = removeEventListener;

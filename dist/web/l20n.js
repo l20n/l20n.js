@@ -266,13 +266,9 @@
         }
 
         if (isElementAllowed(childElement)) {
-          for (k = 0, attr; attr = childElement.attributes[k]; k++) {
-            if (!isAttrAllowed(attr, childElement)) {
-              childElement.removeAttribute(attr.name);
-            }
-          }
-
-          result.appendChild(childElement);
+          const sanitizedChild = childElement.ownerDocument.createElement(childElement.nodeName);
+          overlayElement(sanitizedChild, childElement);
+          result.appendChild(sanitizedChild);
           continue;
         }
 
@@ -354,6 +350,10 @@
     return { setAttributes, getAttributes, translateMutations, translateFragment, translateElement };
   });
   modules.set('bindings/html/head', function () {
+    if (!NodeList.prototype[Symbol.iterator]) {
+      NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
+    }
+
     function getResourceLinks(head) {
       return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), el => decodeURI(el.getAttribute('href')));
     }
@@ -362,11 +362,11 @@
       let availableLangs = Object.create(null);
       let defaultLang = null;
       let appVersion = null;
-      const els = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
+      const metas = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
 
-      for (let el of els) {
-        const name = el.getAttribute('name');
-        const content = el.getAttribute('content').trim();
+      for (let meta of metas) {
+        const name = meta.getAttribute('name');
+        const content = meta.getAttribute('content').trim();
 
         switch (name) {
           case 'availableLanguages':
