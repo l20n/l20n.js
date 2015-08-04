@@ -40,6 +40,7 @@ module.exports = function (grunt) {
     shell: require('./grunt/config/shell'),
     uglify: require('./grunt/config/uglify'),
     watch: require('./grunt/config/watch'),
+    bump: require('./grunt/config/bump'),
   });
 
   // Add copies of watched tasks with an added filter option.
@@ -77,19 +78,16 @@ module.exports = function (grunt) {
     'concat:jsshell',
   ]);
 
-  grunt.registerTask('dist', [
+  grunt.registerTask('gaia', [
     'concat:web',
     'copy:gaia'
   ]);
 
   grunt.registerTask('release', [
-    'concat:web',
+    'lint',
+    'test',
+    'build',
     'uglify'
   ]);
 
-  grunt.registerTask('default', [
-    'lint',
-    'test',
-    'dist',
-  ]);
 };
