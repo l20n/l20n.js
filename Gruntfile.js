@@ -37,6 +37,7 @@ module.exports = function (grunt) {
     shell: require('./grunt/config/shell'),
     uglify: require('./grunt/config/uglify'),
     watch: require('./grunt/config/watch'),
+    bump: require('./grunt/config/bump'),
   });
 
 
@@ -72,9 +73,8 @@ module.exports = function (grunt) {
   ]);
 
   grunt.registerTask('build', [
-    'clean',
-    'compile:html',
-    'uglify:html',
+    'compile',
+    'uglify',
   ]);
 
   grunt.registerTask('gh-pages', [
@@ -97,10 +97,10 @@ module.exports = function (grunt) {
     ]);
   });
 
-  grunt.registerTask('default', [
-    'merge-conflict',
+  grunt.registerTask('release', [
     'lint',
-    'build',
     'test',
+    'clean',
+    'build',
   ]);
 };
