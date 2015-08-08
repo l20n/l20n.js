@@ -553,7 +553,6 @@
     const { L10nError } = getModule('lib/errors');
     const KNOWN_MACROS = ['plural'];
     const MAX_PLACEABLE_LENGTH = 2500;
-    const nonLatin1 = /[^\x01-\xFF]/;
     const FSI = '⁨';
     const PDI = '⁩';
     const resolutionChain = new WeakSet();
@@ -627,10 +626,6 @@
           throw new L10nError('Too many characters in placeable (' + value.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')');
         }
 
-        if (locals.contextIsNonLatin1 || value.match(nonLatin1)) {
-          res[1] = FSI + value + PDI;
-        }
-
         return res;
       }
 
@@ -643,7 +638,7 @@
           return [localsSeq, valueSeq + cur];
         } else {
           const [, value] = subPlaceable(locals, ctx, lang, args, cur.name);
-          return [localsSeq, valueSeq + value];
+          return [localsSeq, valueSeq + FSI + value + PDI];
         }
       }, [locals, '']);
     }
@@ -692,9 +687,6 @@
       }
 
       if (Array.isArray(expr)) {
-        locals.contextIsNonLatin1 = expr.some(function ($_) {
-          return typeof $_ === 'string' && $_.match(nonLatin1);
-        });
         return interpolate(locals, ctx, lang, args, expr);
       }
 

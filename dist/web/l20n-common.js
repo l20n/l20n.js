@@ -1,4 +1,5 @@
-(function(e, a) { for(var i in a) e[i] = a[i]; }(this, /******/ (function(modules) { // webpackBootstrap
+module.exports =
+/******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
 
@@ -46,37 +47,17 @@
 
 	'use strict';
 
+	exports.__esModule = true;
+
 	var _io = __webpack_require__(1);
 
-	var _bindingsHtmlService = __webpack_require__(3);
+	var _libEnv = __webpack_require__(3);
 
-	var readyStates = {
-	  loading: 0,
-	  interactive: 1,
-	  complete: 2
+	exports.default = {
+	  fetch: _io.fetch,
+	  Env: _libEnv.Env
 	};
-
-	function whenInteractive(callback) {
-	  if (readyStates[document.readyState] >= readyStates.interactive) {
-	    return callback();
-	  }
-
-	  document.addEventListener('readystatechange', function onrsc() {
-	    if (readyStates[document.readyState] >= readyStates.interactive) {
-	      document.removeEventListener('readystatechange', onrsc);
-	      callback();
-	    }
-	  });
-	}
-
-	function init() {
-	  var service = new _bindingsHtmlService.Service(_io.fetch);
-	  window.addEventListener('languagechange', service);
-	  document.addEventListener('additionallanguageschange', service);
-	  document.l10n.languages = navigator.languages;
-	}
-
-	whenInteractive(init);
+	module.exports = exports.default;
 
 /***/ },
 /* 1 */
@@ -173,103 +154,25 @@
 	'use strict';
 
 	exports.__esModule = true;
-	exports.getAdditionalLanguages = getAdditionalLanguages;
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _libEnv = __webpack_require__(4);
-
-	var _view = __webpack_require__(12);
-
-	var _head = __webpack_require__(13);
-
-	var _langs = __webpack_require__(15);
-
-	var Service = (function () {
-	  function Service(fetch) {
-	    _classCallCheck(this, Service);
-
-	    var meta = _head.getMeta(document.head);
-	    this.defaultLanguage = meta.defaultLang;
-	    this.availableLanguages = meta.availableLangs;
-	    this.appVersion = meta.appVersion;
-
-	    this.env = new _libEnv.Env(this.defaultLanguage, fetch.bind(null, this.appVersion));
-	    this.views = [document.l10n = new _view.View(this, document)];
-
-	    this.env.addEventListener('deprecatewarning', function (err) {
-	      return console.warn(err);
-	    });
-	  }
-
-	  Service.prototype.requestLanguages = function requestLanguages() {
-	    var requestedLangs = arguments.length <= 0 || arguments[0] === undefined ? navigator.languages : arguments[0];
-
-	    return changeLanguages.call(this, getAdditionalLanguages(), requestedLangs);
-	  };
-
-	  Service.prototype.handleEvent = function handleEvent(evt) {
-	    return changeLanguages.call(this, evt.detail || getAdditionalLanguages(), navigator.languages);
-	  };
-
-	  return Service;
-	})();
-
-	exports.Service = Service;
-
-	function getAdditionalLanguages() {
-	  if (navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
-	    return navigator.mozApps.getAdditionalLanguages().catch(function () {
-	      return [];
-	    });
-	  }
-
-	  return Promise.resolve([]);
-	}
-
-	function translateViews(langs) {
-	  return Promise.all(this.views.map(function (view) {
-	    return _view.translate.call(view, langs);
-	  }));
-	}
-
-	function changeLanguages(additionalLangs, requestedLangs) {
-	  var _this = this;
-
-	  var prevLangs = this.languages || [];
-	  return this.languages = Promise.all([additionalLangs, prevLangs]).then(function (_ref) {
-	    var additionalLangs = _ref[0];
-	    var prevLangs = _ref[1];
-	    return _langs.negotiateLanguages(translateViews.bind(_this), _this.appVersion, _this.defaultLanguage, _this.availableLanguages, additionalLangs, prevLangs, requestedLangs);
-	  });
-	}
-
-/***/ },
-/* 4 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	exports.__esModule = true;
 	exports.amendError = amendError;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _context = __webpack_require__(5);
+	var _context = __webpack_require__(4);
 
-	var _formatPropertiesParser = __webpack_require__(8);
+	var _formatPropertiesParser = __webpack_require__(7);
 
 	var _formatPropertiesParser2 = _interopRequireDefault(_formatPropertiesParser);
 
-	var _formatL20nEntriesParser = __webpack_require__(9);
+	var _formatL20nEntriesParser = __webpack_require__(8);
 
 	var _formatL20nEntriesParser2 = _interopRequireDefault(_formatL20nEntriesParser);
 
-	var _pseudo = __webpack_require__(10);
+	var _pseudo = __webpack_require__(9);
 
-	var _events = __webpack_require__(11);
+	var _events = __webpack_require__(10);
 
 	var parsers = {
 	  properties: _formatPropertiesParser2.default,
@@ -360,7 +263,7 @@
 	}
 
 /***/ },
-/* 5 */
+/* 4 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -371,9 +274,9 @@
 
 	var _errors = __webpack_require__(2);
 
-	var _resolver = __webpack_require__(6);
+	var _resolver = __webpack_require__(5);
 
-	var _plurals = __webpack_require__(7);
+	var _plurals = __webpack_require__(6);
 
 	var Context = (function () {
 	  function Context(env, resIds) {
@@ -481,7 +384,7 @@
 	exports.Context = Context;
 
 /***/ },
-/* 6 */
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -647,7 +550,7 @@
 	}
 
 /***/ },
-/* 7 */
+/* 6 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1097,7 +1000,7 @@
 	}
 
 /***/ },
-/* 8 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1323,7 +1226,7 @@
 	module.exports = exports.default;
 
 /***/ },
-/* 9 */
+/* 8 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1837,7 +1740,7 @@
 	module.exports = exports.default;
 
 /***/ },
-/* 10 */
+/* 9 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1949,7 +1852,7 @@
 	exports.qps = qps;
 
 /***/ },
-/* 11 */
+/* 10 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1998,620 +1901,5 @@
 	  typeListeners.splice(pos, 1);
 	}
 
-/***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	exports.__esModule = true;
-
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
-	exports.translate = translate;
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _bindingsHtmlHead = __webpack_require__(13);
-
-	var _dom = __webpack_require__(14);
-
-	var observerConfig = {
-	  attributes: true,
-	  characterData: false,
-	  childList: true,
-	  subtree: true,
-	  attributeFilter: ['data-l10n-id', 'data-l10n-args']
-	};
-
-	var View = (function () {
-	  function View(service, doc) {
-	    var _this = this;
-
-	    _classCallCheck(this, View);
-
-	    this.service = service;
-	    this.doc = doc;
-	    this.ctx = this.service.env.createContext(_bindingsHtmlHead.getResourceLinks(doc.head));
-
-	    this.ready = new Promise(function (resolve) {
-	      var viewReady = function (evt) {
-	        doc.removeEventListener('DOMLocalized', viewReady);
-	        resolve(evt.detail.languages);
-	      };
-	      doc.addEventListener('DOMLocalized', viewReady);
-	    });
-
-	    var observer = new MutationObserver(onMutations.bind(this));
-	    this.observe = function () {
-	      return observer.observe(_this.doc, observerConfig);
-	    };
-	    this.disconnect = function () {
-	      return observer.disconnect();
-	    };
-
-	    this.observe();
-	  }
-
-	  View.prototype.emit = function emit() {
-	    var _service$env;
-
-	    return (_service$env = this.service.env).emit.apply(_service$env, arguments);
-	  };
-
-	  View.prototype.format = function format(id, args) {
-	    var _this2 = this;
-
-	    return this.service.languages.then(function (langs) {
-	      return _this2.ctx.fetch(langs);
-	    }).then(function (langs) {
-	      return _this2.ctx.resolve(langs, id, args);
-	    });
-	  };
-
-	  View.prototype.translateFragment = function translateFragment(frag) {
-	    var _this3 = this;
-
-	    return this.service.languages.then(function (langs) {
-	      return _this3.ctx.fetch(langs);
-	    }).then(function (langs) {
-	      return _dom.translateFragment(_this3, langs, frag);
-	    });
-	  };
-
-	  _createClass(View, [{
-	    key: 'languages',
-	    get: function () {
-	      return this.service.languages;
-	    },
-	    set: function (langs) {
-	      return this.service.requestLanguages(langs);
-	    }
-	  }]);
-
-	  return View;
-	})();
-
-	exports.View = View;
-
-	View.prototype.setAttributes = _dom.setAttributes;
-	View.prototype.getAttributes = _dom.getAttributes;
-
-	function onMutations(mutations) {
-	  var _this4 = this;
-
-	  return this.service.languages.then(function (langs) {
-	    return _dom.translateMutations(_this4, langs, mutations);
-	  });
-	}
-
-	function translate(langs) {
-	  dispatchEvent(this.doc, 'supportedlanguageschange', langs);
-
-	  return this.ctx.fetch(langs).then(translateDocument.bind(this, langs));
-	}
-
-	function translateDocument(langs) {
-	  var view = this;
-	  var doc = this.doc;
-
-	  var setDOMLocalized = function () {
-	    doc.localized = true;
-	    dispatchEvent(doc, 'DOMLocalized', langs);
-	  };
-
-	  if (langs[0].code === doc.documentElement.getAttribute('lang')) {
-	    return Promise.resolve(setDOMLocalized());
-	  }
-
-	  return _dom.translateFragment(view, langs, doc.documentElement).then(function () {
-	    doc.documentElement.lang = langs[0].code;
-	    doc.documentElement.dir = langs[0].dir;
-	    setDOMLocalized();
-	  });
-	}
-
-	function dispatchEvent(root, name, langs) {
-	  var event = new CustomEvent(name, {
-	    bubbles: false,
-	    cancelable: false,
-	    detail: {
-	      languages: langs
-	    }
-	  });
-	  root.dispatchEvent(event);
-	}
-
-/***/ },
-/* 13 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.getResourceLinks = getResourceLinks;
-	exports.getMeta = getMeta;
-
-	if (typeof NodeList === 'function' && !NodeList.prototype[Symbol.iterator]) {
-	  NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
-	}
-
-	function getResourceLinks(head) {
-	  return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
-	    return decodeURI(el.getAttribute('href'));
-	  });
-	}
-
-	function getMeta(head) {
-	  var availableLangs = Object.create(null);
-	  var defaultLang = null;
-	  var appVersion = null;
-
-	  var metas = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
-	  for (var _iterator = metas, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-	    var _ref;
-
-	    if (_isArray) {
-	      if (_i >= _iterator.length) break;
-	      _ref = _iterator[_i++];
-	    } else {
-	      _i = _iterator.next();
-	      if (_i.done) break;
-	      _ref = _i.value;
-	    }
-
-	    var meta = _ref;
-
-	    var _name = meta.getAttribute('name');
-	    var content = meta.getAttribute('content').trim();
-	    switch (_name) {
-	      case 'availableLanguages':
-	        availableLangs = getLangRevisionMap(availableLangs, content);
-	        break;
-	      case 'defaultLanguage':
-	        var _getLangRevisionTuple = getLangRevisionTuple(content),
-	            lang = _getLangRevisionTuple[0],
-	            rev = _getLangRevisionTuple[1];
-
-	        defaultLang = lang;
-	        if (!(lang in availableLangs)) {
-	          availableLangs[lang] = rev;
-	        }
-	        break;
-	      case 'appVersion':
-	        appVersion = content;
-	    }
-	  }
-
-	  return {
-	    defaultLang: defaultLang,
-	    availableLangs: availableLangs,
-	    appVersion: appVersion
-	  };
-	}
-
-	function getLangRevisionMap(seq, str) {
-	  return str.split(',').reduce(function (seq, cur) {
-	    var _getLangRevisionTuple2 = getLangRevisionTuple(cur);
-
-	    var lang = _getLangRevisionTuple2[0];
-	    var rev = _getLangRevisionTuple2[1];
-
-	    seq[lang] = rev;
-	    return seq;
-	  }, seq);
-	}
-
-	function getLangRevisionTuple(str) {
-	  var _str$trim$split = str.trim().split(':');
-
-	  var lang = _str$trim$split[0];
-	  var rev = _str$trim$split[1];
-
-	  return [lang, parseInt(rev)];
-	}
-
-/***/ },
-/* 14 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.setAttributes = setAttributes;
-	exports.getAttributes = getAttributes;
-	exports.translateMutations = translateMutations;
-	exports.translateFragment = translateFragment;
-	exports.translateElement = translateElement;
-
-	var reOverlay = /<|&#?\w+;/;
-
-	var allowed = {
-	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
-	  attributes: {
-	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
-	    a: ['download'],
-	    area: ['download', 'alt'],
-
-	    input: ['alt', 'placeholder'],
-	    menuitem: ['label'],
-	    menu: ['label'],
-	    optgroup: ['label'],
-	    option: ['label'],
-	    track: ['label'],
-	    img: ['alt'],
-	    textarea: ['placeholder'],
-	    th: ['abbr']
-	  }
-	};
-
-	function setAttributes(element, id, args) {
-	  element.setAttribute('data-l10n-id', id);
-	  if (args) {
-	    element.setAttribute('data-l10n-args', JSON.stringify(args));
-	  }
-	}
-
-	function getAttributes(element) {
-	  return {
-	    id: element.getAttribute('data-l10n-id'),
-	    args: JSON.parse(element.getAttribute('data-l10n-args'))
-	  };
-	}
-
-	function getTranslatables(element) {
-	  var nodes = [];
-
-	  if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
-	    nodes.push(element);
-	  }
-
-	  return nodes.concat.apply(nodes, element.querySelectorAll('*[data-l10n-id]'));
-	}
-
-	function translateMutations(view, langs, mutations) {
-	  var targets = new Set();
-
-	  for (var _iterator = mutations, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-	    var _ref;
-
-	    if (_isArray) {
-	      if (_i >= _iterator.length) break;
-	      _ref = _iterator[_i++];
-	    } else {
-	      _i = _iterator.next();
-	      if (_i.done) break;
-	      _ref = _i.value;
-	    }
-
-	    var mutation = _ref;
-
-	    switch (mutation.type) {
-	      case 'attributes':
-	        targets.add(mutation.target);
-	        break;
-	      case 'childList':
-	        for (var _iterator2 = mutation.addedNodes, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-	          var _ref2;
-
-	          if (_isArray2) {
-	            if (_i2 >= _iterator2.length) break;
-	            _ref2 = _iterator2[_i2++];
-	          } else {
-	            _i2 = _iterator2.next();
-	            if (_i2.done) break;
-	            _ref2 = _i2.value;
-	          }
-
-	          var addedNode = _ref2;
-
-	          if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-	            targets.add(addedNode);
-	          }
-	        }
-	        break;
-	    }
-	  }
-
-	  if (targets.size === 0) {
-	    return;
-	  }
-
-	  var elements = [];
-
-	  targets.forEach(function (target) {
-	    return target.childElementCount ? elements.push.apply(elements, getTranslatables(target)) : elements.push(target);
-	  });
-
-	  Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
-	}
-
-	function translateFragment(view, langs, frag) {
-	  var elements = getTranslatables(frag);
-	  return Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
-	}
-
-	function camelCaseToDashed(string) {
-	  if (string === 'ariaValueText') {
-	    return 'aria-valuetext';
-	  }
-
-	  return string.replace(/[A-Z]/g, function (match) {
-	    return '-' + match.toLowerCase();
-	  }).replace(/^-/, '');
-	}
-
-	function getElementTranslation(view, langs, elem) {
-	  var l10n = getAttributes(elem);
-
-	  return l10n.id ? view.ctx.resolve(langs, l10n.id, l10n.args) : false;
-	}
-
-	function translateElement(view, langs, elem) {
-	  return getElementTranslation(view, langs, elem).then(function (translation) {
-	    if (!translation) {
-	      return false;
-	    }
-
-	    view.disconnect();
-	    applyTranslation(view, elem, translation);
-	    view.observe();
-	  });
-	}
-
-	function applyTranslations(view, elements, translations) {
-	  view.disconnect();
-	  for (var i = 0; i < elements.length; i++) {
-	    if (translations[i] === false) {
-	      continue;
-	    }
-	    applyTranslation(view, elements[i], translations[i]);
-	  }
-	  view.observe();
-	}
-
-	function applyTranslation(view, element, translation) {
-	  var value = translation.value;
-
-	  if (typeof value === 'string') {
-	    if (!reOverlay.test(value)) {
-	      element.textContent = value;
-	    } else {
-	      var tmpl = element.ownerDocument.createElement('template');
-	      tmpl.innerHTML = value;
-
-	      overlayElement(element, tmpl.content);
-	    }
-	  }
-
-	  for (var key in translation.attrs) {
-	    var attrName = camelCaseToDashed(key);
-	    if (isAttrAllowed({ name: attrName }, element)) {
-	      element.setAttribute(attrName, translation.attrs[key]);
-	    }
-	  }
-	}
-
-	function overlayElement(sourceElement, translationElement) {
-	  var result = translationElement.ownerDocument.createDocumentFragment();
-	  var k = undefined,
-	      attr = undefined;
-
-	  var childElement = undefined;
-	  while (childElement = translationElement.childNodes[0]) {
-	    translationElement.removeChild(childElement);
-
-	    if (childElement.nodeType === childElement.TEXT_NODE) {
-	      result.appendChild(childElement);
-	      continue;
-	    }
-
-	    var index = getIndexOfType(childElement);
-	    var sourceChild = getNthElementOfType(sourceElement, childElement, index);
-	    if (sourceChild) {
-	      overlayElement(sourceChild, childElement);
-	      result.appendChild(sourceChild);
-	      continue;
-	    }
-
-	    if (isElementAllowed(childElement)) {
-	      var sanitizedChild = childElement.ownerDocument.createElement(childElement.nodeName);
-	      overlayElement(sanitizedChild, childElement);
-	      result.appendChild(sanitizedChild);
-	      continue;
-	    }
-
-	    result.appendChild(translationElement.ownerDocument.createTextNode(childElement.textContent));
-	  }
-
-	  sourceElement.textContent = '';
-	  sourceElement.appendChild(result);
-
-	  if (translationElement.attributes) {
-	    for (k = 0, attr; attr = translationElement.attributes[k]; k++) {
-	      if (isAttrAllowed(attr, sourceElement)) {
-	        sourceElement.setAttribute(attr.name, attr.value);
-	      }
-	    }
-	  }
-	}
-
-	function isElementAllowed(element) {
-	  return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
-	}
-
-	function isAttrAllowed(attr, element) {
-	  var attrName = attr.name.toLowerCase();
-	  var tagName = element.tagName.toLowerCase();
-
-	  if (allowed.attributes.global.indexOf(attrName) !== -1) {
-	    return true;
-	  }
-
-	  if (!allowed.attributes[tagName]) {
-	    return false;
-	  }
-
-	  if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
-	    return true;
-	  }
-
-	  if (tagName === 'input' && attrName === 'value') {
-	    var type = element.type.toLowerCase();
-	    if (type === 'submit' || type === 'button' || type === 'reset') {
-	      return true;
-	    }
-	  }
-	  return false;
-	}
-
-	function getNthElementOfType(context, element, index) {
-	  var nthOfType = 0;
-	  for (var i = 0, child = undefined; child = context.children[i]; i++) {
-	    if (child.nodeType === child.ELEMENT_NODE && child.tagName === element.tagName) {
-	      if (nthOfType === index) {
-	        return child;
-	      }
-	      nthOfType++;
-	    }
-	  }
-	  return null;
-	}
-
-	function getIndexOfType(element) {
-	  var index = 0;
-	  var child = undefined;
-	  while (child = element.previousElementSibling) {
-	    if (child.tagName === element.tagName) {
-	      index++;
-	    }
-	  }
-	  return index;
-	}
-
-/***/ },
-/* 15 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.negotiateLanguages = negotiateLanguages;
-	exports.getDirection = getDirection;
-
-	var _libIntl = __webpack_require__(16);
-
-	var _libPseudo = __webpack_require__(10);
-
-	var rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
-
-	function negotiateLanguages(fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs, requestedLangs) {
-
-	  var allAvailableLangs = Object.keys(availableLangs).concat(additionalLangs || []).concat(Object.keys(_libPseudo.qps));
-	  var newLangs = _libIntl.prioritizeLocales(defaultLang, allAvailableLangs, requestedLangs);
-
-	  var langs = newLangs.map(function (code) {
-	    return {
-	      code: code,
-	      src: getLangSource(appVersion, availableLangs, additionalLangs, code),
-	      dir: getDirection(code)
-	    };
-	  });
-
-	  if (!arrEqual(prevLangs, newLangs)) {
-	    fn(langs);
-	  }
-
-	  return langs;
-	}
-
-	function getDirection(code) {
-	  return rtlList.indexOf(code) >= 0 ? 'rtl' : 'ltr';
-	}
-
-	function arrEqual(arr1, arr2) {
-	  return arr1.length === arr2.length && arr1.every(function (elem, i) {
-	    return elem === arr2[i];
-	  });
-	}
-
-	function getMatchingLangpack(appVersion, langpacks) {
-	  for (var i = 0, langpack = undefined; langpack = langpacks[i]; i++) {
-	    if (langpack.target === appVersion) {
-	      return langpack;
-	    }
-	  }
-	  return null;
-	}
-
-	function getLangSource(appVersion, availableLangs, additionalLangs, code) {
-	  if (additionalLangs && additionalLangs[code]) {
-	    var lp = getMatchingLangpack(appVersion, additionalLangs[code]);
-	    if (lp && (!(code in availableLangs) || parseInt(lp.revision) > availableLangs[code])) {
-	      return 'extra';
-	    }
-	  }
-
-	  if (code in _libPseudo.qps && !(code in availableLangs)) {
-	    return 'qps';
-	  }
-
-	  return 'app';
-	}
-
-/***/ },
-/* 16 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.prioritizeLocales = prioritizeLocales;
-
-	function prioritizeLocales(def, availableLangs, requested) {
-	  var supportedLocale = undefined;
-
-	  for (var i = 0; i < requested.length; i++) {
-	    var locale = requested[i];
-	    if (availableLangs.indexOf(locale) !== -1) {
-	      supportedLocale = locale;
-	      break;
-	    }
-	  }
-	  if (!supportedLocale || supportedLocale === def) {
-	    return [def];
-	  }
-
-	  return [supportedLocale, def];
-	}
-
 /***/ }
-/******/ ])));
+/******/ ]);

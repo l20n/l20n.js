@@ -92,7 +92,6 @@
     return { negotiateLanguages, getDirection };
   });
   modules.set('bindings/html/dom', function () {
-    const { L10nError } = getModule('lib/errors');
     const reOverlay = /<|&#?\w+;/;
     const allowed = {
       elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
@@ -162,7 +161,7 @@
       }
 
       const elements = [];
-      targets.forEach(target => target.childElementCount ? elements.concat(getTranslatables(target)) : elements.push(target));
+      targets.forEach(target => target.childElementCount ? elements.push(...getTranslatables(target)) : elements.push(target));
       Promise.all(elements.map(elem => getElementTranslation(view, langs, elem))).then(translations => applyTranslations(view, elements, translations));
     }
 
@@ -213,14 +212,7 @@
     }
 
     function applyTranslation(view, element, translation) {
-      let value;
-
-      if (translation.attrs && translation.attrs.innerHTML) {
-        value = translation.attrs.innerHTML;
-        view.emit('deprecatewarning', new L10nError('L10n Deprecation Warning: using innerHTML in translations is unsafe ' + 'and will not be supported in future versions of l10n.js. ' + 'See https://bugzil.la/1027117'));
-      } else {
-        value = translation.value;
-      }
+      const value = translation.value;
 
       if (typeof value === 'string') {
         if (!reOverlay.test(value)) {
@@ -350,7 +342,7 @@
     return { setAttributes, getAttributes, translateMutations, translateFragment, translateElement };
   });
   modules.set('bindings/html/head', function () {
-    if (!NodeList.prototype[Symbol.iterator]) {
+    if (typeof NodeList === 'function' && !NodeList.prototype[Symbol.iterator]) {
       NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
     }
 
@@ -1894,7 +1886,6 @@
     const { L10nError } = getModule('lib/errors');
     const KNOWN_MACROS = ['plural'];
     const MAX_PLACEABLE_LENGTH = 2500;
-    const nonLatin1 = /[^\x01-\xFF]/;
     const FSI = '⁨';
     const PDI = '⁩';
     const resolutionChain = new WeakSet();
@@ -1968,10 +1959,6 @@
           throw new L10nError('Too many characters in placeable (' + value.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')');
         }
 
-        if (locals.contextIsNonLatin1 || value.match(nonLatin1)) {
-          res[1] = FSI + value + PDI;
-        }
-
         return res;
       }
 
@@ -1984,7 +1971,7 @@
           return [localsSeq, valueSeq + cur];
         } else {
           const [, value] = subPlaceable(locals, ctx, lang, args, cur.name);
-          return [localsSeq, valueSeq + value];
+          return [localsSeq, valueSeq + FSI + value + PDI];
         }
       }, [locals, '']);
     }
@@ -2033,9 +2020,6 @@
       }
 
       if (Array.isArray(expr)) {
-        locals.contextIsNonLatin1 = expr.some(function ($_) {
-          return typeof $_ === 'string' && $_.match(nonLatin1);
-        });
         return interpolate(locals, ctx, lang, args, expr);
       }
 

@@ -51,7 +51,7 @@ module.exports =
 
 	var _io = __webpack_require__(1);
 
-	var _libEnv = __webpack_require__(4);
+	var _libEnv = __webpack_require__(5);
 
 	exports.default = {
 	  fetch: _io.fetch,
@@ -71,6 +71,8 @@ module.exports =
 	var _fs = __webpack_require__(2);
 
 	var _libErrors = __webpack_require__(3);
+
+	__webpack_require__(4);
 
 	function load(url) {
 	  return new Promise(function (resolve, reject) {
@@ -116,6 +118,72 @@ module.exports =
 
 /***/ },
 /* 4 */
+/***/ function(module, exports) {
+
+	/*! http://mths.be/endswith v0.2.0 by @mathias */
+	if (!String.prototype.endsWith) {
+		(function() {
+			'use strict'; // needed to support `apply`/`call` with `undefined`/`null`
+			var defineProperty = (function() {
+				// IE 8 only supports `Object.defineProperty` on DOM elements
+				try {
+					var object = {};
+					var $defineProperty = Object.defineProperty;
+					var result = $defineProperty(object, object, object) && $defineProperty;
+				} catch(error) {}
+				return result;
+			}());
+			var toString = {}.toString;
+			var endsWith = function(search) {
+				if (this == null) {
+					throw TypeError();
+				}
+				var string = String(this);
+				if (search && toString.call(search) == '[object RegExp]') {
+					throw TypeError();
+				}
+				var stringLength = string.length;
+				var searchString = String(search);
+				var searchLength = searchString.length;
+				var pos = stringLength;
+				if (arguments.length > 1) {
+					var position = arguments[1];
+					if (position !== undefined) {
+						// `ToInteger`
+						pos = position ? Number(position) : 0;
+						if (pos != pos) { // better `isNaN`
+							pos = 0;
+						}
+					}
+				}
+				var end = Math.min(Math.max(pos, 0), stringLength);
+				var start = end - searchLength;
+				if (start < 0) {
+					return false;
+				}
+				var index = -1;
+				while (++index < searchLength) {
+					if (string.charCodeAt(start + index) != searchString.charCodeAt(index)) {
+						return false;
+					}
+				}
+				return true;
+			};
+			if (defineProperty) {
+				defineProperty(String.prototype, 'endsWith', {
+					'value': endsWith,
+					'configurable': true,
+					'writable': true
+				});
+			} else {
+				String.prototype.endsWith = endsWith;
+			}
+		}());
+	}
+
+
+/***/ },
+/* 5 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -127,19 +195,19 @@ module.exports =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _context = __webpack_require__(5);
+	var _context = __webpack_require__(6);
 
-	var _formatPropertiesParser = __webpack_require__(8);
+	var _formatPropertiesParser = __webpack_require__(9);
 
 	var _formatPropertiesParser2 = _interopRequireDefault(_formatPropertiesParser);
 
-	var _formatL20nEntriesParser = __webpack_require__(9);
+	var _formatL20nEntriesParser = __webpack_require__(10);
 
 	var _formatL20nEntriesParser2 = _interopRequireDefault(_formatL20nEntriesParser);
 
-	var _pseudo = __webpack_require__(10);
+	var _pseudo = __webpack_require__(11);
 
-	var _events = __webpack_require__(11);
+	var _events = __webpack_require__(12);
 
 	var parsers = {
 	  properties: _formatPropertiesParser2.default,
@@ -230,7 +298,7 @@ module.exports =
 	}
 
 /***/ },
-/* 5 */
+/* 6 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -241,9 +309,9 @@ module.exports =
 
 	var _errors = __webpack_require__(3);
 
-	var _resolver = __webpack_require__(6);
+	var _resolver = __webpack_require__(7);
 
-	var _plurals = __webpack_require__(7);
+	var _plurals = __webpack_require__(8);
 
 	var Context = (function () {
 	  function Context(env, resIds) {
@@ -351,7 +419,7 @@ module.exports =
 	exports.Context = Context;
 
 /***/ },
-/* 6 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -363,8 +431,6 @@ module.exports =
 
 	var KNOWN_MACROS = ['plural'];
 	var MAX_PLACEABLE_LENGTH = 2500;
-
-	var nonLatin1 = /[^\x01-\xFF]/;
 
 	var FSI = '⁨';
 	var PDI = '⁩';
@@ -437,11 +503,6 @@ module.exports =
 	    if (value.length >= MAX_PLACEABLE_LENGTH) {
 	      throw new _errors.L10nError('Too many characters in placeable (' + value.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')');
 	    }
-
-	    if (locals.contextIsNonLatin1 || value.match(nonLatin1)) {
-	      res[1] = FSI + value + PDI;
-	    }
-
 	    return res;
 	  }
 
@@ -460,7 +521,7 @@ module.exports =
 
 	      var value = _subPlaceable[1];
 
-	      return [localsSeq, valueSeq + value];
+	      return [localsSeq, valueSeq + FSI + value + PDI];
 	    }
 	  }, [locals, '']);
 	}
@@ -505,9 +566,6 @@ module.exports =
 	  }
 
 	  if (Array.isArray(expr)) {
-	    locals.contextIsNonLatin1 = expr.some(function ($_) {
-	      return typeof $_ === 'string' && $_.match(nonLatin1);
-	    });
 	    return interpolate(locals, ctx, lang, args, expr);
 	  }
 
@@ -527,7 +585,7 @@ module.exports =
 	}
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -977,7 +1035,7 @@ module.exports =
 	}
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1203,7 +1261,7 @@ module.exports =
 	module.exports = exports.default;
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -1717,7 +1775,7 @@ module.exports =
 	module.exports = exports.default;
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1829,7 +1887,7 @@ module.exports =
 	exports.qps = qps;
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports) {
 
 	'use strict';

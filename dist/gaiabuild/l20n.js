@@ -274,7 +274,7 @@ module.exports =
 
 /***/ },
 /* 4 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	'use strict';
 
@@ -284,8 +284,6 @@ module.exports =
 	exports.translateMutations = translateMutations;
 	exports.translateFragment = translateFragment;
 	exports.translateElement = translateElement;
-
-	var _libErrors = __webpack_require__(2);
 
 	var reOverlay = /<|&#?\w+;/;
 
@@ -383,7 +381,7 @@ module.exports =
 	  var elements = [];
 
 	  targets.forEach(function (target) {
-	    return target.childElementCount ? elements.concat(getTranslatables(target)) : elements.push(target);
+	    return target.childElementCount ? elements.push.apply(elements, getTranslatables(target)) : elements.push(target);
 	  });
 
 	  Promise.all(elements.map(function (elem) {
@@ -442,13 +440,7 @@ module.exports =
 	}
 
 	function applyTranslation(view, element, translation) {
-	  var value = undefined;
-	  if (translation.attrs && translation.attrs.innerHTML) {
-	    value = translation.attrs.innerHTML;
-	    view.emit('deprecatewarning', new _libErrors.L10nError('L10n Deprecation Warning: using innerHTML in translations is unsafe ' + 'and will not be supported in future versions of l10n.js. ' + 'See https://bugzil.la/1027117'));
-	  } else {
-	    value = translation.value;
-	  }
+	  var value = translation.value;
 
 	  if (typeof value === 'string') {
 	    if (!reOverlay.test(value)) {
@@ -928,8 +920,6 @@ module.exports =
 	var KNOWN_MACROS = ['plural'];
 	var MAX_PLACEABLE_LENGTH = 2500;
 
-	var nonLatin1 = /[^\x01-\xFF]/;
-
 	var FSI = '⁨';
 	var PDI = '⁩';
 
@@ -1001,11 +991,6 @@ module.exports =
 	    if (value.length >= MAX_PLACEABLE_LENGTH) {
 	      throw new _errors.L10nError('Too many characters in placeable (' + value.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')');
 	    }
-
-	    if (locals.contextIsNonLatin1 || value.match(nonLatin1)) {
-	      res[1] = FSI + value + PDI;
-	    }
-
 	    return res;
 	  }
 
@@ -1024,7 +1009,7 @@ module.exports =
 
 	      var value = _subPlaceable[1];
 
-	      return [localsSeq, valueSeq + value];
+	      return [localsSeq, valueSeq + FSI + value + PDI];
 	    }
 	  }, [locals, '']);
 	}
@@ -1069,9 +1054,6 @@ module.exports =
 	  }
 
 	  if (Array.isArray(expr)) {
-	    locals.contextIsNonLatin1 = expr.some(function ($_) {
-	      return typeof $_ === 'string' && $_.match(nonLatin1);
-	    });
 	    return interpolate(locals, ctx, lang, args, expr);
 	  }
 
@@ -2877,7 +2859,7 @@ module.exports =
 	exports.getResourceLinks = getResourceLinks;
 	exports.getMeta = getMeta;
 
-	if (!NodeList.prototype[Symbol.iterator]) {
+	if (typeof NodeList === 'function' && !NodeList.prototype[Symbol.iterator]) {
 	  NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
 	}
 
