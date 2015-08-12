@@ -93,6 +93,12 @@
   });
   modules.set('bindings/html/dom', function () {
     const reOverlay = /<|&#?\w+;/;
+    const reHtml = /[&<>]/g;
+    const htmlEntities = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;'
+    };
     const allowed = {
       elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
       attributes: {
@@ -181,8 +187,19 @@
     }
 
     function getElementTranslation(view, langs, elem) {
-      const l10n = getAttributes(elem);
-      return l10n.id ? view.ctx.resolve(langs, l10n.id, l10n.args) : false;
+      const id = elem.getAttribute('data-l10n-id');
+
+      if (!id) {
+        return false;
+      }
+
+      const args = elem.getAttribute('data-l10n-args');
+
+      if (!args) {
+        return view.ctx.resolve(langs, id);
+      }
+
+      return view.ctx.resolve(langs, id, JSON.parse(args.replace(reHtml, match => htmlEntities[match])));
     }
 
     function translateElement(view, langs, elem) {

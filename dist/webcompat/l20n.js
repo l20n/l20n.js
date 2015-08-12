@@ -2245,6 +2245,12 @@
 	exports.translateElement = translateElement;
 
 	var reOverlay = /<|&#?\w+;/;
+	var reHtml = /[&<>]/g;
+	var htmlEntities = {
+	  '&': '&amp;',
+	  '<': '&lt;',
+	  '>': '&gt;'
+	};
 
 	var allowed = {
 	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
@@ -2370,9 +2376,21 @@
 	}
 
 	function getElementTranslation(view, langs, elem) {
-	  var l10n = getAttributes(elem);
+	  var id = elem.getAttribute('data-l10n-id');
 
-	  return l10n.id ? view.ctx.resolve(langs, l10n.id, l10n.args) : false;
+	  if (!id) {
+	    return false;
+	  }
+
+	  var args = elem.getAttribute('data-l10n-args');
+
+	  if (!args) {
+	    return view.ctx.resolve(langs, id);
+	  }
+
+	  return view.ctx.resolve(langs, id, JSON.parse(args.replace(reHtml, function (match) {
+	    return htmlEntities[match];
+	  })));
 	}
 
 	function translateElement(view, langs, elem) {

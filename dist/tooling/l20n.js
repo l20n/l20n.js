@@ -2291,6 +2291,12 @@ var L20n =
 	exports.translateElement = translateElement;
 
 	var reOverlay = /<|&#?\w+;/;
+	var reHtml = /[&<>]/g;
+	var htmlEntities = {
+	  '&': '&amp;',
+	  '<': '&lt;',
+	  '>': '&gt;'
+	};
 
 	var allowed = {
 	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
@@ -2416,9 +2422,21 @@ var L20n =
 	}
 
 	function getElementTranslation(view, langs, elem) {
-	  var l10n = getAttributes(elem);
+	  var id = elem.getAttribute('data-l10n-id');
 
-	  return l10n.id ? view.ctx.resolve(langs, l10n.id, l10n.args) : false;
+	  if (!id) {
+	    return false;
+	  }
+
+	  var args = elem.getAttribute('data-l10n-args');
+
+	  if (!args) {
+	    return view.ctx.resolve(langs, id);
+	  }
+
+	  return view.ctx.resolve(langs, id, JSON.parse(args.replace(reHtml, function (match) {
+	    return htmlEntities[match];
+	  })));
 	}
 
 	function translateElement(view, langs, elem) {
@@ -2669,6 +2687,8 @@ var L20n =
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
 	var _ast = __webpack_require__(18);
 
 	var _ast2 = _interopRequireDefault(_ast);
@@ -2677,27 +2697,29 @@ var L20n =
 
 	var MAX_PLACEABLES = 100;
 
-	exports.default = {
-	  parse: function (env, string) {
-	    var pos = arguments.length <= 2 || arguments[2] === undefined ? false : arguments[2];
+	var ParseContext = (function () {
+	  function ParseContext(string, pos) {
+	    _classCallCheck(this, ParseContext);
 
+	    this._config = {
+	      pos: pos
+	    };
 	    this._source = string;
 	    this._index = 0;
 	    this._length = string.length;
 	    this._curEntryStart = 0;
-	    this._config = {
-	      pos: pos
-	    };
+	  }
 
-	    if (pos !== true) {
-	      _ast2.default.Node.prototype.setPosition = function () {};
+	  ParseContext.prototype.setPosition = function setPosition(node, start, end) {
+	    if (!this._config.pos) {
+	      return;
 	    }
-	    return this.getResource(pos);
-	  },
+	    node._pos = { start: start, end: end };
+	  };
 
-	  getResource: function () {
+	  ParseContext.prototype.getResource = function getResource() {
 	    var resource = new _ast2.default.Resource();
-	    resource.setPosition(0, this._length);
+	    this.setPosition(resource, 0, this._length);
 	    resource._errors = [];
 
 	    this.getWS();
@@ -2718,9 +2740,9 @@ var L20n =
 	    }
 
 	    return resource;
-	  },
+	  };
 
-	  getEntry: function () {
+	  ParseContext.prototype.getEntry = function getEntry() {
 	    this._curEntryStart = this._index;
 
 	    if (this._source[this._index] === '<') {
@@ -2738,9 +2760,9 @@ var L20n =
 	    }
 
 	    throw this.error('Invalid entry');
-	  },
+	  };
 
-	  getEntity: function (id, index) {
+	  ParseContext.prototype.getEntity = function getEntity(id, index) {
 	    if (!this.getRequiredWS()) {
 	      throw this.error('Expected white space');
 	    }
@@ -2767,11 +2789,11 @@ var L20n =
 	    ++this._index;
 
 	    var entity = new _ast2.default.Entity(id, value, index, attrs);
-	    entity.setPosition(this._curEntryStart, this._index);
+	    this.setPosition(entity, this._curEntryStart, this._index);
 	    return entity;
-	  },
+	  };
 
-	  getValue: function () {
+	  ParseContext.prototype.getValue = function getValue() {
 	    var ch = arguments.length <= 0 || arguments[0] === undefined ? this._source[this._index] : arguments[0];
 	    var optional = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
@@ -2787,17 +2809,17 @@ var L20n =
 	      throw this.error('Unknown value type');
 	    }
 	    return null;
-	  },
+	  };
 
-	  getWS: function () {
+	  ParseContext.prototype.getWS = function getWS() {
 	    var cc = this._source.charCodeAt(this._index);
 
 	    while (cc === 32 || cc === 10 || cc === 9 || cc === 13) {
 	      cc = this._source.charCodeAt(++this._index);
 	    }
-	  },
+	  };
 
-	  getRequiredWS: function () {
+	  ParseContext.prototype.getRequiredWS = function getRequiredWS() {
 	    var pos = this._index;
 	    var cc = this._source.charCodeAt(pos);
 
@@ -2805,9 +2827,9 @@ var L20n =
 	      cc = this._source.charCodeAt(++this._index);
 	    }
 	    return this._index !== pos;
-	  },
+	  };
 
-	  getIdentifier: function () {
+	  ParseContext.prototype.getIdentifier = function getIdentifier() {
 	    var start = this._index;
 	    var cc = this._source.charCodeAt(this._index);
 
@@ -2822,11 +2844,11 @@ var L20n =
 	    }
 
 	    var id = new _ast2.default.Identifier(this._source.slice(start, this._index));
-	    id.setPosition(start, this._index);
+	    this.setPosition(id, start, this._index);
 	    return id;
-	  },
+	  };
 
-	  getUnicodeChar: function () {
+	  ParseContext.prototype.getUnicodeChar = function getUnicodeChar() {
 	    for (var i = 0; i < 4; i++) {
 	      var cc = this._source.charCodeAt(++this._index);
 	      if (cc > 96 && cc < 103 || cc > 64 && cc < 71 || cc > 47 && cc < 58) {
@@ -2835,9 +2857,9 @@ var L20n =
 	      throw this.error('Illegal unicode escape sequence');
 	    }
 	    return '\\u' + this._source.slice(this._index - 3, this._index + 1);
-	  },
+	  };
 
-	  getString: function (opchar, opcharLen) {
+	  ParseContext.prototype.getString = function getString(opchar, opcharLen) {
 	    var body = [];
 	    var buf = '';
 	    var placeables = 0;
@@ -2904,13 +2926,13 @@ var L20n =
 	    }
 
 	    var string = new _ast2.default.String(this._source.slice(start, this._index - 1), body);
-	    string.setPosition(start, this._index);
+	    this.setPosition(string, start, this._index);
 	    string._opchar = opchar;
 
 	    return string;
-	  },
+	  };
 
-	  getAttributes: function () {
+	  ParseContext.prototype.getAttributes = function getAttributes() {
 	    var attrs = [];
 
 	    while (true) {
@@ -2925,9 +2947,9 @@ var L20n =
 	      }
 	    }
 	    return attrs;
-	  },
+	  };
 
-	  getAttribute: function () {
+	  ParseContext.prototype.getAttribute = function getAttribute() {
 	    var start = this._index;
 	    var key = this.getIdentifier();
 	    var index = undefined;
@@ -2944,11 +2966,11 @@ var L20n =
 	    ++this._index;
 	    this.getWS();
 	    var attr = new _ast2.default.Attribute(key, this.getValue(), index);
-	    attr.setPosition(start, this._index);
+	    this.setPosition(attr, start, this._index);
 	    return attr;
-	  },
+	  };
 
-	  getHash: function () {
+	  ParseContext.prototype.getHash = function getHash() {
 	    var start = this._index;
 	    var items = [];
 
@@ -2974,11 +2996,11 @@ var L20n =
 	    }
 
 	    var hash = new _ast2.default.Hash(items);
-	    hash.setPosition(start, this._index);
+	    this.setPosition(hash, start, this._index);
 	    return hash;
-	  },
+	  };
 
-	  getHashItem: function () {
+	  ParseContext.prototype.getHashItem = function getHashItem() {
 	    var start = this._index;
 
 	    var defItem = false;
@@ -2996,11 +3018,11 @@ var L20n =
 	    this.getWS();
 
 	    var hashItem = new _ast2.default.HashItem(key, this.getValue(), defItem);
-	    hashItem.setPosition(start, this._index);
+	    this.setPosition(hashItem, start, this._index);
 	    return hashItem;
-	  },
+	  };
 
-	  getComment: function () {
+	  ParseContext.prototype.getComment = function getComment() {
 	    this._index += 2;
 	    var start = this._index;
 	    var end = this._source.indexOf('*/', start);
@@ -3011,11 +3033,11 @@ var L20n =
 
 	    this._index = end + 2;
 	    var comment = new _ast2.default.Comment(this._source.slice(start, end));
-	    comment.setPosition(start - 2, this._index);
+	    this.setPosition(comment, start - 2, this._index);
 	    return comment;
-	  },
+	  };
 
-	  getExpression: function () {
+	  ParseContext.prototype.getExpression = function getExpression() {
 	    var start = this._index;
 	    var exp = this.getPrimaryExpression();
 
@@ -3033,9 +3055,9 @@ var L20n =
 	    }
 
 	    return exp;
-	  },
+	  };
 
-	  getPropertyExpression: function (idref, computed, start) {
+	  ParseContext.prototype.getPropertyExpression = function getPropertyExpression(idref, computed, start) {
 	    var exp = undefined;
 
 	    if (computed) {
@@ -3051,19 +3073,19 @@ var L20n =
 	    }
 
 	    var propExpr = new _ast2.default.PropertyExpression(idref, exp, computed);
-	    propExpr.setPosition(start, this._index);
+	    this.setPosition(propExpr, start, this._index);
 	    return propExpr;
-	  },
+	  };
 
-	  getCallExpression: function (callee, start) {
+	  ParseContext.prototype.getCallExpression = function getCallExpression(callee, start) {
 	    this.getWS();
 
 	    var callExpr = new _ast2.default.CallExpression(callee, this.getItemList(this.getExpression, ')'));
-	    callExpr.setPosition(start, this._index);
+	    this.setPosition(callExpr, start, this._index);
 	    return callExpr;
-	  },
+	  };
 
-	  getPrimaryExpression: function () {
+	  ParseContext.prototype.getPrimaryExpression = function getPrimaryExpression() {
 	    var start = this._index;
 	    var ch = this._source[this._index];
 
@@ -3071,19 +3093,19 @@ var L20n =
 	      case '$':
 	        ++this._index;
 	        var variable = new _ast2.default.Variable(this.getIdentifier());
-	        variable.setPosition(start, this._index);
+	        this.setPosition(variable, start, this._index);
 	        return variable;
 	      case '@':
 	        ++this._index;
 	        var global = new _ast2.default.Global(this.getIdentifier());
-	        global.setPosition(start, this._index);
+	        this.setPosition(global, start, this._index);
 	        return global;
 	      default:
 	        return this.getIdentifier();
 	    }
-	  },
+	  };
 
-	  getItemList: function (callback, closeChar) {
+	  ParseContext.prototype.getItemList = function getItemList(callback, closeChar) {
 	    var items = [];
 	    var closed = false;
 
@@ -3113,9 +3135,9 @@ var L20n =
 	    }
 
 	    return items;
-	  },
+	  };
 
-	  error: function (message) {
+	  ParseContext.prototype.error = function error(message) {
 	    var pos = this._index;
 
 	    var start = this._source.lastIndexOf('<', pos - 1);
@@ -3131,9 +3153,9 @@ var L20n =
 	    err.description = message;
 	    err.context = context;
 	    return err;
-	  },
+	  };
 
-	  getJunkEntry: function () {
+	  ParseContext.prototype.getJunkEntry = function getJunkEntry() {
 	    var pos = this._index;
 	    var nextEntity = this._source.indexOf('<', pos);
 	    var nextComment = this._source.indexOf('/*', pos);
@@ -3150,10 +3172,20 @@ var L20n =
 	    this._index = nextEntry;
 
 	    var junk = new _ast2.default.JunkEntry(this._source.slice(this._curEntryStart, nextEntry));
-	    if (this._config.pos) {
-	      junk._pos = { start: this._curEntryStart, end: nextEntry };
-	    }
+
+	    this.setPosition(junk, this._curEntryStart, nextEntry);
 	    return junk;
+	  };
+
+	  return ParseContext;
+	})();
+
+	exports.default = {
+	  parseResource: function (string) {
+	    var pos = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+
+	    var parseContext = new ParseContext(string, pos);
+	    return parseContext.getResource();
 	  }
 	};
 	module.exports = exports.default;
@@ -3170,19 +3202,11 @@ var L20n =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var Node = (function () {
-	  function Node() {
-	    _classCallCheck(this, Node);
+	var Node = function Node() {
+	  _classCallCheck(this, Node);
 
-	    this.type = this.constructor.name;
-	  }
-
-	  Node.prototype.setPosition = function setPosition(start, end) {
-	    this._pos = { start: start, end: end };
-	  };
-
-	  return Node;
-	})();
+	  this.type = this.constructor.name;
+	};
 
 	var Entry = (function (_Node) {
 	  _inherits(Entry, _Node);
