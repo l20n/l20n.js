@@ -63,11 +63,11 @@ var L20n =
 
 	exports.View = _bindingsHtmlView.View;
 
-	var _libFormatL20nAstParser = __webpack_require__(17);
+	var _libFormatL20nAstParser = __webpack_require__(18);
 
 	exports.ASTParser = _interopRequire(_libFormatL20nAstParser);
 
-	var _libFormatL20nAstSerializer = __webpack_require__(19);
+	var _libFormatL20nAstSerializer = __webpack_require__(20);
 
 	exports.ASTSerializer = _interopRequire(_libFormatL20nAstSerializer);
 
@@ -75,7 +75,7 @@ var L20n =
 
 	exports.EntriesParser = _interopRequire(_libFormatL20nEntriesParser);
 
-	var _libFormatL20nEntriesSerializer = __webpack_require__(20);
+	var _libFormatL20nEntriesSerializer = __webpack_require__(21);
 
 	exports.EntriesSerializer = _interopRequire(_libFormatL20nEntriesSerializer);
 
@@ -101,11 +101,11 @@ var L20n =
 	exports.addEventListener = _libEvents.addEventListener;
 	exports.removeEventListener = _libEvents.removeEventListener;
 
-	var _libIntl = __webpack_require__(16);
+	var _libIntl = __webpack_require__(17);
 
 	exports.prioritizeLocales = _libIntl.prioritizeLocales;
 
-	var _libMocks = __webpack_require__(21);
+	var _libMocks = __webpack_require__(22);
 
 	exports.MockContext = _libMocks.MockContext;
 	exports.lang = _libMocks.lang;
@@ -229,7 +229,7 @@ var L20n =
 
 	var _head = __webpack_require__(13);
 
-	var _langs = __webpack_require__(15);
+	var _langs = __webpack_require__(16);
 
 	var Service = (function () {
 	  function Service(fetch) {
@@ -2147,6 +2147,8 @@ var L20n =
 	  var _this4 = this;
 
 	  return this.service.languages.then(function (langs) {
+	    return _this4.ctx.fetch(langs);
+	  }).then(function (langs) {
 	    return _dom.translateMutations(_this4, langs, mutations);
 	  });
 	}
@@ -2279,7 +2281,7 @@ var L20n =
 
 /***/ },
 /* 14 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -2290,31 +2292,13 @@ var L20n =
 	exports.translateFragment = translateFragment;
 	exports.translateElement = translateElement;
 
-	var reOverlay = /<|&#?\w+;/;
+	var _overlay = __webpack_require__(15);
+
 	var reHtml = /[&<>]/g;
 	var htmlEntities = {
 	  '&': '&amp;',
 	  '<': '&lt;',
 	  '>': '&gt;'
-	};
-
-	var allowed = {
-	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
-	  attributes: {
-	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
-	    a: ['download'],
-	    area: ['download', 'alt'],
-
-	    input: ['alt', 'placeholder'],
-	    menuitem: ['label'],
-	    menu: ['label'],
-	    optgroup: ['label'],
-	    option: ['label'],
-	    track: ['label'],
-	    img: ['alt'],
-	    textarea: ['placeholder'],
-	    th: ['abbr']
-	  }
 	};
 
 	function setAttributes(element, id, args) {
@@ -2332,13 +2316,13 @@ var L20n =
 	}
 
 	function getTranslatables(element) {
-	  var nodes = [];
+	  var nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
 
 	  if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
 	    nodes.push(element);
 	  }
 
-	  return nodes.concat.apply(nodes, element.querySelectorAll('*[data-l10n-id]'));
+	  return nodes;
 	}
 
 	function translateMutations(view, langs, mutations) {
@@ -2378,7 +2362,11 @@ var L20n =
 	          var addedNode = _ref2;
 
 	          if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-	            targets.add(addedNode);
+	            if (addedNode.childElementCount) {
+	              getTranslatables(addedNode).forEach(targets.add.bind(targets));
+	            } else {
+	              targets.add(addedNode);
+	            }
 	          }
 	        }
 	        break;
@@ -2389,36 +2377,11 @@ var L20n =
 	    return;
 	  }
 
-	  var elements = [];
-
-	  targets.forEach(function (target) {
-	    return target.childElementCount ? elements.push.apply(elements, getTranslatables(target)) : elements.push(target);
-	  });
-
-	  Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
+	  translateElements(view, langs, Array.from(targets));
 	}
 
 	function translateFragment(view, langs, frag) {
-	  var elements = getTranslatables(frag);
-	  return Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
-	}
-
-	function camelCaseToDashed(string) {
-	  if (string === 'ariaValueText') {
-	    return 'aria-valuetext';
-	  }
-
-	  return string.replace(/[A-Z]/g, function (match) {
-	    return '-' + match.toLowerCase();
-	  }).replace(/^-/, '');
+	  return translateElements(view, langs, getTranslatables(frag));
 	}
 
 	function getElementTranslation(view, langs, elem) {
@@ -2439,6 +2402,14 @@ var L20n =
 	  })));
 	}
 
+	function translateElements(view, langs, elements) {
+	  return Promise.all(elements.map(function (elem) {
+	    return getElementTranslation(view, langs, elem);
+	  })).then(function (translations) {
+	    return _overlay.applyTranslations(view, elements, translations);
+	  });
+	}
+
 	function translateElement(view, langs, elem) {
 	  return getElementTranslation(view, langs, elem).then(function (translation) {
 	    if (!translation) {
@@ -2446,10 +2417,41 @@ var L20n =
 	    }
 
 	    view.disconnect();
-	    applyTranslation(view, elem, translation);
+	    _overlay.applyTranslation(view, elem, translation);
 	    view.observe();
 	  });
 	}
+
+/***/ },
+/* 15 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	exports.applyTranslations = applyTranslations;
+	exports.applyTranslation = applyTranslation;
+
+	var reOverlay = /<|&#?\w+;/;
+
+	var allowed = {
+	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
+	  attributes: {
+	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
+	    a: ['download'],
+	    area: ['download', 'alt'],
+
+	    input: ['alt', 'placeholder'],
+	    menuitem: ['label'],
+	    menu: ['label'],
+	    optgroup: ['label'],
+	    option: ['label'],
+	    track: ['label'],
+	    img: ['alt'],
+	    textarea: ['placeholder'],
+	    th: ['abbr']
+	  }
+	};
 
 	function applyTranslations(view, elements, translations) {
 	  view.disconnect();
@@ -2581,8 +2583,18 @@ var L20n =
 	  return index;
 	}
 
+	function camelCaseToDashed(string) {
+	  if (string === 'ariaValueText') {
+	    return 'aria-valuetext';
+	  }
+
+	  return string.replace(/[A-Z]/g, function (match) {
+	    return '-' + match.toLowerCase();
+	  }).replace(/^-/, '');
+	}
+
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2591,7 +2603,7 @@ var L20n =
 	exports.negotiateLanguages = negotiateLanguages;
 	exports.getDirection = getDirection;
 
-	var _libIntl = __webpack_require__(16);
+	var _libIntl = __webpack_require__(17);
 
 	var _libPseudo = __webpack_require__(10);
 
@@ -2652,7 +2664,7 @@ var L20n =
 	}
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2678,7 +2690,7 @@ var L20n =
 	}
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2689,7 +2701,7 @@ var L20n =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _ast = __webpack_require__(18);
+	var _ast = __webpack_require__(19);
 
 	var _ast2 = _interopRequireDefault(_ast);
 
@@ -3191,7 +3203,7 @@ var L20n =
 	module.exports = exports.default;
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3455,7 +3467,7 @@ var L20n =
 	module.exports = exports.default;
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3671,7 +3683,7 @@ var L20n =
 	module.exports = exports.default;
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -3794,7 +3806,7 @@ var L20n =
 	module.exports = exports.default;
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';

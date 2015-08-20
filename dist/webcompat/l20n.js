@@ -183,7 +183,7 @@
 
 	var _head = __webpack_require__(13);
 
-	var _langs = __webpack_require__(15);
+	var _langs = __webpack_require__(16);
 
 	var Service = (function () {
 	  function Service(fetch) {
@@ -2101,6 +2101,8 @@
 	  var _this4 = this;
 
 	  return this.service.languages.then(function (langs) {
+	    return _this4.ctx.fetch(langs);
+	  }).then(function (langs) {
 	    return _dom.translateMutations(_this4, langs, mutations);
 	  });
 	}
@@ -2233,7 +2235,7 @@
 
 /***/ },
 /* 14 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -2244,31 +2246,13 @@
 	exports.translateFragment = translateFragment;
 	exports.translateElement = translateElement;
 
-	var reOverlay = /<|&#?\w+;/;
+	var _overlay = __webpack_require__(15);
+
 	var reHtml = /[&<>]/g;
 	var htmlEntities = {
 	  '&': '&amp;',
 	  '<': '&lt;',
 	  '>': '&gt;'
-	};
-
-	var allowed = {
-	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
-	  attributes: {
-	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
-	    a: ['download'],
-	    area: ['download', 'alt'],
-
-	    input: ['alt', 'placeholder'],
-	    menuitem: ['label'],
-	    menu: ['label'],
-	    optgroup: ['label'],
-	    option: ['label'],
-	    track: ['label'],
-	    img: ['alt'],
-	    textarea: ['placeholder'],
-	    th: ['abbr']
-	  }
 	};
 
 	function setAttributes(element, id, args) {
@@ -2286,13 +2270,13 @@
 	}
 
 	function getTranslatables(element) {
-	  var nodes = [];
+	  var nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
 
 	  if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
 	    nodes.push(element);
 	  }
 
-	  return nodes.concat.apply(nodes, element.querySelectorAll('*[data-l10n-id]'));
+	  return nodes;
 	}
 
 	function translateMutations(view, langs, mutations) {
@@ -2332,7 +2316,11 @@
 	          var addedNode = _ref2;
 
 	          if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-	            targets.add(addedNode);
+	            if (addedNode.childElementCount) {
+	              getTranslatables(addedNode).forEach(targets.add.bind(targets));
+	            } else {
+	              targets.add(addedNode);
+	            }
 	          }
 	        }
 	        break;
@@ -2343,36 +2331,11 @@
 	    return;
 	  }
 
-	  var elements = [];
-
-	  targets.forEach(function (target) {
-	    return target.childElementCount ? elements.push.apply(elements, getTranslatables(target)) : elements.push(target);
-	  });
-
-	  Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
+	  translateElements(view, langs, Array.from(targets));
 	}
 
 	function translateFragment(view, langs, frag) {
-	  var elements = getTranslatables(frag);
-	  return Promise.all(elements.map(function (elem) {
-	    return getElementTranslation(view, langs, elem);
-	  })).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
-	}
-
-	function camelCaseToDashed(string) {
-	  if (string === 'ariaValueText') {
-	    return 'aria-valuetext';
-	  }
-
-	  return string.replace(/[A-Z]/g, function (match) {
-	    return '-' + match.toLowerCase();
-	  }).replace(/^-/, '');
+	  return translateElements(view, langs, getTranslatables(frag));
 	}
 
 	function getElementTranslation(view, langs, elem) {
@@ -2393,6 +2356,14 @@
 	  })));
 	}
 
+	function translateElements(view, langs, elements) {
+	  return Promise.all(elements.map(function (elem) {
+	    return getElementTranslation(view, langs, elem);
+	  })).then(function (translations) {
+	    return _overlay.applyTranslations(view, elements, translations);
+	  });
+	}
+
 	function translateElement(view, langs, elem) {
 	  return getElementTranslation(view, langs, elem).then(function (translation) {
 	    if (!translation) {
@@ -2400,10 +2371,41 @@
 	    }
 
 	    view.disconnect();
-	    applyTranslation(view, elem, translation);
+	    _overlay.applyTranslation(view, elem, translation);
 	    view.observe();
 	  });
 	}
+
+/***/ },
+/* 15 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	exports.applyTranslations = applyTranslations;
+	exports.applyTranslation = applyTranslation;
+
+	var reOverlay = /<|&#?\w+;/;
+
+	var allowed = {
+	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
+	  attributes: {
+	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
+	    a: ['download'],
+	    area: ['download', 'alt'],
+
+	    input: ['alt', 'placeholder'],
+	    menuitem: ['label'],
+	    menu: ['label'],
+	    optgroup: ['label'],
+	    option: ['label'],
+	    track: ['label'],
+	    img: ['alt'],
+	    textarea: ['placeholder'],
+	    th: ['abbr']
+	  }
+	};
 
 	function applyTranslations(view, elements, translations) {
 	  view.disconnect();
@@ -2535,8 +2537,18 @@
 	  return index;
 	}
 
+	function camelCaseToDashed(string) {
+	  if (string === 'ariaValueText') {
+	    return 'aria-valuetext';
+	  }
+
+	  return string.replace(/[A-Z]/g, function (match) {
+	    return '-' + match.toLowerCase();
+	  }).replace(/^-/, '');
+	}
+
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2545,7 +2557,7 @@
 	exports.negotiateLanguages = negotiateLanguages;
 	exports.getDirection = getDirection;
 
-	var _libIntl = __webpack_require__(16);
+	var _libIntl = __webpack_require__(17);
 
 	var _libPseudo = __webpack_require__(10);
 
@@ -2606,7 +2618,7 @@
 	}
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports) {
 
 	'use strict';
