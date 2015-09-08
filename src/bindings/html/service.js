@@ -1,25 +1,41 @@
 'use strict';
 
 import { Env } from '../../lib/env';
-import { View, translate } from './view';
+import { translate } from './view';
 import { getMeta } from './head';
 import { negotiateLanguages } from './langs';
 
 export class Service {
   constructor(fetch) {
+    this.views = new Map();
+    this.fetch = fetch;
+  }
+
+  register(view, resources) {
     const meta = getMeta(document.head);
     this.defaultLanguage = meta.defaultLang;
     this.availableLanguages = meta.availableLangs;
     this.appVersion = meta.appVersion;
 
     this.env = new Env(
-      this.defaultLanguage, fetch.bind(null, this.appVersion));
-    this.views = [
-      document.l10n = new View(this, document)
-    ];
-
+      this.defaultLanguage, this.fetch.bind(null, this.appVersion));
     this.env.addEventListener('deprecatewarning',
       err => console.warn(err));
+    this.views.set(view, this.env.createContext(resources));
+    return this;
+  }
+
+  initView(view) {
+    return this.languages.then(
+      langs => this.views.get(view).fetch(langs));
+  }
+
+  resolveEntity(view, langs, id, args) {
+    return this.views.get(view).resolveEntity(langs, id, args);
+  }
+
+  resolveValue(view, langs, id, args) {
+    return this.views.get(view).resolveValue(langs, id, args);
   }
 
   requestLanguages(requestedLangs = navigator.languages) {
@@ -43,8 +59,14 @@ export function getAdditionalLanguages() {
 }
 
 function translateViews(langs) {
+  const views = Array.from(this.views);
   return Promise.all(
-    this.views.map(view => translate.call(view, langs)));
+    views.map(tuple => translateView(langs, tuple)));
+}
+
+function translateView(langs, [view, ctx]) {
+  return ctx.fetch(langs).then(
+    translate.bind(view, langs));
 }
 
 function changeLanguages(additionalLangs, requestedLangs) {

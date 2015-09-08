@@ -57,6 +57,10 @@ export class View {
   observe() {}
   disconnect() {}
 
+  _resolveEntity(langs, id, args) {
+    return this.ctx.resolveEntity(langs, id, args);
+  }
+
   translateDocument(code) {
     const dir = getDirection(code);
     const langs = [{ code, dir, src: 'app' }];

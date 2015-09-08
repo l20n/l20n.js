@@ -1,6 +1,6 @@
 'use strict';
 
-import { applyTranslation, applyTranslations } from './overlay';
+import { overlayElement } from './overlay';
 
 const reHtml = /[&<>]/g;
 const htmlEntities = {
@@ -77,12 +77,17 @@ function getElementTranslation(view, langs, elem) {
   const args = elem.getAttribute('data-l10n-args');
 
   if (!args) {
-    return view.ctx.resolve(langs, id);
+    return view._resolveEntity(langs, id);
   }
 
-  return view.ctx.resolve(
+  return view._resolveEntity(
     langs, id, JSON.parse(
       args.replace(reHtml, match => htmlEntities[match])));
+}
+
+export function translateElement(view, langs, elem) {
+  return getElementTranslation(view, langs, elem).then(
+    translation => applyTranslation(view, elem, translation));
 }
 
 function translateElements(view, langs, elements) {
@@ -91,14 +96,23 @@ function translateElements(view, langs, elements) {
       translations => applyTranslations(view, elements, translations));
 }
 
-export function translateElement(view, langs, elem) {
-  return getElementTranslation(view, langs, elem).then(translation => {
-    if (!translation) {
-      return false;
-    }
+function applyTranslation(view, elem, translation) {
+  if (!translation) {
+    return false;
+  }
 
-    view.disconnect();
-    applyTranslation(view, elem, translation);
-    view.observe();
-  });
+  view.disconnect();
+  overlayElement(elem, translation);
+  view.observe();
+}
+
+function applyTranslations(view, elems, translations) {
+  view.disconnect();
+  for (let i = 0; i < elems.length; i++) {
+    if (translations[i] === false) {
+      continue;
+    }
+    overlayElement(elems[i], translations[i]);
+  }
+  view.observe();
 }
