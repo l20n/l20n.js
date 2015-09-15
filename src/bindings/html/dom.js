@@ -7,6 +7,12 @@
 // match the opening angle bracket (<) in HTML tags, and HTML entities like
 // &amp;, &#0038;, &#x0026;.
 var reOverlay = /<|&#?\w+;/;
+var reHtml = /[&<>]/g;
+var htmlEntities = {
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+};
 
 function translateDocument() {
   document.documentElement.lang = this.language.code;
@@ -57,6 +63,10 @@ function camelCaseToDashed(string) {
     .replace(/^-/, '');
 }
 
+function escapeL10nArgs(match) {
+  return htmlEntities[match];
+}
+
 function translateElement(element) {
   if (!this.ctx.isReady) {
     if (!pendingElements) {
@@ -66,13 +76,20 @@ function translateElement(element) {
     return;
   }
 
-  var l10n = getL10nAttributes(element);
+  var l10nId = element.getAttribute('data-l10n-id');
 
-  if (!l10n.id) {
+  if (!l10nId) {
     return false;
   }
 
-  var entity = this.ctx.getEntity(l10n.id, l10n.args);
+  var l10nArgs = element.getAttribute('data-l10n-args');
+
+  var entity = this.ctx.getEntity(
+    l10nId,
+    l10nArgs ?
+      JSON.parse(l10nArgs.replace(reHtml, escapeL10nArgs)) :
+      undefined
+  );
 
   var value;
   if (entity.attrs && entity.attrs.innerHTML) {
