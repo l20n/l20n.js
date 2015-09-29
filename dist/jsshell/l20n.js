@@ -532,6 +532,14 @@
     }
 
     function MockContext(entries) {
+      this._getNumberFormatter = function () {
+        return {
+          format: function (value) {
+            return value;
+          }
+        };
+      };
+
       this._getEntity = function (lang, id) {
         return entries[id];
       };
@@ -605,20 +613,20 @@
     }
 
     function subPlaceable(locals, ctx, lang, args, id) {
-      let res;
+      let newLocals, value;
 
       try {
-        res = resolveIdentifier(ctx, lang, args, id);
+        [newLocals, value] = resolveIdentifier(ctx, lang, args, id);
       } catch (err) {
         return [{
           error: err
-        }, '{{ ' + id + ' }}'];
+        }, FSI + '{{ ' + id + ' }}' + PDI];
       }
 
-      const value = res[1];
-
       if (typeof value === 'number') {
-        return res;
+        const formatter = ctx._getNumberFormatter(lang);
+
+        return [newLocals, formatter.format(value)];
       }
 
       if (typeof value === 'string') {
@@ -626,10 +634,10 @@
           throw new L10nError('Too many characters in placeable (' + value.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')');
         }
 
-        return res;
+        return [newLocals, FSI + value + PDI];
       }
 
-      return [{}, '{{ ' + id + ' }}'];
+      return [{}, FSI + '{{ ' + id + ' }}' + PDI];
     }
 
     function interpolate(locals, ctx, lang, args, arr) {
@@ -638,7 +646,7 @@
           return [localsSeq, valueSeq + cur];
         } else {
           const [, value] = subPlaceable(locals, ctx, lang, args, cur.name);
-          return [localsSeq, valueSeq + FSI + value + PDI];
+          return [localsSeq, valueSeq + value];
         }
       }, [locals, '']);
     }

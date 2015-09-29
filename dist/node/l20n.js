@@ -319,6 +319,7 @@ module.exports =
 
 	    this._env = env;
 	    this._resIds = resIds;
+	    this._numberFormatters = null;
 	  }
 
 	  Context.prototype._formatTuple = function _formatTuple(lang, args, entity, id, key) {
@@ -370,39 +371,60 @@ module.exports =
 	    });
 	  };
 
-	  Context.prototype._resolve = function _resolve(langs, id, args, formatter) {
+	  Context.prototype._resolve = function _resolve(langs, keys, formatter, prevResolved) {
 	    var _this = this;
 
 	    var lang = langs[0];
 
 	    if (!lang) {
-	      this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in any language', id), this);
-	      if (formatter === this._formatEntity) {
-	        return { value: id, attrs: null };
-	      } else {
-	        return id;
-	      }
+	      return reportMissing.call(this, keys, formatter, prevResolved);
 	    }
 
-	    var entity = this._getEntity(lang, id);
+	    var hasUnresolved = false;
 
-	    if (entity) {
-	      return Promise.resolve(formatter.call(this, lang, args, entity, id));
-	    } else {
-	      this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), this);
+	    var resolved = keys.map(function (key, i) {
+	      if (prevResolved && prevResolved[i] !== undefined) {
+	        return prevResolved[i];
+	      }
+
+	      var _ref = Array.isArray(key) ? key : [key, undefined];
+
+	      var id = _ref[0];
+	      var args = _ref[1];
+
+	      var entity = _this._getEntity(lang, id);
+
+	      if (entity) {
+	        return formatter.call(_this, lang, args, entity, id);
+	      }
+
+	      _this._env.emit('notfounderror', new _errors.L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), _this);
+	      hasUnresolved = true;
+	    });
+
+	    if (!hasUnresolved) {
+	      return resolved;
 	    }
 
 	    return this.fetch(langs.slice(1)).then(function (nextLangs) {
-	      return _this._resolve(nextLangs, id, args, formatter);
+	      return _this._resolve(nextLangs, keys, formatter, resolved);
 	    });
 	  };
 
-	  Context.prototype.resolveEntity = function resolveEntity(langs, id, args) {
-	    return this._resolve(langs, id, args, this._formatEntity);
+	  Context.prototype.resolveEntities = function resolveEntities(langs, keys) {
+	    var _this2 = this;
+
+	    return this.fetch(langs).then(function (langs) {
+	      return _this2._resolve(langs, keys, _this2._formatEntity);
+	    });
 	  };
 
-	  Context.prototype.resolveValue = function resolveValue(langs, id, args) {
-	    return this._resolve(langs, id, args, this._formatValue);
+	  Context.prototype.resolveValues = function resolveValues(langs, keys) {
+	    var _this3 = this;
+
+	    return this.fetch(langs).then(function (langs) {
+	      return _this3._resolve(langs, keys, _this3._formatValue);
+	    });
 	  };
 
 	  Context.prototype._getEntity = function _getEntity(lang, id) {
@@ -420,6 +442,20 @@ module.exports =
 	    return undefined;
 	  };
 
+	  Context.prototype._getNumberFormatter = function _getNumberFormatter(lang) {
+	    if (!this._numberFormatters) {
+	      this._numberFormatters = new Map();
+	    }
+	    if (!this._numberFormatters.has(lang)) {
+	      var formatter = Intl.NumberFormat(lang, {
+	        useGrouping: false
+	      });
+	      this._numberFormatters.set(lang, formatter);
+	      return formatter;
+	    }
+	    return this._numberFormatters.get(lang);
+	  };
+
 	  Context.prototype._getMacro = function _getMacro(lang, id) {
 	    switch (id) {
 	      case 'plural':
@@ -433,6 +469,25 @@ module.exports =
 	})();
 
 	exports.Context = Context;
+
+	function reportMissing(keys, formatter, resolved) {
+	  var _this4 = this;
+
+	  var missingIds = new Set();
+
+	  keys.forEach(function (key, i) {
+	    if (resolved && resolved[i] !== undefined) {
+	      return;
+	    }
+	    var id = Array.isArray(key) ? key[0] : key;
+	    missingIds.add(id);
+	    resolved[i] = formatter === _this4._formatValue ? id : { value: id, attrs: null };
+	  });
+
+	  this._env.emit('notfounderror', new _errors.L10nError('"' + [].concat(missingIds).join(', ') + '"' + ' not found in any language', missingIds), this);
+
+	  return resolved;
+	}
 
 /***/ },
 /* 7 */
@@ -501,28 +556,31 @@ module.exports =
 	}
 
 	function subPlaceable(locals, ctx, lang, args, id) {
-	  var res = undefined;
+	  var newLocals = undefined,
+	      value = undefined;
 
 	  try {
-	    res = resolveIdentifier(ctx, lang, args, id);
+	    var _resolveIdentifier = resolveIdentifier(ctx, lang, args, id);
+
+	    newLocals = _resolveIdentifier[0];
+	    value = _resolveIdentifier[1];
 	  } catch (err) {
-	    return [{ error: err }, '{{ ' + id + ' }}'];
+	    return [{ error: err }, FSI + '{{ ' + id + ' }}' + PDI];
 	  }
 
-	  var value = res[1];
-
 	  if (typeof value === 'number') {
-	    return res;
+	    var formatter = ctx._getNumberFormatter(lang);
+	    return [newLocals, formatter.format(value)];
 	  }
 
 	  if (typeof value === 'string') {
 	    if (value.length >= MAX_PLACEABLE_LENGTH) {
 	      throw new _errors.L10nError('Too many characters in placeable (' + value.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')');
 	    }
-	    return res;
+	    return [newLocals, FSI + value + PDI];
 	  }
 
-	  return [{}, '{{ ' + id + ' }}'];
+	  return [{}, FSI + '{{ ' + id + ' }}' + PDI];
 	}
 
 	function interpolate(locals, ctx, lang, args, arr) {
@@ -537,7 +595,7 @@ module.exports =
 
 	      var value = _subPlaceable[1];
 
-	      return [localsSeq, valueSeq + FSI + value + PDI];
+	      return [localsSeq, valueSeq + value];
 	    }
 	  }, [locals, '']);
 	}
