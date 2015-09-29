@@ -50,15 +50,11 @@ export class View {
     }
   }
 
-  emit(...args) {
-    return this.env.emit(...args);
-  }
+  _observe() {}
+  _disconnect() {}
 
-  observe() {}
-  disconnect() {}
-
-  _resolveEntity(langs, id, args) {
-    return this.ctx.resolveEntity(langs, id, args);
+  _resolveEntities(langs, keys) {
+    return this.ctx.resolveEntities(langs, keys);
   }
 
   translateDocument(code) {

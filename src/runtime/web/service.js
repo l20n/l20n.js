@@ -1,44 +1,45 @@
 'use strict';
 
 import { Env } from '../../lib/env';
-import { translate } from './view';
-import { getMeta } from './head';
-import { negotiateLanguages } from './langs';
+import { fetch } from './io';
+import { translateDocument } from '../../bindings/html/view';
+import { getMeta, documentReady } from '../../bindings/html/head';
+import { negotiateLanguages } from '../../bindings/html/langs';
 
 export class Service {
-  constructor(fetch) {
-    this.views = new Map();
-    this.fetch = fetch;
+  constructor(requestedLangs) {
+    this.ctxs = new Map();
+    this.interactive = documentReady().then(
+      () => this.init(requestedLangs));
   }
 
-  register(view, resources) {
+  init(requestedLangs) {
     const meta = getMeta(document.head);
     this.defaultLanguage = meta.defaultLang;
     this.availableLanguages = meta.availableLangs;
     this.appVersion = meta.appVersion;
 
     this.env = new Env(
-      this.defaultLanguage, this.fetch.bind(null, this.appVersion));
-    this.env.addEventListener('deprecatewarning',
-      err => console.warn(err));
-    this.views.set(view, this.env.createContext(resources));
-    return this;
+      this.defaultLanguage, fetch.bind(null, this.appVersion));
+
+    return this.requestLanguages(requestedLangs);
   }
 
-  initView(view) {
+  registerView(view, resources) {
+    return this.interactive.then(
+      () => this.ctxs.set(view, this.env.createContext(resources)));
+  }
+
+  resolveEntities(view, langs, keys) {
+    return this.ctxs.get(view).resolveEntities(langs, keys);
+  }
+
+  formatValues(view, keys) {
     return this.languages.then(
-      langs => this.views.get(view).fetch(langs));
+      langs => this.ctxs.get(view).resolveValues(langs, keys));
   }
 
-  resolveEntity(view, langs, id, args) {
-    return this.views.get(view).resolveEntity(langs, id, args);
-  }
-
-  resolveValue(view, langs, id, args) {
-    return this.views.get(view).resolveValue(langs, id, args);
-  }
-
-  requestLanguages(requestedLangs = navigator.languages) {
+  requestLanguages(requestedLangs) {
     return changeLanguages.call(
       this, getAdditionalLanguages(), requestedLangs);
   }
@@ -59,14 +60,9 @@ export function getAdditionalLanguages() {
 }
 
 function translateViews(langs) {
-  const views = Array.from(this.views);
+  const views = Array.from(this.ctxs.keys());
   return Promise.all(
-    views.map(tuple => translateView(langs, tuple)));
-}
-
-function translateView(langs, [view, ctx]) {
-  return ctx.fetch(langs).then(
-    translate.bind(view, langs));
+    views.map(view => translateDocument(view, langs)));
 }
 
 function changeLanguages(additionalLangs, requestedLangs) {

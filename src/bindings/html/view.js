@@ -1,6 +1,7 @@
 'use strict';
 
-import { getResourceLinks } from '../../bindings/html/head';
+import { qps } from '../../lib/pseudo';
+import { getResourceLinks, documentReady } from './head';
 import {
   setAttributes, getAttributes, translateFragment, translateMutations
 } from './dom';
@@ -13,52 +14,52 @@ const observerConfig = {
   attributeFilter: ['data-l10n-id', 'data-l10n-args']
 };
 
-export class View {
-  constructor(doc) {
-    this.doc = doc;
+const readiness = new WeakMap();
 
-    this.ready = new Promise(function(resolve) {
-      const viewReady = function(evt) {
-        doc.removeEventListener('DOMLocalized', viewReady);
-        resolve(evt.detail.languages);
-      };
-      doc.addEventListener('DOMLocalized', viewReady);
-    });
+export class View {
+  constructor(client, doc) {
+    this._doc = doc;
+    this.qps = qps;
+
+    this._interactive = documentReady().then(
+      () => init(this, client));
 
     const observer = new MutationObserver(onMutations.bind(this));
-    this.observe = () => observer.observe(this.doc, observerConfig);
-    this.disconnect = () => observer.disconnect();
+    this._observe = () => observer.observe(doc, observerConfig);
+    this._disconnect = () => observer.disconnect();
 
+    this.ready = this.resolvedLanguages().then(
+      langs => translateDocument(this, langs));
   }
 
-  init(service) {
-    this.service = service.register(this, getResourceLinks(this.doc.head));
-    this.observe();
+  resolvedLanguages() {
+    return this._interactive.then(
+      client => client.languages);
   }
 
-  get languages() {
-    return this.service.languages;
+  requestLanguages(langs) {
+    return this._interactive.then(
+      client => client.requestLanguages(langs));
   }
 
-  set languages(langs) {
-    return this.service.requestLanguages(langs);
-  }
-
-  emit(...args) {
-    return this.service.env.emit(...args);
-  }
-
-  _resolveEntity(langs, id, args) {
-    return this.service.resolveEntity(this, langs, id, args);
+  _resolveEntities(langs, keys) {
+    return this._interactive.then(
+      client => client.resolveEntities(this, langs, keys));
   }
 
   formatValue(id, args) {
-    return this.service.initView(this).then(
-      langs => this.service.resolveValue(this, langs, id, args));
+    return this._interactive.then(
+      client => client.formatValues(this, [[id, args]])).then(
+        values => values[0]);
+  }
+
+  formatValues(...keys) {
+    return this._interactive.then(
+      client => client.formatValues(this, keys));
   }
 
   translateFragment(frag) {
-    return this.service.initView(this).then(
+    return this.resolvedLanguages().then(
       langs => translateFragment(this, langs, frag));
   }
 }
@@ -66,42 +67,54 @@ export class View {
 View.prototype.setAttributes = setAttributes;
 View.prototype.getAttributes = getAttributes;
 
+function init(view, client) {
+  view._observe();
+  return client.registerView(view, getResourceLinks(view._doc.head)).then(
+    () => client);
+}
+
 function onMutations(mutations) {
-  return this.service.initView(this).then(
+  return this.resolvedLanguages().then(
     langs => translateMutations(this, langs, mutations));
 }
 
-export function translate(langs) {
-  dispatchEvent(this.doc, 'supportedlanguageschange', langs);
-  return translateDocument.call(this, langs);
-}
+export function translateDocument(view, langs) {
+  const html = view._doc.documentElement;
 
-function translateDocument(langs) {
-  const [view, doc] = [this, this.doc];
-  const setDOMLocalized = function() {
-    doc.localized = true;
-    dispatchEvent(doc, 'DOMLocalized', langs);
-  };
-
-  if (langs[0].code === doc.documentElement.getAttribute('lang')) {
-    return Promise.resolve(setDOMLocalized());
+  if (readiness.has(html)) {
+    return translateFragment(view, langs, html).then(
+      () => setDOMAttrsAndEmit(html, langs)).then(
+        () => langs.map(takeCode));
   }
 
-  return translateFragment(view, langs, doc.documentElement).then(
-    () => {
-      doc.documentElement.lang = langs[0].code;
-      doc.documentElement.dir = langs[0].dir;
-      setDOMLocalized();
-    });
+  const translated =
+    // has the document been already pre-translated?
+    langs[0].code === html.getAttribute('lang') ?
+      Promise.resolve() :
+      translateFragment(view, langs, html).then(
+        () => setDOMAttrs(html, langs));
+
+  return translated.then(
+    () => readiness.set(html, true)).then(
+      () => langs.map(takeCode));
 }
 
-function dispatchEvent(root, name, langs) {
-  const event = new CustomEvent(name, {
+function setDOMAttrsAndEmit(html, langs) {
+  setDOMAttrs(html, langs);
+  html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
     bubbles: false,
     cancelable: false,
     detail: {
-      languages: langs
+      languages: langs.map(takeCode)
     }
-  });
-  root.dispatchEvent(event);
+  }));
+}
+
+function setDOMAttrs(html, langs) {
+  html.setAttribute('lang', langs[0].code);
+  html.setAttribute('dir', langs[0].dir);
+}
+
+function takeCode(lang) {
+  return lang.code;
 }

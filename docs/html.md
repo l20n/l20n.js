@@ -107,5 +107,6 @@ clarity):
 <h1>Hello, Mary!</h1>
 ```
 
-When all DOM nodes are localized, `document` will fire a `DOMLocalized` 
-event and will set its `localized` property to `true`.
+The first time all DOM nodes are localized, the `document.l10n.ready` promise 
+will resolve.  On every following re-translation due to languages change, 
+`document` will fire a `DOMRetranslated` event.
