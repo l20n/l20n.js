@@ -48,7 +48,7 @@
 
 	var _service = __webpack_require__(1);
 
-	var _bindingsHtmlView = __webpack_require__(12);
+	var _bindingsHtmlView = __webpack_require__(2);
 
 	var service = new _service.Service(navigator.languages);
 	window.addEventListener('languagechange', service);
@@ -67,13 +67,15 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _libEnv = __webpack_require__(2);
+	var _libEnv = __webpack_require__(6);
 
-	var _io = __webpack_require__(11);
+	var _libPseudo = __webpack_require__(13);
 
-	var _bindingsHtmlView = __webpack_require__(12);
+	var _io = __webpack_require__(15);
 
-	var _bindingsHtmlHead = __webpack_require__(13);
+	var _bindingsHtmlView = __webpack_require__(2);
+
+	var _bindingsHtmlHead = __webpack_require__(3);
 
 	var _bindingsHtmlLangs = __webpack_require__(16);
 
@@ -124,6 +126,14 @@
 	    return changeLanguages.call(this, getAdditionalLanguages(), requestedLangs);
 	  };
 
+	  Service.prototype.getPseudoName = function getPseudoName(code) {
+	    return _libPseudo.pseudo[code].name;
+	  };
+
+	  Service.prototype.pseudotranslate = function pseudotranslate(code, str) {
+	    return _libPseudo.pseudo[code].process(str);
+	  };
+
 	  Service.prototype.handleEvent = function handleEvent(evt) {
 	    return changeLanguages.call(this, evt.detail || getAdditionalLanguages(), navigator.languages);
 	  };
@@ -168,25 +178,615 @@
 	'use strict';
 
 	exports.__esModule = true;
+	exports.translateDocument = translateDocument;
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	var _head = __webpack_require__(3);
+
+	var _dom = __webpack_require__(4);
+
+	var observerConfig = {
+	  attributes: true,
+	  characterData: false,
+	  childList: true,
+	  subtree: true,
+	  attributeFilter: ['data-l10n-id', 'data-l10n-args']
+	};
+
+	var readiness = new WeakMap();
+
+	var View = (function () {
+	  function View(client, doc) {
+	    var _this = this;
+
+	    _classCallCheck(this, View);
+
+	    this._doc = doc;
+	    this.pseudo = {
+	      'qps-ploc': new Pseudo(this, 'qps-ploc'),
+	      'qps-plocm': new Pseudo(this, 'qps-plocm')
+	    };
+
+	    this._interactive = _head.documentReady().then(function () {
+	      return init(_this, client);
+	    });
+
+	    var observer = new MutationObserver(onMutations.bind(this));
+	    this._observe = function () {
+	      return observer.observe(doc, observerConfig);
+	    };
+	    this._disconnect = function () {
+	      return observer.disconnect();
+	    };
+
+	    this.ready = this.resolvedLanguages().then(function (langs) {
+	      return translateDocument(_this, langs);
+	    });
+	  }
+
+	  View.prototype.resolvedLanguages = function resolvedLanguages() {
+	    return this._interactive.then(function (client) {
+	      return client.languages;
+	    });
+	  };
+
+	  View.prototype.requestLanguages = function requestLanguages(langs) {
+	    return this._interactive.then(function (client) {
+	      return client.requestLanguages(langs);
+	    });
+	  };
+
+	  View.prototype._resolveEntities = function _resolveEntities(langs, keys) {
+	    var _this2 = this;
+
+	    return this._interactive.then(function (client) {
+	      return client.resolveEntities(_this2, langs, keys);
+	    });
+	  };
+
+	  View.prototype.formatValue = function formatValue(id, args) {
+	    var _this3 = this;
+
+	    return this._interactive.then(function (client) {
+	      return client.formatValues(_this3, [[id, args]]);
+	    }).then(function (values) {
+	      return values[0];
+	    });
+	  };
+
+	  View.prototype.formatValues = function formatValues() {
+	    var _this4 = this;
+
+	    for (var _len = arguments.length, keys = Array(_len), _key = 0; _key < _len; _key++) {
+	      keys[_key] = arguments[_key];
+	    }
+
+	    return this._interactive.then(function (client) {
+	      return client.formatValues(_this4, keys);
+	    });
+	  };
+
+	  View.prototype.translateFragment = function translateFragment(frag) {
+	    var _this5 = this;
+
+	    return this.resolvedLanguages().then(function (langs) {
+	      return _dom.translateFragment(_this5, langs, frag);
+	    });
+	  };
+
+	  return View;
+	})();
+
+	exports.View = View;
+
+	View.prototype.setAttributes = _dom.setAttributes;
+	View.prototype.getAttributes = _dom.getAttributes;
+
+	var Pseudo = (function () {
+	  function Pseudo(view, code) {
+	    _classCallCheck(this, Pseudo);
+
+	    this.view = view;
+	    this.code = code;
+	  }
+
+	  Pseudo.prototype.getName = function getName() {
+	    var _this6 = this;
+
+	    return this.view._interactive.then(function (client) {
+	      return client.getPseudoName(_this6.code);
+	    });
+	  };
+
+	  Pseudo.prototype.processString = function processString(str) {
+	    var _this7 = this;
+
+	    return this.view._interactive.then(function (client) {
+	      return client.pseudotranslate(_this7.code, str);
+	    });
+	  };
+
+	  return Pseudo;
+	})();
+
+	function init(view, client) {
+	  view._observe();
+	  return client.registerView(view, _head.getResourceLinks(view._doc.head)).then(function () {
+	    return client;
+	  });
+	}
+
+	function onMutations(mutations) {
+	  var _this8 = this;
+
+	  return this.resolvedLanguages().then(function (langs) {
+	    return _dom.translateMutations(_this8, langs, mutations);
+	  });
+	}
+
+	function translateDocument(view, langs) {
+	  var html = view._doc.documentElement;
+
+	  if (readiness.has(html)) {
+	    return _dom.translateFragment(view, langs, html).then(function () {
+	      return setDOMAttrsAndEmit(html, langs);
+	    }).then(function () {
+	      return langs.map(takeCode);
+	    });
+	  }
+
+	  var translated = langs[0].code === html.getAttribute('lang') ? Promise.resolve() : _dom.translateFragment(view, langs, html).then(function () {
+	    return setDOMAttrs(html, langs);
+	  });
+
+	  return translated.then(function () {
+	    return readiness.set(html, true);
+	  }).then(function () {
+	    return langs.map(takeCode);
+	  });
+	}
+
+	function setDOMAttrsAndEmit(html, langs) {
+	  setDOMAttrs(html, langs);
+	  html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
+	    bubbles: false,
+	    cancelable: false,
+	    detail: {
+	      languages: langs.map(takeCode)
+	    }
+	  }));
+	}
+
+	function setDOMAttrs(html, langs) {
+	  html.setAttribute('lang', langs[0].code);
+	  html.setAttribute('dir', langs[0].dir);
+	}
+
+	function takeCode(lang) {
+	  return lang.code;
+	}
+
+/***/ },
+/* 3 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	exports.documentReady = documentReady;
+	exports.getResourceLinks = getResourceLinks;
+	exports.getMeta = getMeta;
+
+	if (typeof NodeList === 'function' && !NodeList.prototype[Symbol.iterator]) {
+	  NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
+	}
+
+	function documentReady() {
+	  if (document.readyState !== 'loading') {
+	    return Promise.resolve();
+	  }
+
+	  return new Promise(function (resolve) {
+	    document.addEventListener('readystatechange', function onrsc() {
+	      document.removeEventListener('readystatechange', onrsc);
+	      resolve();
+	    });
+	  });
+	}
+
+	function getResourceLinks(head) {
+	  return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
+	    return decodeURI(el.getAttribute('href'));
+	  });
+	}
+
+	function getMeta(head) {
+	  var availableLangs = Object.create(null);
+	  var defaultLang = null;
+	  var appVersion = null;
+
+	  var metas = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
+	  for (var _iterator = metas, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+	    var _ref;
+
+	    if (_isArray) {
+	      if (_i >= _iterator.length) break;
+	      _ref = _iterator[_i++];
+	    } else {
+	      _i = _iterator.next();
+	      if (_i.done) break;
+	      _ref = _i.value;
+	    }
+
+	    var meta = _ref;
+
+	    var _name = meta.getAttribute('name');
+	    var content = meta.getAttribute('content').trim();
+	    switch (_name) {
+	      case 'availableLanguages':
+	        availableLangs = getLangRevisionMap(availableLangs, content);
+	        break;
+	      case 'defaultLanguage':
+	        var _getLangRevisionTuple = getLangRevisionTuple(content),
+	            lang = _getLangRevisionTuple[0],
+	            rev = _getLangRevisionTuple[1];
+
+	        defaultLang = lang;
+	        if (!(lang in availableLangs)) {
+	          availableLangs[lang] = rev;
+	        }
+	        break;
+	      case 'appVersion':
+	        appVersion = content;
+	    }
+	  }
+
+	  return {
+	    defaultLang: defaultLang,
+	    availableLangs: availableLangs,
+	    appVersion: appVersion
+	  };
+	}
+
+	function getLangRevisionMap(seq, str) {
+	  return str.split(',').reduce(function (seq, cur) {
+	    var _getLangRevisionTuple2 = getLangRevisionTuple(cur);
+
+	    var lang = _getLangRevisionTuple2[0];
+	    var rev = _getLangRevisionTuple2[1];
+
+	    seq[lang] = rev;
+	    return seq;
+	  }, seq);
+	}
+
+	function getLangRevisionTuple(str) {
+	  var _str$trim$split = str.trim().split(':');
+
+	  var lang = _str$trim$split[0];
+	  var rev = _str$trim$split[1];
+
+	  return [lang, parseInt(rev)];
+	}
+
+/***/ },
+/* 4 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	exports.setAttributes = setAttributes;
+	exports.getAttributes = getAttributes;
+	exports.translateMutations = translateMutations;
+	exports.translateFragment = translateFragment;
+
+	var _overlay = __webpack_require__(5);
+
+	var reHtml = /[&<>]/g;
+	var htmlEntities = {
+	  '&': '&amp;',
+	  '<': '&lt;',
+	  '>': '&gt;'
+	};
+
+	function setAttributes(element, id, args) {
+	  element.setAttribute('data-l10n-id', id);
+	  if (args) {
+	    element.setAttribute('data-l10n-args', JSON.stringify(args));
+	  }
+	}
+
+	function getAttributes(element) {
+	  return {
+	    id: element.getAttribute('data-l10n-id'),
+	    args: JSON.parse(element.getAttribute('data-l10n-args'))
+	  };
+	}
+
+	function getTranslatables(element) {
+	  var nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
+
+	  if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
+	    nodes.push(element);
+	  }
+
+	  return nodes;
+	}
+
+	function translateMutations(view, langs, mutations) {
+	  var targets = new Set();
+
+	  for (var _iterator = mutations, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+	    var _ref;
+
+	    if (_isArray) {
+	      if (_i >= _iterator.length) break;
+	      _ref = _iterator[_i++];
+	    } else {
+	      _i = _iterator.next();
+	      if (_i.done) break;
+	      _ref = _i.value;
+	    }
+
+	    var mutation = _ref;
+
+	    switch (mutation.type) {
+	      case 'attributes':
+	        targets.add(mutation.target);
+	        break;
+	      case 'childList':
+	        for (var _iterator2 = mutation.addedNodes, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
+	          var _ref2;
+
+	          if (_isArray2) {
+	            if (_i2 >= _iterator2.length) break;
+	            _ref2 = _iterator2[_i2++];
+	          } else {
+	            _i2 = _iterator2.next();
+	            if (_i2.done) break;
+	            _ref2 = _i2.value;
+	          }
+
+	          var addedNode = _ref2;
+
+	          if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
+	            if (addedNode.childElementCount) {
+	              getTranslatables(addedNode).forEach(targets.add.bind(targets));
+	            } else {
+	              if (addedNode.hasAttribute('data-l10n-id')) {
+	                targets.add(addedNode);
+	              }
+	            }
+	          }
+	        }
+	        break;
+	    }
+	  }
+
+	  if (targets.size === 0) {
+	    return;
+	  }
+
+	  translateElements(view, langs, Array.from(targets));
+	}
+
+	function translateFragment(view, langs, frag) {
+	  return translateElements(view, langs, getTranslatables(frag));
+	}
+
+	function getElementsTranslation(view, langs, elems) {
+	  var keys = elems.map(function (elem) {
+	    var id = elem.getAttribute('data-l10n-id');
+	    var args = elem.getAttribute('data-l10n-args');
+	    return args ? [id, JSON.parse(args.replace(reHtml, function (match) {
+	      return htmlEntities[match];
+	    }))] : id;
+	  });
+
+	  return view._resolveEntities(langs, keys);
+	}
+
+	function translateElements(view, langs, elements) {
+	  return getElementsTranslation(view, langs, elements).then(function (translations) {
+	    return applyTranslations(view, elements, translations);
+	  });
+	}
+
+	function applyTranslations(view, elems, translations) {
+	  view._disconnect();
+	  for (var i = 0; i < elems.length; i++) {
+	    _overlay.overlayElement(elems[i], translations[i]);
+	  }
+	  view._observe();
+	}
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	exports.__esModule = true;
+	exports.overlayElement = overlayElement;
+
+	var reOverlay = /<|&#?\w+;/;
+
+	var allowed = {
+	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
+	  attributes: {
+	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
+	    a: ['download'],
+	    area: ['download', 'alt'],
+
+	    input: ['alt', 'placeholder'],
+	    menuitem: ['label'],
+	    menu: ['label'],
+	    optgroup: ['label'],
+	    option: ['label'],
+	    track: ['label'],
+	    img: ['alt'],
+	    textarea: ['placeholder'],
+	    th: ['abbr']
+	  }
+	};
+
+	function overlayElement(element, translation) {
+	  var value = translation.value;
+
+	  if (typeof value === 'string') {
+	    if (!reOverlay.test(value)) {
+	      element.textContent = value;
+	    } else {
+	      var tmpl = element.ownerDocument.createElement('template');
+	      tmpl.innerHTML = value;
+
+	      overlay(element, tmpl.content);
+	    }
+	  }
+
+	  for (var key in translation.attrs) {
+	    var attrName = camelCaseToDashed(key);
+	    if (isAttrAllowed({ name: attrName }, element)) {
+	      element.setAttribute(attrName, translation.attrs[key]);
+	    }
+	  }
+	}
+
+	function overlay(sourceElement, translationElement) {
+	  var result = translationElement.ownerDocument.createDocumentFragment();
+	  var k = undefined,
+	      attr = undefined;
+
+	  var childElement = undefined;
+	  while (childElement = translationElement.childNodes[0]) {
+	    translationElement.removeChild(childElement);
+
+	    if (childElement.nodeType === childElement.TEXT_NODE) {
+	      result.appendChild(childElement);
+	      continue;
+	    }
+
+	    var index = getIndexOfType(childElement);
+	    var sourceChild = getNthElementOfType(sourceElement, childElement, index);
+	    if (sourceChild) {
+	      overlay(sourceChild, childElement);
+	      result.appendChild(sourceChild);
+	      continue;
+	    }
+
+	    if (isElementAllowed(childElement)) {
+	      var sanitizedChild = childElement.ownerDocument.createElement(childElement.nodeName);
+	      overlay(sanitizedChild, childElement);
+	      result.appendChild(sanitizedChild);
+	      continue;
+	    }
+
+	    result.appendChild(translationElement.ownerDocument.createTextNode(childElement.textContent));
+	  }
+
+	  sourceElement.textContent = '';
+	  sourceElement.appendChild(result);
+
+	  if (translationElement.attributes) {
+	    for (k = 0, attr; attr = translationElement.attributes[k]; k++) {
+	      if (isAttrAllowed(attr, sourceElement)) {
+	        sourceElement.setAttribute(attr.name, attr.value);
+	      }
+	    }
+	  }
+	}
+
+	function isElementAllowed(element) {
+	  return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
+	}
+
+	function isAttrAllowed(attr, element) {
+	  var attrName = attr.name.toLowerCase();
+	  var tagName = element.tagName.toLowerCase();
+
+	  if (allowed.attributes.global.indexOf(attrName) !== -1) {
+	    return true;
+	  }
+
+	  if (!allowed.attributes[tagName]) {
+	    return false;
+	  }
+
+	  if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
+	    return true;
+	  }
+
+	  if (tagName === 'input' && attrName === 'value') {
+	    var type = element.type.toLowerCase();
+	    if (type === 'submit' || type === 'button' || type === 'reset') {
+	      return true;
+	    }
+	  }
+	  return false;
+	}
+
+	function getNthElementOfType(context, element, index) {
+	  var nthOfType = 0;
+	  for (var i = 0, child = undefined; child = context.children[i]; i++) {
+	    if (child.nodeType === child.ELEMENT_NODE && child.tagName === element.tagName) {
+	      if (nthOfType === index) {
+	        return child;
+	      }
+	      nthOfType++;
+	    }
+	  }
+	  return null;
+	}
+
+	function getIndexOfType(element) {
+	  var index = 0;
+	  var child = undefined;
+	  while (child = element.previousElementSibling) {
+	    if (child.tagName === element.tagName) {
+	      index++;
+	    }
+	  }
+	  return index;
+	}
+
+	function camelCaseToDashed(string) {
+	  if (string === 'ariaValueText') {
+	    return 'aria-valuetext';
+	  }
+
+	  return string.replace(/[A-Z]/g, function (match) {
+	    return '-' + match.toLowerCase();
+	  }).replace(/^-/, '');
+	}
+
+/***/ },
+/* 6 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	exports.__esModule = true;
 	exports.amendError = amendError;
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _context = __webpack_require__(3);
+	var _context = __webpack_require__(7);
 
-	var _formatPropertiesParser = __webpack_require__(7);
+	var _formatPropertiesParser = __webpack_require__(11);
 
 	var _formatPropertiesParser2 = _interopRequireDefault(_formatPropertiesParser);
 
-	var _formatL20nEntriesParser = __webpack_require__(8);
+	var _formatL20nEntriesParser = __webpack_require__(12);
 
 	var _formatL20nEntriesParser2 = _interopRequireDefault(_formatL20nEntriesParser);
 
-	var _pseudo = __webpack_require__(9);
+	var _pseudo = __webpack_require__(13);
 
-	var _events = __webpack_require__(10);
+	var _events = __webpack_require__(14);
 
 	var parsers = {
 	  properties: _formatPropertiesParser2.default,
@@ -227,13 +827,13 @@
 	  };
 
 	  Env.prototype._create = function _create(lang, entries) {
-	    if (lang.src !== 'qps') {
+	    if (lang.src !== 'pseudo') {
 	      return entries;
 	    }
 
 	    var pseudoentries = Object.create(null);
 	    for (var key in entries) {
-	      pseudoentries[key] = _pseudo.walkEntry(entries[key], _pseudo.qps[lang.code].translate);
+	      pseudoentries[key] = _pseudo.walkEntry(entries[key], _pseudo.pseudo[lang.code].process);
 	    }
 	    return pseudoentries;
 	  };
@@ -261,7 +861,7 @@
 	      cache[id] = err;
 	    };
 
-	    var langToFetch = lang.src === 'qps' ? { code: this.defaultLang, src: 'app' } : lang;
+	    var langToFetch = lang.src === 'pseudo' ? { code: this.defaultLang, src: 'app' } : lang;
 
 	    return cache[id] = this.fetch(res, langToFetch).then(saveEntries, recover);
 	  };
@@ -277,7 +877,7 @@
 	}
 
 /***/ },
-/* 3 */
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -286,11 +886,11 @@
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-	var _errors = __webpack_require__(4);
+	var _errors = __webpack_require__(8);
 
-	var _resolver = __webpack_require__(5);
+	var _resolver = __webpack_require__(9);
 
-	var _plurals = __webpack_require__(6);
+	var _plurals = __webpack_require__(10);
 
 	var Context = (function () {
 	  function Context(env, resIds) {
@@ -469,7 +1069,7 @@
 	}
 
 /***/ },
-/* 4 */
+/* 8 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -488,7 +1088,7 @@
 	L10nError.prototype.constructor = L10nError;
 
 /***/ },
-/* 5 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -496,7 +1096,7 @@
 	exports.__esModule = true;
 	exports.format = format;
 
-	var _errors = __webpack_require__(4);
+	var _errors = __webpack_require__(8);
 
 	var KNOWN_MACROS = ['plural'];
 	var MAX_PLACEABLE_LENGTH = 2500;
@@ -657,7 +1257,7 @@
 	}
 
 /***/ },
-/* 6 */
+/* 10 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1107,14 +1707,14 @@
 	}
 
 /***/ },
-/* 7 */
+/* 11 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	exports.__esModule = true;
 
-	var _errors = __webpack_require__(4);
+	var _errors = __webpack_require__(8);
 
 	var MAX_PLACEABLES = 100;
 
@@ -1333,14 +1933,14 @@
 	module.exports = exports.default;
 
 /***/ },
-/* 8 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	exports.__esModule = true;
 
-	var _errors = __webpack_require__(4);
+	var _errors = __webpack_require__(8);
 
 	var MAX_PLACEABLES = 100;
 
@@ -1847,7 +2447,7 @@
 	module.exports = exports.default;
 
 /***/ },
-/* 9 */
+/* 13 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -1940,7 +2540,7 @@
 	      });
 	    };
 
-	    var tranform = function (val) {
+	    var transform = function (val) {
 	      return replaceChars(charMaps[id], mods[id](val));
 	    };
 
@@ -1960,15 +2560,15 @@
 	    };
 
 	    return _pseudo = {
-	      translate: function (val) {
-	        return apply(tranform, val);
-	      },
-	      name: tranform(name)
+	      name: transform(name),
+	      process: function (str) {
+	        return apply(transform, str);
+	      }
 	    };
 	  };
 	}
 
-	var qps = Object.defineProperties(Object.create(null), {
+	var pseudo = Object.defineProperties(Object.create(null), {
 	  'qps-ploc': {
 	    enumerable: true,
 	    get: createGetter('qps-ploc', 'Runtime Accented')
@@ -1978,10 +2578,10 @@
 	    get: createGetter('qps-plocm', 'Runtime Mirrored')
 	  }
 	});
-	exports.qps = qps;
+	exports.pseudo = pseudo;
 
 /***/ },
-/* 10 */
+/* 14 */
 /***/ function(module, exports) {
 
 	'use strict';
@@ -2031,7 +2631,7 @@
 	}
 
 /***/ },
-/* 11 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2039,7 +2639,7 @@
 	exports.__esModule = true;
 	exports.fetch = fetch;
 
-	var _libErrors = __webpack_require__(4);
+	var _libErrors = __webpack_require__(8);
 
 	function load(type, url) {
 	  return new Promise(function (resolve, reject) {
@@ -2100,568 +2700,6 @@
 	}
 
 /***/ },
-/* 12 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.translateDocument = translateDocument;
-
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
-
-	var _libPseudo = __webpack_require__(9);
-
-	var _head = __webpack_require__(13);
-
-	var _dom = __webpack_require__(14);
-
-	var observerConfig = {
-	  attributes: true,
-	  characterData: false,
-	  childList: true,
-	  subtree: true,
-	  attributeFilter: ['data-l10n-id', 'data-l10n-args']
-	};
-
-	var readiness = new WeakMap();
-
-	var View = (function () {
-	  function View(client, doc) {
-	    var _this = this;
-
-	    _classCallCheck(this, View);
-
-	    this._doc = doc;
-	    this.qps = _libPseudo.qps;
-
-	    this._interactive = _head.documentReady().then(function () {
-	      return init(_this, client);
-	    });
-
-	    var observer = new MutationObserver(onMutations.bind(this));
-	    this._observe = function () {
-	      return observer.observe(doc, observerConfig);
-	    };
-	    this._disconnect = function () {
-	      return observer.disconnect();
-	    };
-
-	    this.ready = this.resolvedLanguages().then(function (langs) {
-	      return translateDocument(_this, langs);
-	    });
-	  }
-
-	  View.prototype.resolvedLanguages = function resolvedLanguages() {
-	    return this._interactive.then(function (client) {
-	      return client.languages;
-	    });
-	  };
-
-	  View.prototype.requestLanguages = function requestLanguages(langs) {
-	    return this._interactive.then(function (client) {
-	      return client.requestLanguages(langs);
-	    });
-	  };
-
-	  View.prototype._resolveEntities = function _resolveEntities(langs, keys) {
-	    var _this2 = this;
-
-	    return this._interactive.then(function (client) {
-	      return client.resolveEntities(_this2, langs, keys);
-	    });
-	  };
-
-	  View.prototype.formatValue = function formatValue(id, args) {
-	    var _this3 = this;
-
-	    return this._interactive.then(function (client) {
-	      return client.formatValues(_this3, [[id, args]]);
-	    }).then(function (values) {
-	      return values[0];
-	    });
-	  };
-
-	  View.prototype.formatValues = function formatValues() {
-	    var _this4 = this;
-
-	    for (var _len = arguments.length, keys = Array(_len), _key = 0; _key < _len; _key++) {
-	      keys[_key] = arguments[_key];
-	    }
-
-	    return this._interactive.then(function (client) {
-	      return client.formatValues(_this4, keys);
-	    });
-	  };
-
-	  View.prototype.translateFragment = function translateFragment(frag) {
-	    var _this5 = this;
-
-	    return this.resolvedLanguages().then(function (langs) {
-	      return _dom.translateFragment(_this5, langs, frag);
-	    });
-	  };
-
-	  return View;
-	})();
-
-	exports.View = View;
-
-	View.prototype.setAttributes = _dom.setAttributes;
-	View.prototype.getAttributes = _dom.getAttributes;
-
-	function init(view, client) {
-	  view._observe();
-	  return client.registerView(view, _head.getResourceLinks(view._doc.head)).then(function () {
-	    return client;
-	  });
-	}
-
-	function onMutations(mutations) {
-	  var _this6 = this;
-
-	  return this.resolvedLanguages().then(function (langs) {
-	    return _dom.translateMutations(_this6, langs, mutations);
-	  });
-	}
-
-	function translateDocument(view, langs) {
-	  var html = view._doc.documentElement;
-
-	  if (readiness.has(html)) {
-	    return _dom.translateFragment(view, langs, html).then(function () {
-	      return setDOMAttrsAndEmit(html, langs);
-	    }).then(function () {
-	      return langs.map(takeCode);
-	    });
-	  }
-
-	  var translated = langs[0].code === html.getAttribute('lang') ? Promise.resolve() : _dom.translateFragment(view, langs, html).then(function () {
-	    return setDOMAttrs(html, langs);
-	  });
-
-	  return translated.then(function () {
-	    return readiness.set(html, true);
-	  }).then(function () {
-	    return langs.map(takeCode);
-	  });
-	}
-
-	function setDOMAttrsAndEmit(html, langs) {
-	  setDOMAttrs(html, langs);
-	  html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
-	    bubbles: false,
-	    cancelable: false,
-	    detail: {
-	      languages: langs.map(takeCode)
-	    }
-	  }));
-	}
-
-	function setDOMAttrs(html, langs) {
-	  html.setAttribute('lang', langs[0].code);
-	  html.setAttribute('dir', langs[0].dir);
-	}
-
-	function takeCode(lang) {
-	  return lang.code;
-	}
-
-/***/ },
-/* 13 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.documentReady = documentReady;
-	exports.getResourceLinks = getResourceLinks;
-	exports.getMeta = getMeta;
-
-	if (typeof NodeList === 'function' && !NodeList.prototype[Symbol.iterator]) {
-	  NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
-	}
-
-	function documentReady() {
-	  if (document.readyState !== 'loading') {
-	    return Promise.resolve();
-	  }
-
-	  return new Promise(function (resolve) {
-	    document.addEventListener('readystatechange', function onrsc() {
-	      document.removeEventListener('readystatechange', onrsc);
-	      resolve();
-	    });
-	  });
-	}
-
-	function getResourceLinks(head) {
-	  return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
-	    return decodeURI(el.getAttribute('href'));
-	  });
-	}
-
-	function getMeta(head) {
-	  var availableLangs = Object.create(null);
-	  var defaultLang = null;
-	  var appVersion = null;
-
-	  var metas = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
-	  for (var _iterator = metas, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-	    var _ref;
-
-	    if (_isArray) {
-	      if (_i >= _iterator.length) break;
-	      _ref = _iterator[_i++];
-	    } else {
-	      _i = _iterator.next();
-	      if (_i.done) break;
-	      _ref = _i.value;
-	    }
-
-	    var meta = _ref;
-
-	    var _name = meta.getAttribute('name');
-	    var content = meta.getAttribute('content').trim();
-	    switch (_name) {
-	      case 'availableLanguages':
-	        availableLangs = getLangRevisionMap(availableLangs, content);
-	        break;
-	      case 'defaultLanguage':
-	        var _getLangRevisionTuple = getLangRevisionTuple(content),
-	            lang = _getLangRevisionTuple[0],
-	            rev = _getLangRevisionTuple[1];
-
-	        defaultLang = lang;
-	        if (!(lang in availableLangs)) {
-	          availableLangs[lang] = rev;
-	        }
-	        break;
-	      case 'appVersion':
-	        appVersion = content;
-	    }
-	  }
-
-	  return {
-	    defaultLang: defaultLang,
-	    availableLangs: availableLangs,
-	    appVersion: appVersion
-	  };
-	}
-
-	function getLangRevisionMap(seq, str) {
-	  return str.split(',').reduce(function (seq, cur) {
-	    var _getLangRevisionTuple2 = getLangRevisionTuple(cur);
-
-	    var lang = _getLangRevisionTuple2[0];
-	    var rev = _getLangRevisionTuple2[1];
-
-	    seq[lang] = rev;
-	    return seq;
-	  }, seq);
-	}
-
-	function getLangRevisionTuple(str) {
-	  var _str$trim$split = str.trim().split(':');
-
-	  var lang = _str$trim$split[0];
-	  var rev = _str$trim$split[1];
-
-	  return [lang, parseInt(rev)];
-	}
-
-/***/ },
-/* 14 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.setAttributes = setAttributes;
-	exports.getAttributes = getAttributes;
-	exports.translateMutations = translateMutations;
-	exports.translateFragment = translateFragment;
-
-	var _overlay = __webpack_require__(15);
-
-	var reHtml = /[&<>]/g;
-	var htmlEntities = {
-	  '&': '&amp;',
-	  '<': '&lt;',
-	  '>': '&gt;'
-	};
-
-	function setAttributes(element, id, args) {
-	  element.setAttribute('data-l10n-id', id);
-	  if (args) {
-	    element.setAttribute('data-l10n-args', JSON.stringify(args));
-	  }
-	}
-
-	function getAttributes(element) {
-	  return {
-	    id: element.getAttribute('data-l10n-id'),
-	    args: JSON.parse(element.getAttribute('data-l10n-args'))
-	  };
-	}
-
-	function getTranslatables(element) {
-	  var nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
-
-	  if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
-	    nodes.push(element);
-	  }
-
-	  return nodes;
-	}
-
-	function translateMutations(view, langs, mutations) {
-	  var targets = new Set();
-
-	  for (var _iterator = mutations, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
-	    var _ref;
-
-	    if (_isArray) {
-	      if (_i >= _iterator.length) break;
-	      _ref = _iterator[_i++];
-	    } else {
-	      _i = _iterator.next();
-	      if (_i.done) break;
-	      _ref = _i.value;
-	    }
-
-	    var mutation = _ref;
-
-	    switch (mutation.type) {
-	      case 'attributes':
-	        targets.add(mutation.target);
-	        break;
-	      case 'childList':
-	        for (var _iterator2 = mutation.addedNodes, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();;) {
-	          var _ref2;
-
-	          if (_isArray2) {
-	            if (_i2 >= _iterator2.length) break;
-	            _ref2 = _iterator2[_i2++];
-	          } else {
-	            _i2 = _iterator2.next();
-	            if (_i2.done) break;
-	            _ref2 = _i2.value;
-	          }
-
-	          var addedNode = _ref2;
-
-	          if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-	            if (addedNode.childElementCount) {
-	              getTranslatables(addedNode).forEach(targets.add.bind(targets));
-	            } else {
-	              if (addedNode.hasAttribute('data-l10n-id')) {
-	                targets.add(addedNode);
-	              }
-	            }
-	          }
-	        }
-	        break;
-	    }
-	  }
-
-	  if (targets.size === 0) {
-	    return;
-	  }
-
-	  translateElements(view, langs, Array.from(targets));
-	}
-
-	function translateFragment(view, langs, frag) {
-	  return translateElements(view, langs, getTranslatables(frag));
-	}
-
-	function getElementsTranslation(view, langs, elems) {
-	  var keys = elems.map(function (elem) {
-	    var id = elem.getAttribute('data-l10n-id');
-	    var args = elem.getAttribute('data-l10n-args');
-	    return args ? [id, JSON.parse(args.replace(reHtml, function (match) {
-	      return htmlEntities[match];
-	    }))] : id;
-	  });
-
-	  return view._resolveEntities(langs, keys);
-	}
-
-	function translateElements(view, langs, elements) {
-	  return getElementsTranslation(view, langs, elements).then(function (translations) {
-	    return applyTranslations(view, elements, translations);
-	  });
-	}
-
-	function applyTranslations(view, elems, translations) {
-	  view._disconnect();
-	  for (var i = 0; i < elems.length; i++) {
-	    _overlay.overlayElement(elems[i], translations[i]);
-	  }
-	  view._observe();
-	}
-
-/***/ },
-/* 15 */
-/***/ function(module, exports) {
-
-	'use strict';
-
-	exports.__esModule = true;
-	exports.overlayElement = overlayElement;
-
-	var reOverlay = /<|&#?\w+;/;
-
-	var allowed = {
-	  elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
-	  attributes: {
-	    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
-	    a: ['download'],
-	    area: ['download', 'alt'],
-
-	    input: ['alt', 'placeholder'],
-	    menuitem: ['label'],
-	    menu: ['label'],
-	    optgroup: ['label'],
-	    option: ['label'],
-	    track: ['label'],
-	    img: ['alt'],
-	    textarea: ['placeholder'],
-	    th: ['abbr']
-	  }
-	};
-
-	function overlayElement(element, translation) {
-	  var value = translation.value;
-
-	  if (typeof value === 'string') {
-	    if (!reOverlay.test(value)) {
-	      element.textContent = value;
-	    } else {
-	      var tmpl = element.ownerDocument.createElement('template');
-	      tmpl.innerHTML = value;
-
-	      overlay(element, tmpl.content);
-	    }
-	  }
-
-	  for (var key in translation.attrs) {
-	    var attrName = camelCaseToDashed(key);
-	    if (isAttrAllowed({ name: attrName }, element)) {
-	      element.setAttribute(attrName, translation.attrs[key]);
-	    }
-	  }
-	}
-
-	function overlay(sourceElement, translationElement) {
-	  var result = translationElement.ownerDocument.createDocumentFragment();
-	  var k = undefined,
-	      attr = undefined;
-
-	  var childElement = undefined;
-	  while (childElement = translationElement.childNodes[0]) {
-	    translationElement.removeChild(childElement);
-
-	    if (childElement.nodeType === childElement.TEXT_NODE) {
-	      result.appendChild(childElement);
-	      continue;
-	    }
-
-	    var index = getIndexOfType(childElement);
-	    var sourceChild = getNthElementOfType(sourceElement, childElement, index);
-	    if (sourceChild) {
-	      overlay(sourceChild, childElement);
-	      result.appendChild(sourceChild);
-	      continue;
-	    }
-
-	    if (isElementAllowed(childElement)) {
-	      var sanitizedChild = childElement.ownerDocument.createElement(childElement.nodeName);
-	      overlay(sanitizedChild, childElement);
-	      result.appendChild(sanitizedChild);
-	      continue;
-	    }
-
-	    result.appendChild(translationElement.ownerDocument.createTextNode(childElement.textContent));
-	  }
-
-	  sourceElement.textContent = '';
-	  sourceElement.appendChild(result);
-
-	  if (translationElement.attributes) {
-	    for (k = 0, attr; attr = translationElement.attributes[k]; k++) {
-	      if (isAttrAllowed(attr, sourceElement)) {
-	        sourceElement.setAttribute(attr.name, attr.value);
-	      }
-	    }
-	  }
-	}
-
-	function isElementAllowed(element) {
-	  return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
-	}
-
-	function isAttrAllowed(attr, element) {
-	  var attrName = attr.name.toLowerCase();
-	  var tagName = element.tagName.toLowerCase();
-
-	  if (allowed.attributes.global.indexOf(attrName) !== -1) {
-	    return true;
-	  }
-
-	  if (!allowed.attributes[tagName]) {
-	    return false;
-	  }
-
-	  if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
-	    return true;
-	  }
-
-	  if (tagName === 'input' && attrName === 'value') {
-	    var type = element.type.toLowerCase();
-	    if (type === 'submit' || type === 'button' || type === 'reset') {
-	      return true;
-	    }
-	  }
-	  return false;
-	}
-
-	function getNthElementOfType(context, element, index) {
-	  var nthOfType = 0;
-	  for (var i = 0, child = undefined; child = context.children[i]; i++) {
-	    if (child.nodeType === child.ELEMENT_NODE && child.tagName === element.tagName) {
-	      if (nthOfType === index) {
-	        return child;
-	      }
-	      nthOfType++;
-	    }
-	  }
-	  return null;
-	}
-
-	function getIndexOfType(element) {
-	  var index = 0;
-	  var child = undefined;
-	  while (child = element.previousElementSibling) {
-	    if (child.tagName === element.tagName) {
-	      index++;
-	    }
-	  }
-	  return index;
-	}
-
-	function camelCaseToDashed(string) {
-	  if (string === 'ariaValueText') {
-	    return 'aria-valuetext';
-	  }
-
-	  return string.replace(/[A-Z]/g, function (match) {
-	    return '-' + match.toLowerCase();
-	  }).replace(/^-/, '');
-	}
-
-/***/ },
 /* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
@@ -2673,13 +2711,13 @@
 
 	var _libIntl = __webpack_require__(17);
 
-	var _libPseudo = __webpack_require__(9);
+	var _libPseudo = __webpack_require__(13);
 
 	var rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
 
 	function negotiateLanguages(fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs, requestedLangs) {
 
-	  var allAvailableLangs = Object.keys(availableLangs).concat(additionalLangs || []).concat(Object.keys(_libPseudo.qps));
+	  var allAvailableLangs = Object.keys(availableLangs).concat(additionalLangs || []).concat(Object.keys(_libPseudo.pseudo));
 	  var newLangs = _libIntl.prioritizeLocales(defaultLang, allAvailableLangs, requestedLangs);
 
 	  var langs = newLangs.map(function (code) {
@@ -2724,8 +2762,8 @@
 	    }
 	  }
 
-	  if (code in _libPseudo.qps && !(code in availableLangs)) {
-	    return 'qps';
+	  if (code in _libPseudo.pseudo && !(code in availableLangs)) {
+	    return 'pseudo';
 	  }
 
 	  return 'app';

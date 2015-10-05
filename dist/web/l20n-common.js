@@ -213,13 +213,13 @@ module.exports =
 	  };
 
 	  Env.prototype._create = function _create(lang, entries) {
-	    if (lang.src !== 'qps') {
+	    if (lang.src !== 'pseudo') {
 	      return entries;
 	    }
 
 	    var pseudoentries = Object.create(null);
 	    for (var key in entries) {
-	      pseudoentries[key] = _pseudo.walkEntry(entries[key], _pseudo.qps[lang.code].translate);
+	      pseudoentries[key] = _pseudo.walkEntry(entries[key], _pseudo.pseudo[lang.code].process);
 	    }
 	    return pseudoentries;
 	  };
@@ -247,7 +247,7 @@ module.exports =
 	      cache[id] = err;
 	    };
 
-	    var langToFetch = lang.src === 'qps' ? { code: this.defaultLang, src: 'app' } : lang;
+	    var langToFetch = lang.src === 'pseudo' ? { code: this.defaultLang, src: 'app' } : lang;
 
 	    return cache[id] = this.fetch(res, langToFetch).then(saveEntries, recover);
 	  };
@@ -1907,7 +1907,7 @@ module.exports =
 	      });
 	    };
 
-	    var tranform = function (val) {
+	    var transform = function (val) {
 	      return replaceChars(charMaps[id], mods[id](val));
 	    };
 
@@ -1927,15 +1927,15 @@ module.exports =
 	    };
 
 	    return _pseudo = {
-	      translate: function (val) {
-	        return apply(tranform, val);
-	      },
-	      name: tranform(name)
+	      name: transform(name),
+	      process: function (str) {
+	        return apply(transform, str);
+	      }
 	    };
 	  };
 	}
 
-	var qps = Object.defineProperties(Object.create(null), {
+	var pseudo = Object.defineProperties(Object.create(null), {
 	  'qps-ploc': {
 	    enumerable: true,
 	    get: createGetter('qps-ploc', 'Runtime Accented')
@@ -1945,7 +1945,7 @@ module.exports =
 	    get: createGetter('qps-plocm', 'Runtime Mirrored')
 	  }
 	});
-	exports.qps = qps;
+	exports.pseudo = pseudo;
 
 /***/ },
 /* 10 */
