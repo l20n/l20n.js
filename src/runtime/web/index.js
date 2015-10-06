@@ -64,7 +64,8 @@ document.l10n = {
         return Promise.resolve(navigator.mozL10n.qps['qps-ploc'].name);
       },
       processString: function(s) {
-        return Promise.resolve(navigator.mozL10n.qps['qps-ploc'].translate(s));
+        return
+          Promise.resolve(navigator.mozL10n.qps['qps-ploc'].translate(s));
       }
     },
     'qps-plocm': {
@@ -72,7 +73,8 @@ document.l10n = {
         return Promise.resolve(navigator.mozL10n.qps['qps-plocm'].name);
       },
       processString: function(s) {
-        return Promise.resolve(navigator.mozL10n.qps['qps-plocm'].translate(s));
+        return
+          Promise.resolve(navigator.mozL10n.qps['qps-plocm'].translate(s));
       }
     }
   },
