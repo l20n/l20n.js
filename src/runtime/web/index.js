@@ -38,7 +38,7 @@ document.l10n = {
     return navigator.mozL10n.formatValue(id, args);
   },
   translateFragment: function (frag) {
-    Promise.resolve(navigator.mozL10n.translateFragment(frag));
+    return Promise.resolve(navigator.mozL10n.translateFragment(frag));
   },
   ready: function() {
     return new Promise(function(resolve) {
@@ -64,15 +64,15 @@ document.l10n = {
         return Promise.resolve(navigator.mozL10n.qps['qps-ploc'].name);
       },
       processString: function(s) {
-        Promise.resolve(navigator.mozL10n.qps['qps-ploc'].translate(s));
+        return Promise.resolve(navigator.mozL10n.qps['qps-ploc'].translate(s));
       }
     },
     'qps-plocm': {
       getName: function() {
-        Promise.resolve(navigator.mozL10n.qps['qps-plocm'].name);
+        return Promise.resolve(navigator.mozL10n.qps['qps-plocm'].name);
       },
       processString: function(s) {
-        Promise.resolve(navigator.mozL10n.qps['qps-plocm'].translate(s));
+        return Promise.resolve(navigator.mozL10n.qps['qps-plocm'].translate(s));
       }
     }
   },
