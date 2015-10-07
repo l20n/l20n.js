@@ -5,10 +5,11 @@
 var bundle = require('../../../build/babel/bundle');
 
 module.exports = {
-  node: {
+  bridge: {
     options: bundle,
     files: {
-      'dist/bundle/node/l20n.js': 'src/runtime/node/index.js'
+      'dist/bundle/bridge/service.js': 'src/runtime/bridge/service.js',
+      'dist/bundle/bridge/client.js': 'src/runtime/bridge/client.js'
     }
   },
 };
