@@ -91,17 +91,7 @@ function translateElement(element) {
       undefined
   );
 
-  var value;
-  if (entity.attrs && entity.attrs.innerHTML) {
-    // XXX innerHTML is treated as value (https://bugzil.la/1142526)
-    value = entity.attrs.innerHTML;
-    console.warn(
-      'L10n Deprecation Warning: using innerHTML in translations is unsafe ' +
-      'and will not be supported in future versions of l10n.js. ' +
-      'See https://bugzil.la/1027117');
-  } else {
-    value = entity.value;
-  }
+  var value = entity.value;
 
   if (typeof value === 'string') {
     if (!reOverlay.test(value)) {
