@@ -40,13 +40,9 @@ document.l10n = {
   translateFragment: function (frag) {
     return Promise.resolve(navigator.mozL10n.translateFragment(frag));
   },
-  ready: function() {
-    return new Promise(function(resolve) {
-      navigator.mozL10n.once(function() {
-        resolve(navigator.mozL10n.ctx.supportedLocales);
-      });
-    });
-  },
+  ready: new Promise(function(resolve) {
+    navigator.mozL10n.once(resolve);
+  }),
   formatValues: function() {
     var keys = arguments;
     var resp = keys.map(function(key) {
@@ -57,6 +53,11 @@ document.l10n = {
     });
 
     return Promise.all(resp);
+  },
+  requestLanguages: function(langs) {
+    // XXX real l20n returns a promise
+    navigator.mozL10n.ctx.requestLocales.apply(
+      navigator.mozL10n.ctx, langs);
   },
   pseudo: {
     'qps-ploc': {
@@ -80,15 +81,16 @@ document.l10n = {
   },
 };
 
+navigator.mozL10n.ready(function() {
+  document.documentElement.setAttribute(
+    'langs', navigator.mozL10n.ctx.supportedLocales.join(' '));
+});
+
 navigator.mozL10n.once(function() {
   window.addEventListener('localized', function() {
     document.dispatchEvent(new CustomEvent('DOMRetranslated', {
       bubbles: false,
-      cancelable: false,
-      detail: {
-        languages: navigator.mozL10n.ctx ?
-          navigator.mozL10n.ctx.supportedLocales : '',
-      }
+      cancelable: false
     }));
   });
 });
