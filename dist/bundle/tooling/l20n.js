@@ -17,8 +17,7 @@
     const { getPluralRule } = getModule('lib/plurals');
     const lang = {
       code: 'en-US',
-      src: 'app',
-      dir: 'ltr'
+      src: 'app'
     };
 
     function createEntriesFromSource(source) {
@@ -1070,7 +1069,6 @@
   modules.set('bindings/html/langs', function () {
     const { prioritizeLocales } = getModule('lib/intl');
     const { pseudo } = getModule('lib/pseudo');
-    const rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
 
     function getMeta(head) {
       let availableLangs = Object.create(null);
@@ -1127,8 +1125,7 @@
       const newLangs = prioritizeLocales(defaultLang, allAvailableLangs, requestedLangs);
       const langs = newLangs.map(code => ({
         code: code,
-        src: getLangSource(appVersion, availableLangs, additionalLangs, code),
-        dir: getDirection(code)
+        src: getLangSource(appVersion, availableLangs, additionalLangs, code)
       }));
 
       if (!arrEqual(prevLangs, newLangs)) {
@@ -1136,10 +1133,6 @@
       }
 
       return langs;
-    }
-
-    function getDirection(code) {
-      return rtlList.indexOf(code) >= 0 ? 'rtl' : 'ltr';
     }
 
     function arrEqual(arr1, arr2) {
@@ -1172,7 +1165,7 @@
       return 'app';
     }
 
-    return { getMeta, negotiateLanguages, getDirection };
+    return { getMeta, negotiateLanguages };
   });
   modules.set('lib/pseudo', function () {
     function walkEntry(entry, fn) {
@@ -3302,10 +3295,14 @@
       });
     }
 
-    return { documentReady };
+    function getDirection(code) {
+      return ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'].indexOf(code) >= 0 ? 'rtl' : 'ltr';
+    }
+
+    return { documentReady, getDirection };
   });
   modules.set('bindings/html/view', function () {
-    const { documentReady } = getModule('bindings/html/shims');
+    const { documentReady, getDirection } = getModule('bindings/html/shims');
     const { setAttributes, getAttributes, translateFragment, translateMutations, getResourceLinks } = getModule('bindings/html/dom');
     const observerConfig = {
       attributes: true,
@@ -3333,13 +3330,10 @@
         const translateView = langs => translateDocument(this, langs);
 
         client.on('translateDocument', translateView);
-        this.ready = this.resolvedLanguages().then(translateView);
+        this.ready = this._interactive.then(client => client.method('resolvedLanguages')).then(translateView);
       }
-      resolvedLanguages() {
-        return this._interactive.then(client => client.method('resolvedLanguages'));
-      }
-      requestLanguages(langs) {
-        return this._interactive.then(client => client.method('requestLanguages', langs));
+      requestLanguages(langs, global) {
+        return this._interactive.then(client => client.method('requestLanguages', langs, global));
       }
       _resolveEntities(langs, keys) {
         return this._interactive.then(client => client.method('resolveEntities', client.id, langs, keys));
@@ -3351,7 +3345,7 @@
         return this._interactive.then(client => client.method('formatValues', client.id, keys));
       }
       translateFragment(frag) {
-        return this.resolvedLanguages().then(langs => translateFragment(this, langs, frag));
+        return this._interactive.then(client => client.method('resolvedLanguages')).then(langs => translateFragment(this, langs, frag));
       }
     }
 
@@ -3379,31 +3373,26 @@
       const html = view._doc.documentElement;
 
       if (readiness.has(html)) {
-        return translateFragment(view, langs, html).then(() => setDOMAttrsAndEmit(html, langs)).then(() => langs.map(takeCode));
+        return translateFragment(view, langs, html).then(() => setDOMAttrsAndEmit(html, langs));
       }
 
       const translated = langs[0].code === html.getAttribute('lang') ? Promise.resolve() : translateFragment(view, langs, html).then(() => setDOMAttrs(html, langs));
-      return translated.then(() => readiness.set(html, true)).then(() => langs.map(takeCode));
+      return translated.then(() => readiness.set(html, true));
     }
 
     function setDOMAttrsAndEmit(html, langs) {
       setDOMAttrs(html, langs);
       html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
         bubbles: false,
-        cancelable: false,
-        detail: {
-          languages: langs.map(takeCode)
-        }
+        cancelable: false
       }));
     }
 
     function setDOMAttrs(html, langs) {
-      html.setAttribute('lang', langs[0].code);
-      html.setAttribute('dir', langs[0].dir);
-    }
-
-    function takeCode(lang) {
-      return lang.code;
+      const codes = langs.map(lang => lang.code);
+      html.setAttribute('langs', codes.join(' '));
+      html.setAttribute('lang', codes[0]);
+      html.setAttribute('dir', getDirection(codes[0]));
     }
 
     return { View, translateDocument };

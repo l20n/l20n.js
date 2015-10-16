@@ -47,8 +47,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var pseudo = _getModule2.pseudo;
 
-    var rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
-
     function getMeta(head) {
       var availableLangs = Object.create(null);
       var defaultLang = null;
@@ -129,8 +127,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var langs = newLangs.map(function (code) {
         return {
           code: code,
-          src: getLangSource(appVersion, availableLangs, additionalLangs, code),
-          dir: getDirection(code)
+          src: getLangSource(appVersion, availableLangs, additionalLangs, code)
         };
       });
 
@@ -139,10 +136,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       return langs;
-    }
-
-    function getDirection(code) {
-      return rtlList.indexOf(code) >= 0 ? 'rtl' : 'ltr';
     }
 
     function arrEqual(arr1, arr2) {
@@ -177,7 +170,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return 'app';
     }
 
-    return { getMeta: getMeta, negotiateLanguages: negotiateLanguages, getDirection: getDirection };
+    return { getMeta: getMeta, negotiateLanguages: negotiateLanguages };
   });
   modules.set('bindings/html/shims', function () {
     if (typeof NodeList === 'function' && !NodeList.prototype[Symbol.iterator]) {
@@ -197,7 +190,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
     }
 
-    return { documentReady: documentReady };
+    function getDirection(code) {
+      return ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'].indexOf(code) >= 0 ? 'rtl' : 'ltr';
+    }
+
+    return { documentReady: documentReady, getDirection: getDirection };
   });
   modules.set('lib/events', function () {
     function emit(listeners) {

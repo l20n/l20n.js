@@ -529,8 +529,7 @@
 
     var lang = {
       code: 'en-US',
-      src: 'app',
-      dir: 'ltr'
+      src: 'app'
     };
 
     function createEntriesFromSource(source) {

@@ -27,8 +27,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var lang = {
       code: 'en-US',
-      src: 'app',
-      dir: 'ltr'
+      src: 'app'
     };
 
     function createEntriesFromSource(source) {
@@ -1228,8 +1227,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     var pseudo = _getModule5.pseudo;
 
-    var rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
-
     function getMeta(head) {
       var availableLangs = Object.create(null);
       var defaultLang = null;
@@ -1310,8 +1307,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       var langs = newLangs.map(function (code) {
         return {
           code: code,
-          src: getLangSource(appVersion, availableLangs, additionalLangs, code),
-          dir: getDirection(code)
+          src: getLangSource(appVersion, availableLangs, additionalLangs, code)
         };
       });
 
@@ -1320,10 +1316,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }
 
       return langs;
-    }
-
-    function getDirection(code) {
-      return rtlList.indexOf(code) >= 0 ? 'rtl' : 'ltr';
     }
 
     function arrEqual(arr1, arr2) {
@@ -1358,7 +1350,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       return 'app';
     }
 
-    return { getMeta: getMeta, negotiateLanguages: negotiateLanguages, getDirection: getDirection };
+    return { getMeta: getMeta, negotiateLanguages: negotiateLanguages };
   });
   modules.set('lib/pseudo', function () {
     function walkEntry(entry, fn) {
@@ -3706,12 +3698,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
     }
 
-    return { documentReady: documentReady };
+    function getDirection(code) {
+      return ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'].indexOf(code) >= 0 ? 'rtl' : 'ltr';
+    }
+
+    return { documentReady: documentReady, getDirection: getDirection };
   });
   modules.set('bindings/html/view', function () {
     var _getModule20 = getModule('bindings/html/shims');
 
     var documentReady = _getModule20.documentReady;
+    var getDirection = _getModule20.getDirection;
 
     var _getModule21 = getModule('bindings/html/dom');
 
@@ -3759,18 +3756,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         client.on('translateDocument', translateView);
-        this.ready = this.resolvedLanguages().then(translateView);
+        this.ready = this._interactive.then(function (client) {
+          return client.method('resolvedLanguages');
+        }).then(translateView);
       }
 
-      View.prototype.resolvedLanguages = function resolvedLanguages() {
+      View.prototype.requestLanguages = function requestLanguages(langs, global) {
         return this._interactive.then(function (client) {
-          return client.method('resolvedLanguages');
-        });
-      };
-
-      View.prototype.requestLanguages = function requestLanguages(langs) {
-        return this._interactive.then(function (client) {
-          return client.method('requestLanguages', langs);
+          return client.method('requestLanguages', langs, global);
         });
       };
 
@@ -3801,7 +3794,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       View.prototype.translateFragment = function translateFragment(frag) {
         var _this14 = this;
 
-        return this.resolvedLanguages().then(function (langs) {
+        return this._interactive.then(function (client) {
+          return client.method('resolvedLanguages');
+        }).then(function (langs) {
           return _translateFragment(_this14, langs, frag);
         });
       };
@@ -3849,8 +3844,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (readiness.has(html)) {
         return _translateFragment(view, langs, html).then(function () {
           return setDOMAttrsAndEmit(html, langs);
-        }).then(function () {
-          return langs.map(takeCode);
         });
       }
 
@@ -3859,8 +3852,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
       return translated.then(function () {
         return readiness.set(html, true);
-      }).then(function () {
-        return langs.map(takeCode);
       });
     }
 
@@ -3868,20 +3859,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       setDOMAttrs(html, langs);
       html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
         bubbles: false,
-        cancelable: false,
-        detail: {
-          languages: langs.map(takeCode)
-        }
+        cancelable: false
       }));
     }
 
     function setDOMAttrs(html, langs) {
-      html.setAttribute('lang', langs[0].code);
-      html.setAttribute('dir', langs[0].dir);
-    }
-
-    function takeCode(lang) {
-      return lang.code;
+      var codes = langs.map(function (lang) {
+        return lang.code;
+      });
+      html.setAttribute('langs', codes.join(' '));
+      html.setAttribute('lang', codes[0]);
+      html.setAttribute('dir', getDirection(codes[0]));
     }
 
     return { View: View, translateDocument: translateDocument };

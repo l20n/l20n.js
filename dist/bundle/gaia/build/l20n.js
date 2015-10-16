@@ -202,134 +202,29 @@
 
     return { serializeContext };
   });
-  modules.set('lib/intl', function () {
-    function prioritizeLocales(def, availableLangs, requested) {
-      let supportedLocale;
-
-      for (let i = 0; i < requested.length; i++) {
-        const locale = requested[i];
-
-        if (availableLangs.indexOf(locale) !== -1) {
-          supportedLocale = locale;
-          break;
-        }
-      }
-
-      if (!supportedLocale || supportedLocale === def) {
-        return [def];
-      }
-
-      return [supportedLocale, def];
+  modules.set('bindings/html/shims', function () {
+    if (typeof NodeList === 'function' && !NodeList.prototype[Symbol.iterator]) {
+      NodeList.prototype[Symbol.iterator] = Array.prototype[Symbol.iterator];
     }
 
-    return { prioritizeLocales };
-  });
-  modules.set('bindings/html/langs', function () {
-    const { prioritizeLocales } = getModule('lib/intl');
-    const { pseudo } = getModule('lib/pseudo');
-    const rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
-
-    function getMeta(head) {
-      let availableLangs = Object.create(null);
-      let defaultLang = null;
-      let appVersion = null;
-      const metas = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
-
-      for (let meta of metas) {
-        const name = meta.getAttribute('name');
-        const content = meta.getAttribute('content').trim();
-
-        switch (name) {
-          case 'availableLanguages':
-            availableLangs = getLangRevisionMap(availableLangs, content);
-            break;
-
-          case 'defaultLanguage':
-            const [lang, rev] = getLangRevisionTuple(content);
-            defaultLang = lang;
-
-            if (!(lang in availableLangs)) {
-              availableLangs[lang] = rev;
-            }
-
-            break;
-
-          case 'appVersion':
-            appVersion = content;
-        }
+    function documentReady() {
+      if (document.readyState !== 'loading') {
+        return Promise.resolve();
       }
 
-      return {
-        defaultLang,
-        availableLangs,
-        appVersion
-      };
-    }
-
-    function getLangRevisionMap(seq, str) {
-      return str.split(',').reduce((seq, cur) => {
-        const [lang, rev] = getLangRevisionTuple(cur);
-        seq[lang] = rev;
-        return seq;
-      }, seq);
-    }
-
-    function getLangRevisionTuple(str) {
-      const [lang, rev] = str.trim().split(':');
-      return [lang, parseInt(rev)];
-    }
-
-    function negotiateLanguages(fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs, requestedLangs) {
-      const allAvailableLangs = Object.keys(availableLangs).concat(additionalLangs || []).concat(Object.keys(pseudo));
-      const newLangs = prioritizeLocales(defaultLang, allAvailableLangs, requestedLangs);
-      const langs = newLangs.map(code => ({
-        code: code,
-        src: getLangSource(appVersion, availableLangs, additionalLangs, code),
-        dir: getDirection(code)
-      }));
-
-      if (!arrEqual(prevLangs, newLangs)) {
-        fn(langs);
-      }
-
-      return langs;
+      return new Promise(resolve => {
+        document.addEventListener('readystatechange', function onrsc() {
+          document.removeEventListener('readystatechange', onrsc);
+          resolve();
+        });
+      });
     }
 
     function getDirection(code) {
-      return rtlList.indexOf(code) >= 0 ? 'rtl' : 'ltr';
+      return ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'].indexOf(code) >= 0 ? 'rtl' : 'ltr';
     }
 
-    function arrEqual(arr1, arr2) {
-      return arr1.length === arr2.length && arr1.every((elem, i) => elem === arr2[i]);
-    }
-
-    function getMatchingLangpack(appVersion, langpacks) {
-      for (let i = 0, langpack; langpack = langpacks[i]; i++) {
-        if (langpack.target === appVersion) {
-          return langpack;
-        }
-      }
-
-      return null;
-    }
-
-    function getLangSource(appVersion, availableLangs, additionalLangs, code) {
-      if (additionalLangs && additionalLangs[code]) {
-        const lp = getMatchingLangpack(appVersion, additionalLangs[code]);
-
-        if (lp && (!(code in availableLangs) || parseInt(lp.revision) > availableLangs[code])) {
-          return 'extra';
-        }
-      }
-
-      if (code in pseudo && !(code in availableLangs)) {
-        return 'pseudo';
-      }
-
-      return 'app';
-    }
-
-    return { getMeta, negotiateLanguages, getDirection };
+    return { documentReady, getDirection };
   });
   modules.set('bindings/html/overlay', function () {
     const reOverlay = /<|&#?\w+;/;
@@ -2935,7 +2830,7 @@
     const { Env } = getModule('lib/env');
     const { LegacyEnv } = getModule('bindings/gaiabuild/legacy/env');
     const { getResourceLinks, translateFragment } = getModule('bindings/html/dom');
-    const { getDirection } = getModule('bindings/html/langs');
+    const { getDirection } = getModule('bindings/html/shims');
     const { serializeContext } = getModule('bindings/gaiabuild/serialize');
     const { serializeLegacyContext } = getModule('bindings/gaiabuild/legacy/serialize');
 
@@ -2972,7 +2867,6 @@
         const dir = getDirection(code);
         const langs = [{
           code,
-          dir,
           src: 'app'
         }];
 
@@ -2986,7 +2880,6 @@
       serializeResources(code) {
         const lang = {
           code,
-          dir: getDirection(code),
           src: code in pseudo ? 'pseudo' : 'app'
         };
         return fetchContext(this.ctx, lang).then(() => {
@@ -3033,7 +2926,6 @@
     function fetchContext(ctx, lang) {
       const sourceLang = {
         code: 'en-US',
-        dir: 'ltr',
         src: 'app'
       };
       return Promise.all([sourceLang, lang].map(lang => ctx.fetch([lang])));

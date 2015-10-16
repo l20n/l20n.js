@@ -330,12 +330,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
     }
 
-    return { documentReady: documentReady };
+    function getDirection(code) {
+      return ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'].indexOf(code) >= 0 ? 'rtl' : 'ltr';
+    }
+
+    return { documentReady: documentReady, getDirection: getDirection };
   });
   modules.set('bindings/html/view', function () {
     var _getModule2 = getModule('bindings/html/shims');
 
     var documentReady = _getModule2.documentReady;
+    var getDirection = _getModule2.getDirection;
 
     var _getModule3 = getModule('bindings/html/dom');
 
@@ -383,18 +388,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         client.on('translateDocument', translateView);
-        this.ready = this.resolvedLanguages().then(translateView);
+        this.ready = this._interactive.then(function (client) {
+          return client.method('resolvedLanguages');
+        }).then(translateView);
       }
 
-      View.prototype.resolvedLanguages = function resolvedLanguages() {
+      View.prototype.requestLanguages = function requestLanguages(langs, global) {
         return this._interactive.then(function (client) {
-          return client.method('resolvedLanguages');
-        });
-      };
-
-      View.prototype.requestLanguages = function requestLanguages(langs) {
-        return this._interactive.then(function (client) {
-          return client.method('requestLanguages', langs);
+          return client.method('requestLanguages', langs, global);
         });
       };
 
@@ -425,7 +426,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       View.prototype.translateFragment = function translateFragment(frag) {
         var _this2 = this;
 
-        return this.resolvedLanguages().then(function (langs) {
+        return this._interactive.then(function (client) {
+          return client.method('resolvedLanguages');
+        }).then(function (langs) {
           return _translateFragment(_this2, langs, frag);
         });
       };
@@ -473,8 +476,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       if (readiness.has(html)) {
         return _translateFragment(view, langs, html).then(function () {
           return setDOMAttrsAndEmit(html, langs);
-        }).then(function () {
-          return langs.map(takeCode);
         });
       }
 
@@ -483,8 +484,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       });
       return translated.then(function () {
         return readiness.set(html, true);
-      }).then(function () {
-        return langs.map(takeCode);
       });
     }
 
@@ -492,20 +491,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       setDOMAttrs(html, langs);
       html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
         bubbles: false,
-        cancelable: false,
-        detail: {
-          languages: langs.map(takeCode)
-        }
+        cancelable: false
       }));
     }
 
     function setDOMAttrs(html, langs) {
-      html.setAttribute('lang', langs[0].code);
-      html.setAttribute('dir', langs[0].dir);
-    }
-
-    function takeCode(lang) {
-      return lang.code;
+      var codes = langs.map(function (lang) {
+        return lang.code;
+      });
+      html.setAttribute('langs', codes.join(' '));
+      html.setAttribute('lang', codes[0]);
+      html.setAttribute('dir', getDirection(codes[0]));
     }
 
     return { View: View, translateDocument: translateDocument };
@@ -536,6 +532,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       endpoint: channel,
       timeout: false
     });
+
+    window.addEventListener('pageshow', function () {
+      return client.connect();
+    });
+    window.addEventListener('pagehide', function () {
+      return client.disconnect();
+    });
+
     document.l10n = new View(client, document);
 
     navigator.mozL10n = {

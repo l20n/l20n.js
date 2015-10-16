@@ -523,8 +523,7 @@
     const { getPluralRule } = getModule('lib/plurals');
     const lang = {
       code: 'en-US',
-      src: 'app',
-      dir: 'ltr'
+      src: 'app'
     };
 
     function createEntriesFromSource(source) {
