@@ -396,7 +396,7 @@
     };
 
     function getResourceLinks(head) {
-      return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), el => decodeURI(el.getAttribute('href')));
+      return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), el => el.getAttribute('href'));
     }
 
     function setAttributes(element, id, args) {
@@ -2949,7 +2949,7 @@
     const { L10nError } = getModule('lib/errors');
     return {
       fetch: function (htmloptimizer, res, lang) {
-        const url = res.replace('{locale}', lang.code);
+        const url = decodeURI(res).replace('{locale}', lang.code);
         const {
           file,
           content

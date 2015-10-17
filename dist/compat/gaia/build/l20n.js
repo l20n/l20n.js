@@ -425,7 +425,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     function getResourceLinks(head) {
       return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
-        return decodeURI(el.getAttribute('href'));
+        return el.getAttribute('href');
       });
     }
 
@@ -3242,7 +3242,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     return {
       fetch: function (htmloptimizer, res, lang) {
-        var url = res.replace('{locale}', lang.code);
+        var url = decodeURI(res).replace('{locale}', lang.code);
 
         var _htmloptimizer$getFileByRelativePath = htmloptimizer.getFileByRelativePath(url);
 

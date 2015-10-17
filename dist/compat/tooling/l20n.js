@@ -3559,7 +3559,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     function getResourceLinks(head) {
       return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
-        return decodeURI(el.getAttribute('href'));
+        return el.getAttribute('href');
       });
     }
 
@@ -3833,7 +3833,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     function onMutations(mutations) {
       var _this15 = this;
 
-      return this.resolvedLanguages().then(function (langs) {
+      return this._interactive.then(function (client) {
+        return client.method('resolvedLanguages');
+      }).then(function (langs) {
         return translateMutations(_this15, langs, mutations);
       });
     }

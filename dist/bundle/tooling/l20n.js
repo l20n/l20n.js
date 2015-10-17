@@ -3187,7 +3187,7 @@
     };
 
     function getResourceLinks(head) {
-      return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), el => decodeURI(el.getAttribute('href')));
+      return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), el => el.getAttribute('href'));
     }
 
     function setAttributes(element, id, args) {
@@ -3366,7 +3366,7 @@
     }
 
     function onMutations(mutations) {
-      return this.resolvedLanguages().then(langs => translateMutations(this, langs, mutations));
+      return this._interactive.then(client => client.method('resolvedLanguages')).then(langs => translateMutations(this, langs, mutations));
     }
 
     function translateDocument(view, langs) {
