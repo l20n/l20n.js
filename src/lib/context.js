@@ -51,7 +51,10 @@ export class Context {
       return Promise.resolve(langs);
     }
 
-    const resIds = Array.from(this._env._resLists.get(this));
+    const resIds = [];
+    this._env._resLists.get(this).forEach(resId => {
+      resIds.push(resId);
+    });
 
     return Promise.all(
       resIds.map(
@@ -106,7 +109,11 @@ export class Context {
 
   _getEntity(lang, id) {
     const cache = this._env._resCache;
-    const resIds = Array.from(this._env._resLists.get(this));
+    const resIds = [];
+
+    this._env._resLists.get(this).forEach(resId => {
+      resIds.push(resId);
+    });
 
     // Look for `id` in every resource in order.
     for (let i = 0, resId; resId = resIds[i]; i++) {

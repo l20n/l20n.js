@@ -13,7 +13,8 @@ export function getMeta(head) {
     'meta[name="availableLanguages"],' +
     'meta[name="defaultLanguage"],' +
     'meta[name="appVersion"]');
-  for (let meta of metas) {
+  for (let i = 0; i < metas.length; i++) {
+    let meta = metas[i];
     const name = meta.getAttribute('name');
     const content = meta.getAttribute('content').trim();
     switch (name) {

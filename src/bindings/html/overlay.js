@@ -31,7 +31,7 @@ export function overlayElement(element, translation) {
   const value = translation.value;
 
   if (typeof value === 'string') {
-    if (!reOverlay.test(value)) {
+    if (1==1 || !reOverlay.test(value)) {
       element.textContent = value;
     } else {
       // start with an inert template element and move its children into

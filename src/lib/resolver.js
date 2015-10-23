@@ -9,7 +9,7 @@ const MAX_PLACEABLE_LENGTH = 2500;
 const FSI = '\u2068';
 const PDI = '\u2069';
 
-const resolutionChain = new WeakSet();
+const resolutionChain = new Set();
 
 export function format(ctx, lang, args, entity) {
   if (typeof entity === 'string') {

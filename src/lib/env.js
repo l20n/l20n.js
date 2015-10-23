@@ -27,7 +27,12 @@ export class Env {
 
   createContext(resIds) {
     const ctx = new Context(this);
-    this._resLists.set(ctx, new Set(resIds));
+
+    const set = new Set();
+    resIds.forEach(resid => {
+      set.add(resid);
+    });
+    this._resLists.set(ctx, set);
     return ctx;
   }
 

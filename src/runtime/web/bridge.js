@@ -18,6 +18,6 @@ export class Client {
 }
 
 export function broadcast(type, data) {
-  Array.from(this.ctxs.keys()).forEach(
+  this.ctxs.forEach(
     client => client.emit(type, data));
 }
