@@ -1,283 +1,308 @@
-(function (global) {
-  'use strict';
+(function () { 'use strict';
 
-  const modules = new Map();
-  const moduleCache = new Map();
+  // match the opening angle bracket (<) in HTML tags, and HTML entities like
+  // &amp;, &#0038;, &#x0026;.
+  const reOverlay = /<|&#?\w+;/;
 
-  function getModule(id) {
-    if (!moduleCache.has(id)) {
-      moduleCache.set(id, modules.get(id).call(global))
+  const allowed = {
+    elements: [
+      'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
+      'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u',
+      'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'
+    ],
+    attributes: {
+      global: [ 'title', 'aria-label', 'aria-valuetext', 'aria-moz-hint' ],
+      a: [ 'download' ],
+      area: [ 'download', 'alt' ],
+      // value is special-cased in isAttrAllowed
+      input: [ 'alt', 'placeholder' ],
+      menuitem: [ 'label' ],
+      menu: [ 'label' ],
+      optgroup: [ 'label' ],
+      option: [ 'label' ],
+      track: [ 'label' ],
+      img: [ 'alt' ],
+      textarea: [ 'placeholder' ],
+      th: [ 'abbr']
+    }
+  };
+
+  function overlayElement(element, translation) {
+    const value = translation.value;
+
+    if (typeof value === 'string') {
+      if (!reOverlay.test(value)) {
+        element.textContent = value;
+      } else {
+        // start with an inert template element and move its children into
+        // `element` but such that `element`'s own children are not replaced
+        const tmpl = element.ownerDocument.createElement('template');
+        tmpl.innerHTML = value;
+        // overlay the node with the DocumentFragment
+        overlay(element, tmpl.content);
+      }
     }
 
-    return moduleCache.get(id);
+    for (let key in translation.attrs) {
+      const attrName = camelCaseToDashed(key);
+      if (isAttrAllowed({ name: attrName }, element)) {
+        element.setAttribute(attrName, translation.attrs[key]);
+      }
+    }
   }
 
-  modules.set('bindings/html/overlay', function () {
-    const reOverlay = /<|&#?\w+;/;
-    const allowed = {
-      elements: ['a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data', 'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u', 'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'],
-      attributes: {
-        global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
-        a: ['download'],
-        area: ['download', 'alt'],
-        input: ['alt', 'placeholder'],
-        menuitem: ['label'],
-        menu: ['label'],
-        optgroup: ['label'],
-        option: ['label'],
-        track: ['label'],
-        img: ['alt'],
-        textarea: ['placeholder'],
-        th: ['abbr']
-      }
-    };
+  // The goal of overlay is to move the children of `translationElement`
+  // into `sourceElement` such that `sourceElement`'s own children are not
+  // replaced, but onle have their text nodes and their attributes modified.
+  //
+  // We want to make it possible for localizers to apply text-level semantics to
+  // the translations and make use of HTML entities. At the same time, we
+  // don't trust translations so we need to filter unsafe elements and
+  // attribtues out and we don't want to break the Web by replacing elements to
+  // which third-party code might have created references (e.g. two-way
+  // bindings in MVC frameworks).
+  function overlay(sourceElement, translationElement) {
+    const result = translationElement.ownerDocument.createDocumentFragment();
+    let k, attr;
 
-    function overlayElement(element, translation) {
-      const value = translation.value;
+    // take one node from translationElement at a time and check it against
+    // the allowed list or try to match it with a corresponding element
+    // in the source
+    let childElement;
+    while ((childElement = translationElement.childNodes[0])) {
+      translationElement.removeChild(childElement);
 
-      if (typeof value === 'string') {
-        if (!reOverlay.test(value)) {
-          element.textContent = value;
-        } else {
-          const tmpl = element.ownerDocument.createElement('template');
-          tmpl.innerHTML = value;
-          overlay(element, tmpl.content);
-        }
+      if (childElement.nodeType === childElement.TEXT_NODE) {
+        result.appendChild(childElement);
+        continue;
       }
 
-      for (let key in translation.attrs) {
-        const attrName = camelCaseToDashed(key);
+      const index = getIndexOfType(childElement);
+      const sourceChild = getNthElementOfType(sourceElement, childElement, index);
+      if (sourceChild) {
+        // there is a corresponding element in the source, let's use it
+        overlay(sourceChild, childElement);
+        result.appendChild(sourceChild);
+        continue;
+      }
 
-        if (isAttrAllowed({
-          name: attrName
-        }, element)) {
-          element.setAttribute(attrName, translation.attrs[key]);
+      if (isElementAllowed(childElement)) {
+        const sanitizedChild = childElement.ownerDocument.createElement(
+          childElement.nodeName);
+        overlay(sanitizedChild, childElement);
+        result.appendChild(sanitizedChild);
+        continue;
+      }
+
+      // otherwise just take this child's textContent
+      result.appendChild(
+        translationElement.ownerDocument.createTextNode(
+          childElement.textContent));
+    }
+
+    // clear `sourceElement` and append `result` which by this time contains
+    // `sourceElement`'s original children, overlayed with translation
+    sourceElement.textContent = '';
+    sourceElement.appendChild(result);
+
+    // if we're overlaying a nested element, translate the allowed
+    // attributes; top-level attributes are handled in `translateElement`
+    // XXX attributes previously set here for another language should be
+    // cleared if a new language doesn't use them; https://bugzil.la/922577
+    if (translationElement.attributes) {
+      for (k = 0, attr; (attr = translationElement.attributes[k]); k++) {
+        if (isAttrAllowed(attr, sourceElement)) {
+          sourceElement.setAttribute(attr.name, attr.value);
         }
       }
     }
+  }
 
-    function overlay(sourceElement, translationElement) {
-      const result = translationElement.ownerDocument.createDocumentFragment();
-      let k, attr;
-      let childElement;
+  // XXX the allowed list should be amendable; https://bugzil.la/922573
+  function isElementAllowed(element) {
+    return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
+  }
 
-      while (childElement = translationElement.childNodes[0]) {
-        translationElement.removeChild(childElement);
-
-        if (childElement.nodeType === childElement.TEXT_NODE) {
-          result.appendChild(childElement);
-          continue;
-        }
-
-        const index = getIndexOfType(childElement);
-        const sourceChild = getNthElementOfType(sourceElement, childElement, index);
-
-        if (sourceChild) {
-          overlay(sourceChild, childElement);
-          result.appendChild(sourceChild);
-          continue;
-        }
-
-        if (isElementAllowed(childElement)) {
-          const sanitizedChild = childElement.ownerDocument.createElement(childElement.nodeName);
-          overlay(sanitizedChild, childElement);
-          result.appendChild(sanitizedChild);
-          continue;
-        }
-
-        result.appendChild(translationElement.ownerDocument.createTextNode(childElement.textContent));
-      }
-
-      sourceElement.textContent = '';
-      sourceElement.appendChild(result);
-
-      if (translationElement.attributes) {
-        for (k = 0, attr; attr = translationElement.attributes[k]; k++) {
-          if (isAttrAllowed(attr, sourceElement)) {
-            sourceElement.setAttribute(attr.name, attr.value);
-          }
-        }
-      }
+  function isAttrAllowed(attr, element) {
+    const attrName = attr.name.toLowerCase();
+    const tagName = element.tagName.toLowerCase();
+    // is it a globally safe attribute?
+    if (allowed.attributes.global.indexOf(attrName) !== -1) {
+      return true;
     }
-
-    function isElementAllowed(element) {
-      return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
-    }
-
-    function isAttrAllowed(attr, element) {
-      const attrName = attr.name.toLowerCase();
-      const tagName = element.tagName.toLowerCase();
-
-      if (allowed.attributes.global.indexOf(attrName) !== -1) {
-        return true;
-      }
-
-      if (!allowed.attributes[tagName]) {
-        return false;
-      }
-
-      if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
-        return true;
-      }
-
-      if (tagName === 'input' && attrName === 'value') {
-        const type = element.type.toLowerCase();
-
-        if (type === 'submit' || type === 'button' || type === 'reset') {
-          return true;
-        }
-      }
-
+    // are there no allowed attributes for this element?
+    if (!allowed.attributes[tagName]) {
       return false;
     }
-
-    function getNthElementOfType(context, element, index) {
-      let nthOfType = 0;
-
-      for (let i = 0, child; child = context.children[i]; i++) {
-        if (child.nodeType === child.ELEMENT_NODE && child.tagName === element.tagName) {
-          if (nthOfType === index) {
-            return child;
-          }
-
-          nthOfType++;
-        }
+    // is it allowed on this element?
+    // XXX the allowed list should be amendable; https://bugzil.la/922573
+    if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
+      return true;
+    }
+    // special case for value on inputs with type button, reset, submit
+    if (tagName === 'input' && attrName === 'value') {
+      const type = element.type.toLowerCase();
+      if (type === 'submit' || type === 'button' || type === 'reset') {
+        return true;
       }
+    }
+    return false;
+  }
 
-      return null;
+  // Get n-th immediate child of context that is of the same type as element.
+  // XXX Use querySelector(':scope > ELEMENT:nth-of-type(index)'), when:
+  // 1) :scope is widely supported in more browsers and 2) it works with
+  // DocumentFragments.
+  function getNthElementOfType(context, element, index) {
+    /* jshint boss:true */
+    let nthOfType = 0;
+    for (let i = 0, child; child = context.children[i]; i++) {
+      if (child.nodeType === child.ELEMENT_NODE &&
+          child.tagName === element.tagName) {
+        if (nthOfType === index) {
+          return child;
+        }
+        nthOfType++;
+      }
+    }
+    return null;
+  }
+
+  // Get the index of the element among siblings of the same type.
+  function getIndexOfType(element) {
+    let index = 0;
+    let child;
+    while ((child = element.previousElementSibling)) {
+      if (child.tagName === element.tagName) {
+        index++;
+      }
+    }
+    return index;
+  }
+
+  function camelCaseToDashed(string) {
+    // XXX workaround for https://bugzil.la/1141934
+    if (string === 'ariaValueText') {
+      return 'aria-valuetext';
     }
 
-    function getIndexOfType(element) {
-      let index = 0;
-      let child;
-
-      while (child = element.previousElementSibling) {
-        if (child.tagName === element.tagName) {
-          index++;
-        }
-      }
-
-      return index;
-    }
-
-    function camelCaseToDashed(string) {
-      if (string === 'ariaValueText') {
-        return 'aria-valuetext';
-      }
-
-      return string.replace(/[A-Z]/g, function (match) {
+    return string
+      .replace(/[A-Z]/g, function (match) {
         return '-' + match.toLowerCase();
-      }).replace(/^-/, '');
-    }
+      })
+      .replace(/^-/, '');
+  }
 
-    return { overlayElement };
-  });
-  modules.set('bindings/html/dom', function () {
-    const { overlayElement } = getModule('bindings/html/overlay');
-    const reHtml = /[&<>]/g;
-    const htmlEntities = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;'
+  const reHtml = /[&<>]/g;
+  const htmlEntities = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+  };
+
+  function getResourceLinks(head) {
+    return Array.prototype.map.call(
+      head.querySelectorAll('link[rel="localization"]'),
+      el => el.getAttribute('href'));
+  }
+
+  function setAttributes(element, id, args) {
+    element.setAttribute('data-l10n-id', id);
+    if (args) {
+      element.setAttribute('data-l10n-args', JSON.stringify(args));
+    }
+  }
+
+  function getAttributes(element) {
+    return {
+      id: element.getAttribute('data-l10n-id'),
+      args: JSON.parse(element.getAttribute('data-l10n-args'))
     };
+  }
 
-    function getResourceLinks(head) {
-      return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), el => el.getAttribute('href'));
+  function getTranslatables(element) {
+    const nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
+
+    if (typeof element.hasAttribute === 'function' &&
+        element.hasAttribute('data-l10n-id')) {
+      nodes.push(element);
     }
 
-    function setAttributes(element, id, args) {
-      element.setAttribute('data-l10n-id', id);
+    return nodes;
+  }
 
-      if (args) {
-        element.setAttribute('data-l10n-args', JSON.stringify(args));
-      }
-    }
+  function translateMutations(view, langs, mutations) {
+    const targets = new Set();
 
-    function getAttributes(element) {
-      return {
-        id: element.getAttribute('data-l10n-id'),
-        args: JSON.parse(element.getAttribute('data-l10n-args'))
-      };
-    }
-
-    function getTranslatables(element) {
-      const nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
-
-      if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
-        nodes.push(element);
-      }
-
-      return nodes;
-    }
-
-    function translateMutations(view, langs, mutations) {
-      const targets = new Set();
-
-      for (let mutation of mutations) {
-        switch (mutation.type) {
-          case 'attributes':
-            targets.add(mutation.target);
-            break;
-
-          case 'childList':
-            for (let addedNode of mutation.addedNodes) {
-              if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-                if (addedNode.childElementCount) {
-                  getTranslatables(addedNode).forEach(targets.add.bind(targets));
-                } else {
-                  if (addedNode.hasAttribute('data-l10n-id')) {
-                    targets.add(addedNode);
-                  }
+    for (let mutation of mutations) {
+      switch (mutation.type) {
+        case 'attributes':
+          targets.add(mutation.target);
+          break;
+        case 'childList':
+          for (let addedNode of mutation.addedNodes) {
+            if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
+              if (addedNode.childElementCount) {
+                getTranslatables(addedNode).forEach(targets.add.bind(targets));
+              } else {
+                if (addedNode.hasAttribute('data-l10n-id')) {
+                  targets.add(addedNode);
                 }
               }
             }
-
-            break;
-        }
+          }
+          break;
       }
-
-      if (targets.size === 0) {
-        return;
-      }
-
-      translateElements(view, langs, Array.from(targets));
     }
 
-    function translateFragment(view, langs, frag) {
-      return translateElements(view, langs, getTranslatables(frag));
+    if (targets.size === 0) {
+      return;
     }
 
-    function getElementsTranslation(view, langs, elems) {
-      const keys = elems.map(elem => {
-        const id = elem.getAttribute('data-l10n-id');
-        const args = elem.getAttribute('data-l10n-args');
-        return args ? [id, JSON.parse(args.replace(reHtml, match => htmlEntities[match]))] : id;
-      });
-      return view._resolveEntities(langs, keys);
+    translateElements(view, langs, Array.from(targets));
+  }
+
+  function translateFragment(view, langs, frag) {
+    return translateElements(view, langs, getTranslatables(frag));
+  }
+
+  function getElementsTranslation(view, langs, elems) {
+    const keys = elems.map(elem => {
+      const id = elem.getAttribute('data-l10n-id');
+      const args = elem.getAttribute('data-l10n-args');
+      return args ? [
+        id,
+        JSON.parse(args.replace(reHtml, match => htmlEntities[match]))
+      ] : id;
+    });
+
+    return view._resolveEntities(langs, keys);
+  }
+
+  function translateElements(view, langs, elements) {
+    return getElementsTranslation(view, langs, elements).then(
+      translations => applyTranslations(view, elements, translations));
+  }
+
+  function applyTranslations(view, elems, translations) {
+    view._disconnect();
+    for (let i = 0; i < elems.length; i++) {
+      overlayElement(elems[i], translations[i]);
     }
+    view._observe();
+  }
 
-    function translateElements(view, langs, elements) {
-      return getElementsTranslation(view, langs, elements).then(translations => applyTranslations(view, elements, translations));
-    }
 
-    function applyTranslations(view, elems, translations) {
-      view._disconnect();
+  var dom = {
+    getResourceLinks: getResourceLinks,
+    setAttributes: setAttributes,
+    getAttributes: getAttributes,
+    translateMutations: translateMutations,
+    translateFragment: translateFragment
+  };
 
-      for (let i = 0; i < elems.length; i++) {
-        overlayElement(elems[i], translations[i]);
-      }
+  window.L20n = {
+    dom
+  };
 
-      view._observe();
-    }
-
-    return { getResourceLinks, setAttributes, getAttributes, translateMutations, translateFragment };
-  });
-  modules.set('runtime/tooling/testing', function () {
-    const dom = getModule('bindings/html/dom');
-
-    window.L20n = {
-      dom
-    };
-  });
-  getModule('runtime/tooling/testing');
-})(this);
+})();
