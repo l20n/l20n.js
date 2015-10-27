@@ -29,11 +29,10 @@ module.exports = function (grunt) {
 
   // Load all grunt tasks matching the `grunt-*` pattern.
   require('load-grunt-tasks')(grunt);
-  grunt.loadTasks('./build/babel/tasks');
+  grunt.loadTasks('./build/tasks');
 
 
   grunt.initConfig({
-    babel: require('./build/babel'),
     copy: require('./build/copy'),
     clean: require('./build/clean'),
     jshint: require('./build/lint/jshint'),
@@ -41,6 +40,7 @@ module.exports = function (grunt) {
     karma: require('./build/karma'),
     'merge-conflict': require('./build/lint/merge-conflict'),
     mochaTest: require('./build/mocha-test'),
+    rollup: require('./build/rollup'),
     shell: require('./build/shell'),
     uglify: require('./build/uglify'),
     watch: require('./build/watch'),
@@ -71,25 +71,35 @@ module.exports = function (grunt) {
     'mochaTest:dot'
   ]);
 
+  grunt.registerTask('test-browser', [
+    'rollup:testing',
+    'compat:testing',
+    'karma'
+  ]);
+
+  grunt.registerTask('bundle', [
+    'rollup',
+  ]);
+
   grunt.registerTask('build', [
     'lint',
     'test',
-    'babel',
-    'compat',
+    'bundle',
   ]);
 
   grunt.registerTask('web', [
     'lint',
     'test',
-    'babel:web',
-    'babel:bridge',
+    'rollup:web',
+    'rollup:bridge',
   ]);
 
   grunt.registerTask('gaia', [
     'lint',
     'test',
-    'babel:gaia',
-    'babel:bridge',
+    'rollup:gaia',
+    'rollup:gaiabuild',
+    'rollup:bridge',
     'compat:gaia',
     'copy:gaia'
   ]);
@@ -97,7 +107,7 @@ module.exports = function (grunt) {
   grunt.registerTask('release', [
     'lint',
     'test',
-    'babel',
+    'bundle',
     'compat',
     'uglify'
   ]);
