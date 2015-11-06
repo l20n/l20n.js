@@ -1,54 +1,15 @@
-(function () { 'use strict';
+var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
 
-  function emit(listeners, ...args) {
-    const type = args.shift();
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
 
-    if (listeners['*']) {
-      listeners['*'].slice().forEach(
-        listener => listener.apply(this, args));
-    }
+(function () {
+  'use strict';
 
-    if (listeners[type]) {
-      listeners[type].slice().forEach(
-        listener => listener.apply(this, args));
-    }
-  }
-
-  function addEventListener(listeners, type, listener) {
-    if (!(type in listeners)) {
-      listeners[type] = [];
-    }
-    listeners[type].push(listener);
-  }
-
-  function removeEventListener(listeners, type, listener) {
-    const typeListeners = listeners[type];
-    const pos = typeListeners.indexOf(listener);
-    if (pos === -1) {
-      return;
-    }
-
-    typeListeners.splice(pos, 1);
-  }
-
-  class Client {
-    constructor(remote) {
-      this.id = this;
-      this.remote = remote;
-
-      const listeners = {};
-      this.on = (...args) => addEventListener(listeners, ...args);
-      this.emit = (...args) => emit(listeners, ...args);
-    }
-
-    method(name, ...args) {
-      return this.remote[name](...args);
-    }
-  }
+  const Service = bridge.service;
+  const channel = new BroadcastChannel('l20n-channel');
 
   function broadcast(type, data) {
-    Array.from(this.ctxs.keys()).forEach(
-      client => client.emit(type, data));
+    return this.service.broadcast(type, data);
   }
 
   function L10nError(message, id, lang) {
@@ -61,7 +22,7 @@
   L10nError.prototype.constructor = L10nError;
 
   function load(type, url) {
-    return new Promise(function(resolve, reject) {
+    return new Promise(function (resolve, reject) {
       const xhr = new XMLHttpRequest();
 
       if (xhr.overrideMimeType) {
@@ -100,11 +61,10 @@
   }
 
   const io = {
-    extra: function(code, ver, path, type) {
-      return navigator.mozApps.getLocalizationResource(
-        code, ver, path, type);
+    extra: function (code, ver, path, type) {
+      return navigator.mozApps.getLocalizationResource(code, ver, path, type);
     },
-    app: function(code, ver, path, type) {
+    app: function (code, ver, path, type) {
       switch (type) {
         case 'text':
           return load('text/plain', path);
@@ -113,7 +73,7 @@
         default:
           throw new L10nError('Unknown file type: ' + type);
       }
-    },
+    }
   };
 
   function fetchResource(ver, res, lang) {
@@ -125,7 +85,7 @@
   const MAX_PLACEABLES$1 = 100;
 
   var L20nParser = {
-    parse: function(emit, string) {
+    parse: function (emit, string) {
       this._source = string;
       this._index = 0;
       this._length = string.length;
@@ -135,7 +95,7 @@
       return this.getResource();
     },
 
-    getResource: function() {
+    getResource: function () {
       this.getWS();
       while (this._index < this._length) {
         try {
@@ -160,7 +120,7 @@
       return this.entries;
     },
 
-    getEntry: function() {
+    getEntry: function () {
       if (this._source[this._index] === '<') {
         ++this._index;
         const id = this.getIdentifier();
@@ -178,7 +138,7 @@
       throw this.error('Invalid entry');
     },
 
-    getEntity: function(id, index) {
+    getEntity: function (id, index) {
       if (!this.getRequiredWS()) {
         throw this.error('Expected white space');
       }
@@ -219,7 +179,7 @@
       }
     },
 
-    getValue: function(ch = this._source[this._index], optional = false) {
+    getValue: function (ch = this._source[this._index], optional = false) {
       switch (ch) {
         case '\'':
         case '"':
@@ -235,7 +195,7 @@
       return;
     },
 
-    getWS: function() {
+    getWS: function () {
       let cc = this._source.charCodeAt(this._index);
       // space, \n, \t, \r
       while (cc === 32 || cc === 10 || cc === 9 || cc === 13) {
@@ -243,7 +203,7 @@
       }
     },
 
-    getRequiredWS: function() {
+    getRequiredWS: function () {
       const pos = this._index;
       let cc = this._source.charCodeAt(pos);
       // space, \n, \t, \r
@@ -253,45 +213,42 @@
       return this._index !== pos;
     },
 
-    getIdentifier: function() {
+    getIdentifier: function () {
       const start = this._index;
       let cc = this._source.charCodeAt(this._index);
 
-      if ((cc >= 97 && cc <= 122) || // a-z
-          (cc >= 65 && cc <= 90) ||  // A-Z
-          cc === 95) {               // _
+      if (cc >= 97 && cc <= 122 || cc >= 65 && cc <= 90 || // A-Z
+      cc === 95) {
+        // _
         cc = this._source.charCodeAt(++this._index);
       } else {
         throw this.error('Identifier has to start with [a-zA-Z_]');
       }
 
-      while ((cc >= 97 && cc <= 122) || // a-z
-             (cc >= 65 && cc <= 90) ||  // A-Z
-             (cc >= 48 && cc <= 57) ||  // 0-9
-             cc === 95) {               // _
+      while (cc >= 97 && cc <= 122 || cc >= 65 && cc <= 90 || cc >= 48 && cc <= 57 || // 0-9
+      cc === 95) {
+        // _
         cc = this._source.charCodeAt(++this._index);
       }
 
       return this._source.slice(start, this._index);
     },
 
-    getUnicodeChar: function() {
+    getUnicodeChar: function () {
       for (let i = 0; i < 4; i++) {
         let cc = this._source.charCodeAt(++this._index);
-        if ((cc > 96 && cc < 103) || // a-f
-            (cc > 64 && cc < 71) ||  // A-F
-            (cc > 47 && cc < 58)) {  // 0-9
+        if (cc > 96 && cc < 103 || cc > 64 && cc < 71 || cc > 47 && cc < 58) {
+          // 0-9
           continue;
         }
         throw this.error('Illegal unicode escape sequence');
       }
       this._index++;
-      return String.fromCharCode(
-        parseInt(this._source.slice(this._index - 4, this._index), 16));
+      return String.fromCharCode(parseInt(this._source.slice(this._index - 4, this._index), 16));
     },
 
     stringRe: /"|'|{{|\\/g,
-    getString: function(opchar, opcharLen) {
+    getString: function (opchar, opcharLen) {
       const body = [];
       let placeables = 0;
 
@@ -320,8 +277,7 @@
 
         if (match[0] === '{{') {
           if (placeables > MAX_PLACEABLES$1 - 1) {
-            throw this.error('Too many placeables, maximum allowed is ' +
-                MAX_PLACEABLES$1);
+            throw this.error('Too many placeables, maximum allowed is ' + MAX_PLACEABLES$1);
           }
           placeables++;
           if (match.index > bufStart || buf.length > 0) {
@@ -341,8 +297,7 @@
           this._index = match.index + 1;
           const ch2 = this._source[this._index];
           if (ch2 === 'u') {
-            buf += this._source.slice(bufStart, match.index) +
-              this.getUnicodeChar();
+            buf += this._source.slice(bufStart, match.index) + this.getUnicodeChar();
           } else if (ch2 === opchar || ch2 === '\\') {
             buf += this._source.slice(bufStart, match.index) + ch2;
             this._index++;
@@ -367,7 +322,7 @@
       return body;
     },
 
-    getAttributes: function() {
+    getAttributes: function () {
       const attrs = Object.create(null);
 
       while (true) {
@@ -383,11 +338,11 @@
       return attrs;
     },
 
-    getAttribute: function(attrs) {
+    getAttribute: function (attrs) {
       const key = this.getIdentifier();
       let index;
 
-      if (this._source[this._index]=== '[') {
+      if (this._source[this._index] === '[') {
         ++this._index;
         this.getWS();
         index = this.getItemList(this.getExpression, ']');
@@ -414,7 +369,7 @@
       }
     },
 
-    getHash: function() {
+    getHash: function () {
       const items = Object.create(null);
 
       ++this._index;
@@ -455,7 +410,7 @@
       return items;
     },
 
-    getHashItem: function() {
+    getHashItem: function () {
       let defItem = false;
       if (this._source[this._index] === '*') {
         ++this._index;
@@ -473,7 +428,7 @@
       return [key, this.getValue(), defItem];
     },
 
-    getComment: function() {
+    getComment: function () {
       this._index += 2;
       const start = this._index;
       const end = this._source.indexOf('*/', start);
@@ -504,7 +459,7 @@
       return exp;
     },
 
-    getPropertyExpression: function(idref, computed) {
+    getPropertyExpression: function (idref, computed) {
       let exp;
 
       if (computed) {
@@ -527,7 +482,7 @@
       };
     },
 
-    getCallExpression: function(callee) {
+    getCallExpression: function (callee) {
       this.getWS();
 
       return {
@@ -537,7 +492,7 @@
       };
     },
 
-    getPrimaryExpression: function() {
+    getPrimaryExpression: function () {
       const ch = this._source[this._index];
 
       switch (ch) {
@@ -561,7 +516,7 @@
       }
     },
 
-    getItemList: function(callback, closeChar) {
+    getItemList: function (callback, closeChar) {
       const items = [];
       let closed = false;
 
@@ -593,8 +548,7 @@
       return items;
     },
 
-
-    getJunkEntry: function() {
+    getJunkEntry: function () {
       const pos = this._index;
       let nextEntity = this._source.indexOf('<', pos);
       let nextComment = this._source.indexOf('/*', pos);
@@ -611,7 +565,7 @@
       this._index = nextEntry;
     },
 
-    error: function(message, type = 'parsererror') {
+    error: function (message, type = 'parsererror') {
       const pos = this._index;
 
       let start = this._source.lastIndexOf('<', pos - 1);
@@ -625,7 +579,7 @@
         this.emit(type, err);
       }
       return err;
-    },
+    }
   };
 
   var MAX_PLACEABLES = 100;
@@ -635,7 +589,7 @@
     entryIds: null,
     emit: null,
 
-    init: function() {
+    init: function () {
       this.patterns = {
         comment: /^\s*#|^\s*$/,
         entity: /^([^=\s]+)\s*=\s*(.*)$/,
@@ -644,11 +598,11 @@
         unicode: /\\u([0-9a-fA-F]{1,4})/g,
         entries: /[^\r\n]+/g,
         controlChars: /\\([\\\n\r\t\b\f\{\}\"\'])/g,
-        placeables: /\{\{\s*([^\s]*?)\s*\}\}/,
+        placeables: /\{\{\s*([^\s]*?)\s*\}\}/
       };
     },
 
-    parse: function(emit, source) {
+    parse: function (emit, source) {
       if (!this.patterns) {
         this.init();
       }
@@ -685,7 +639,7 @@
       return entries;
     },
 
-    parseEntity: function(id, value, entries) {
+    parseEntity: function (id, value, entries) {
       var name, key;
 
       var pos = id.indexOf('[');
@@ -700,8 +654,7 @@
       var nameElements = name.split('.');
 
       if (nameElements.length > 2) {
-        throw this.error('Error in ID: "' + name + '".' +
-            ' Nested attributes are not supported.');
+        throw this.error('Error in ID: "' + name + '".' + ' Nested attributes are not supported.');
       }
 
       var attr;
@@ -719,9 +672,8 @@
       this.setEntityValue(name, attr, key, this.unescapeString(value), entries);
     },
 
-    setEntityValue: function(id, attr, key, rawValue, entries) {
-      var value = rawValue.indexOf('{{') > -1 ?
-        this.parseString(rawValue) : rawValue;
+    setEntityValue: function (id, attr, key, rawValue, entries) {
+      var value = rawValue.indexOf('{{') > -1 ? this.parseString(rawValue) : rawValue;
 
       var isSimpleValue = typeof value === 'string';
       var root = entries;
@@ -775,7 +727,7 @@
       }
     },
 
-    parseString: function(str) {
+    parseString: function (str) {
       var chunks = str.split(this.patterns.placeables);
       var complexStr = [];
 
@@ -783,8 +735,7 @@
       var placeablesCount = (len - 1) / 2;
 
       if (placeablesCount >= MAX_PLACEABLES) {
-        throw this.error('Too many placeables (' + placeablesCount +
-                            ', max allowed is ' + MAX_PLACEABLES + ')');
+        throw this.error('Too many placeables (' + placeablesCount + ', max allowed is ' + MAX_PLACEABLES + ')');
       }
 
       for (var i = 0; i < chunks.length; i++) {
@@ -792,7 +743,7 @@
           continue;
         }
         if (i % 2 === 1) {
-          complexStr.push({type: 'idOrVar', name: chunks[i]});
+          complexStr.push({ type: 'idOrVar', name: chunks[i] });
         } else {
           complexStr.push(chunks[i]);
         }
@@ -800,16 +751,16 @@
       return complexStr;
     },
 
-    unescapeString: function(str) {
+    unescapeString: function (str) {
       if (str.lastIndexOf('\\') !== -1) {
         str = str.replace(this.patterns.controlChars, '$1');
       }
-      return str.replace(this.patterns.unicode, function(match, token) {
+      return str.replace(this.patterns.unicode, function (match, token) {
         return String.fromCodePoint(parseInt(token, 16));
       });
     },
 
-    parseIndex: function(str) {
+    parseIndex: function (str) {
       var match = str.match(this.patterns.index);
       if (!match) {
         throw new L10nError('Malformed index');
@@ -831,11 +782,11 @@
           }]
         }];
       } else {
-        return [{type: 'idOrVar', name: match[1]}];
+        return [{ type: 'idOrVar', name: match[1] }];
       }
     },
 
-    error: function(msg, type = 'parsererror') {
+    error: function (msg, type = 'parsererror') {
       const err = new L10nError(msg);
       if (this.emit) {
         this.emit(type, err);
@@ -848,8 +799,8 @@
   const MAX_PLACEABLE_LENGTH = 2500;
 
   // Unicode bidi isolation characters
-  const FSI = '\u2068';
-  const PDI = '\u2069';
+  const FSI = '⁨';
+  const PDI = '⁩';
 
   const resolutionChain = new WeakSet();
 
@@ -869,8 +820,7 @@
     // resolving process;  however, we still need to remove the entity from the
     // resolution chain
     try {
-      rv = resolveValue(
-        {}, ctx, lang, args, entity.value, entity.index);
+      rv = resolveValue({}, ctx, lang, args, entity.value, entity.index);
     } finally {
       resolutionChain.delete(entity);
     }
@@ -883,8 +833,7 @@
     }
 
     if (args && args.hasOwnProperty(id)) {
-      if (typeof args[id] === 'string' || (typeof args[id] === 'number' &&
-          !isNaN(args[id]))) {
+      if (typeof args[id] === 'string' || typeof args[id] === 'number' && !isNaN(args[id])) {
         return [{}, args[id]];
       } else {
         throw new L10nError('Arg must be a string or a number: ' + id);
@@ -923,9 +872,7 @@
     if (typeof value === 'string') {
       // prevent Billion Laughs attacks
       if (value.length >= MAX_PLACEABLE_LENGTH) {
-        throw new L10nError('Too many characters in placeable (' +
-                            value.length + ', max allowed is ' +
-                            MAX_PLACEABLE_LENGTH + ')');
+        throw new L10nError('Too many characters in placeable (' + value.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')');
       }
       return [newLocals, FSI + value + PDI];
     }
@@ -934,7 +881,7 @@
   }
 
   function interpolate(locals, ctx, lang, args, arr) {
-    return arr.reduce(function([localsSeq, valueSeq], cur) {
+    return arr.reduce(function ([localsSeq, valueSeq], cur) {
       if (typeof cur === 'string') {
         return [localsSeq, valueSeq + cur];
       } else {
@@ -948,8 +895,7 @@
   function resolveSelector(ctx, lang, args, expr, index) {
     //XXX: Dehardcode!!!
     let selectorName;
-    if (index[0].type === 'call' && index[0].expr.type === 'prop' &&
-        index[0].expr.expr.name === 'cldr') {
+    if (index[0].type === 'call' && index[0].expr.type === 'prop' && index[0].expr.expr.name === 'cldr') {
       selectorName = 'plural';
     } else {
       selectorName = index[0].name;
@@ -961,8 +907,7 @@
       return selector;
     }
 
-    const argValue = index[0].args ?
-      resolveIdentifier(ctx, lang, args, index[0].args[0].name)[1] : undefined;
+    const argValue = index[0].args ? resolveIdentifier(ctx, lang, args, index[0].args[0].name)[1] : undefined;
 
     if (selectorName === 'plural') {
       // special cases for zero, one, two if they are defined on the hash
@@ -985,9 +930,7 @@
       return [locals, expr];
     }
 
-    if (typeof expr === 'string' ||
-        typeof expr === 'boolean' ||
-        typeof expr === 'number') {
+    if (typeof expr === 'string' || typeof expr === 'boolean' || typeof expr === 'number') {
       return [locals, expr];
     }
 
@@ -1198,17 +1141,17 @@
   // list of all plural rules methods:
   // map an integer to the plural form name to use
   const pluralRules = {
-    '0': function() {
+    '0': function () {
       return 'other';
     },
-    '1': function(n) {
-      if ((isBetween((n % 100), 3, 10))) {
+    '1': function (n) {
+      if (isBetween(n % 100, 3, 10)) {
         return 'few';
       }
       if (n === 0) {
         return 'zero';
       }
-      if ((isBetween((n % 100), 11, 99))) {
+      if (isBetween(n % 100, 11, 99)) {
         return 'many';
       }
       if (n === 2) {
@@ -1219,8 +1162,8 @@
       }
       return 'other';
     },
-    '2': function(n) {
-      if (n !== 0 && (n % 10) === 0) {
+    '2': function (n) {
+      if (n !== 0 && n % 10 === 0) {
         return 'many';
       }
       if (n === 2) {
@@ -1231,34 +1174,34 @@
       }
       return 'other';
     },
-    '3': function(n) {
+    '3': function (n) {
       if (n === 1) {
         return 'one';
       }
       return 'other';
     },
-    '4': function(n) {
-      if ((isBetween(n, 0, 1))) {
+    '4': function (n) {
+      if (isBetween(n, 0, 1)) {
         return 'one';
       }
       return 'other';
     },
-    '5': function(n) {
-      if ((isBetween(n, 0, 2)) && n !== 2) {
+    '5': function (n) {
+      if (isBetween(n, 0, 2) && n !== 2) {
         return 'one';
       }
       return 'other';
     },
-    '6': function(n) {
+    '6': function (n) {
       if (n === 0) {
         return 'zero';
       }
-      if ((n % 10) === 1 && (n % 100) !== 11) {
+      if (n % 10 === 1 && n % 100 !== 11) {
         return 'one';
       }
       return 'other';
     },
-    '7': function(n) {
+    '7': function (n) {
       if (n === 2) {
         return 'two';
       }
@@ -1267,11 +1210,11 @@
       }
       return 'other';
     },
-    '8': function(n) {
-      if ((isBetween(n, 3, 6))) {
+    '8': function (n) {
+      if (isBetween(n, 3, 6)) {
         return 'few';
       }
-      if ((isBetween(n, 7, 10))) {
+      if (isBetween(n, 7, 10)) {
         return 'many';
       }
       if (n === 2) {
@@ -1282,8 +1225,8 @@
       }
       return 'other';
     },
-    '9': function(n) {
-      if (n === 0 || n !== 1 && (isBetween((n % 100), 1, 19))) {
+    '9': function (n) {
+      if (n === 0 || n !== 1 && isBetween(n % 100, 1, 19)) {
         return 'few';
       }
       if (n === 1) {
@@ -1291,31 +1234,29 @@
       }
       return 'other';
     },
-    '10': function(n) {
-      if ((isBetween((n % 10), 2, 9)) && !(isBetween((n % 100), 11, 19))) {
+    '10': function (n) {
+      if (isBetween(n % 10, 2, 9) && !isBetween(n % 100, 11, 19)) {
         return 'few';
       }
-      if ((n % 10) === 1 && !(isBetween((n % 100), 11, 19))) {
+      if (n % 10 === 1 && !isBetween(n % 100, 11, 19)) {
         return 'one';
       }
       return 'other';
     },
-    '11': function(n) {
-      if ((isBetween((n % 10), 2, 4)) && !(isBetween((n % 100), 12, 14))) {
+    '11': function (n) {
+      if (isBetween(n % 10, 2, 4) && !isBetween(n % 100, 12, 14)) {
         return 'few';
       }
-      if ((n % 10) === 0 ||
-          (isBetween((n % 10), 5, 9)) ||
-          (isBetween((n % 100), 11, 14))) {
+      if (n % 10 === 0 || isBetween(n % 10, 5, 9) || isBetween(n % 100, 11, 14)) {
         return 'many';
       }
-      if ((n % 10) === 1 && (n % 100) !== 11) {
+      if (n % 10 === 1 && n % 100 !== 11) {
         return 'one';
       }
       return 'other';
     },
-    '12': function(n) {
-      if ((isBetween(n, 2, 4))) {
+    '12': function (n) {
+      if (isBetween(n, 2, 4)) {
         return 'few';
       }
       if (n === 1) {
@@ -1323,13 +1264,11 @@
       }
       return 'other';
     },
-    '13': function(n) {
-      if ((isBetween((n % 10), 2, 4)) && !(isBetween((n % 100), 12, 14))) {
+    '13': function (n) {
+      if (isBetween(n % 10, 2, 4) && !isBetween(n % 100, 12, 14)) {
         return 'few';
       }
-      if (n !== 1 && (isBetween((n % 10), 0, 1)) ||
-          (isBetween((n % 10), 5, 9)) ||
-          (isBetween((n % 100), 12, 14))) {
+      if (n !== 1 && isBetween(n % 10, 0, 1) || isBetween(n % 10, 5, 9) || isBetween(n % 100, 12, 14)) {
         return 'many';
       }
       if (n === 1) {
@@ -1337,23 +1276,23 @@
       }
       return 'other';
     },
-    '14': function(n) {
-      if ((isBetween((n % 100), 3, 4))) {
+    '14': function (n) {
+      if (isBetween(n % 100, 3, 4)) {
         return 'few';
       }
-      if ((n % 100) === 2) {
+      if (n % 100 === 2) {
         return 'two';
       }
-      if ((n % 100) === 1) {
+      if (n % 100 === 1) {
         return 'one';
       }
       return 'other';
     },
-    '15': function(n) {
-      if (n === 0 || (isBetween((n % 100), 2, 10))) {
+    '15': function (n) {
+      if (n === 0 || isBetween(n % 100, 2, 10)) {
         return 'few';
       }
-      if ((isBetween((n % 100), 11, 19))) {
+      if (isBetween(n % 100, 11, 19)) {
         return 'many';
       }
       if (n === 1) {
@@ -1361,13 +1300,13 @@
       }
       return 'other';
     },
-    '16': function(n) {
-      if ((n % 10) === 1 && n !== 11) {
+    '16': function (n) {
+      if (n % 10 === 1 && n !== 11) {
         return 'one';
       }
       return 'other';
     },
-    '17': function(n) {
+    '17': function (n) {
       if (n === 3) {
         return 'few';
       }
@@ -1385,44 +1324,40 @@
       }
       return 'other';
     },
-    '18': function(n) {
+    '18': function (n) {
       if (n === 0) {
         return 'zero';
       }
-      if ((isBetween(n, 0, 2)) && n !== 0 && n !== 2) {
+      if (isBetween(n, 0, 2) && n !== 0 && n !== 2) {
         return 'one';
       }
       return 'other';
     },
-    '19': function(n) {
-      if ((isBetween(n, 2, 10))) {
+    '19': function (n) {
+      if (isBetween(n, 2, 10)) {
         return 'few';
       }
-      if ((isBetween(n, 0, 1))) {
+      if (isBetween(n, 0, 1)) {
         return 'one';
       }
       return 'other';
     },
-    '20': function(n) {
-      if ((isBetween((n % 10), 3, 4) || ((n % 10) === 9)) && !(
-          isBetween((n % 100), 10, 19) ||
-          isBetween((n % 100), 70, 79) ||
-          isBetween((n % 100), 90, 99)
-          )) {
+    '20': function (n) {
+      if ((isBetween(n % 10, 3, 4) || n % 10 === 9) && !(isBetween(n % 100, 10, 19) || isBetween(n % 100, 70, 79) || isBetween(n % 100, 90, 99))) {
         return 'few';
       }
-      if ((n % 1000000) === 0 && n !== 0) {
+      if (n % 1000000 === 0 && n !== 0) {
         return 'many';
       }
-      if ((n % 10) === 2 && !isIn((n % 100), [12, 72, 92])) {
+      if (n % 10 === 2 && !isIn(n % 100, [12, 72, 92])) {
         return 'two';
       }
-      if ((n % 10) === 1 && !isIn((n % 100), [11, 71, 91])) {
+      if (n % 10 === 1 && !isIn(n % 100, [11, 71, 91])) {
         return 'one';
       }
       return 'other';
     },
-    '21': function(n) {
+    '21': function (n) {
       if (n === 0) {
         return 'zero';
       }
@@ -1431,20 +1366,20 @@
       }
       return 'other';
     },
-    '22': function(n) {
-      if ((isBetween(n, 0, 1)) || (isBetween(n, 11, 99))) {
+    '22': function (n) {
+      if (isBetween(n, 0, 1) || isBetween(n, 11, 99)) {
         return 'one';
       }
       return 'other';
     },
-    '23': function(n) {
-      if ((isBetween((n % 10), 1, 2)) || (n % 20) === 0) {
+    '23': function (n) {
+      if (isBetween(n % 10, 1, 2) || n % 20 === 0) {
         return 'one';
       }
       return 'other';
     },
-    '24': function(n) {
-      if ((isBetween(n, 3, 10) || isBetween(n, 13, 19))) {
+    '24': function (n) {
+      if (isBetween(n, 3, 10) || isBetween(n, 13, 19)) {
         return 'few';
       }
       if (isIn(n, [2, 12])) {
@@ -1461,154 +1396,162 @@
     // return a function that gives the plural form name for a given integer
     const index = locales2rules[code.replace(/-.*$/, '')];
     if (!(index in pluralRules)) {
-      return function() { return 'other'; };
+      return function () {
+        return 'other';
+      };
     }
     return pluralRules[index];
   }
 
-  class Context {
-    constructor(env) {
+  let Context = (function () {
+    function Context(env) {
+      _classCallCheck(this, Context);
+
       this._env = env;
       this._numberFormatters = null;
     }
 
-    _formatTuple(lang, args, entity, id, key) {
-      try {
-        return format(this, lang, args, entity);
-      } catch (err) {
-        err.id = key ? id + '::' + key : id;
-        err.lang = lang;
-        this._env.emit('resolveerror', err, this);
-        return [{ error: err }, err.id];
-      }
-    }
-
-    _formatEntity(lang, args, entity, id) {
-      const [, value] = this._formatTuple(lang, args, entity, id);
-
-      const formatted = {
-        value,
-        attrs: null,
-      };
-
-      if (entity.attrs) {
-        formatted.attrs = Object.create(null);
-        for (let key in entity.attrs) {
-          /* jshint -W089 */
-          const [, attrValue] = this._formatTuple(
-            lang, args, entity.attrs[key], id, key);
-          formatted.attrs[key] = attrValue;
+    _createClass(Context, [{
+      key: '_formatTuple',
+      value: function _formatTuple(lang, args, entity, id, key) {
+        try {
+          return format(this, lang, args, entity);
+        } catch (err) {
+          err.id = key ? id + '::' + key : id;
+          err.lang = lang;
+          this._env.emit('resolveerror', err, this);
+          return [{ error: err }, err.id];
         }
       }
+    }, {
+      key: '_formatEntity',
+      value: function _formatEntity(lang, args, entity, id) {
+        const [, value] = this._formatTuple(lang, args, entity, id);
 
-      return formatted;
-    }
+        const formatted = {
+          value,
+          attrs: null
+        };
 
-    _formatValue(lang, args, entity, id) {
-      return this._formatTuple(lang, args, entity, id)[1];
-    }
-
-    fetch(langs) {
-      if (langs.length === 0) {
-        return Promise.resolve(langs);
-      }
-
-      const resIds = Array.from(this._env._resLists.get(this));
-
-      return Promise.all(
-        resIds.map(
-          this._env._getResource.bind(this._env, langs[0]))).then(
-            () => langs);
-    }
-
-    _resolve(langs, keys, formatter, prevResolved) {
-      const lang = langs[0];
-
-      if (!lang) {
-        return reportMissing.call(this, keys, formatter, prevResolved);
-      }
-
-      let hasUnresolved = false;
-
-      const resolved = keys.map((key, i) => {
-        if (prevResolved && prevResolved[i] !== undefined) {
-          return prevResolved[i];
-        }
-        const [id, args] = Array.isArray(key) ?
-          key : [key, undefined];
-        const entity = this._getEntity(lang, id);
-
-        if (entity) {
-          return formatter.call(this, lang, args, entity, id);
+        if (entity.attrs) {
+          formatted.attrs = Object.create(null);
+          for (let key in entity.attrs) {
+            /* jshint -W089 */
+            const [, attrValue] = this._formatTuple(lang, args, entity.attrs[key], id, key);
+            formatted.attrs[key] = attrValue;
+          }
         }
 
-        this._env.emit('notfounderror',
-          new L10nError('"' + id + '"' + ' not found in ' + lang.code,
-            id, lang), this);
-        hasUnresolved = true;
-      });
-
-      if (!hasUnresolved) {
-        return resolved;
+        return formatted;
       }
-
-      return this.fetch(langs.slice(1)).then(
-        nextLangs => this._resolve(nextLangs, keys, formatter, resolved));
-    }
-
-    resolveEntities(langs, keys) {
-      return this.fetch(langs).then(
-        langs => this._resolve(langs, keys, this._formatEntity));
-    }
-
-    resolveValues(langs, keys) {
-      return this.fetch(langs).then(
-        langs => this._resolve(langs, keys, this._formatValue));
-    }
-
-    _getEntity(lang, id) {
-      const cache = this._env._resCache;
-      const resIds = Array.from(this._env._resLists.get(this));
-
-      // Look for `id` in every resource in order.
-      for (let i = 0, resId; resId = resIds[i]; i++) {
-        const resource = cache.get(resId + lang.code + lang.src);
-        if (resource instanceof L10nError) {
-          continue;
+    }, {
+      key: '_formatValue',
+      value: function _formatValue(lang, args, entity, id) {
+        return this._formatTuple(lang, args, entity, id)[1];
+      }
+    }, {
+      key: 'fetch',
+      value: function fetch(langs) {
+        if (langs.length === 0) {
+          return Promise.resolve(langs);
         }
-        if (id in resource) {
-          return resource[id];
-        }
-      }
-      return undefined;
-    }
 
-    _getNumberFormatter(lang) {
-      if (!this._numberFormatters) {
-        this._numberFormatters = new Map();
+        const resIds = Array.from(this._env._resLists.get(this));
+
+        return Promise.all(resIds.map(this._env._getResource.bind(this._env, langs[0]))).then(() => langs);
       }
-      if (!this._numberFormatters.has(lang)) {
-        const formatter = Intl.NumberFormat(lang, {
-          useGrouping: false,
+    }, {
+      key: '_resolve',
+      value: function _resolve(langs, keys, formatter, prevResolved) {
+        const lang = langs[0];
+
+        if (!lang) {
+          return reportMissing.call(this, keys, formatter, prevResolved);
+        }
+
+        let hasUnresolved = false;
+
+        const resolved = keys.map((key, i) => {
+          if (prevResolved && prevResolved[i] !== undefined) {
+            return prevResolved[i];
+          }
+          const [id, args] = Array.isArray(key) ? key : [key, undefined];
+          const entity = this._getEntity(lang, id);
+
+          if (entity) {
+            return formatter.call(this, lang, args, entity, id);
+          }
+
+          this._env.emit('notfounderror', new L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang), this);
+          hasUnresolved = true;
         });
-        this._numberFormatters.set(lang, formatter);
-        return formatter;
-      }
-      return this._numberFormatters.get(lang);
-    }
 
-    // XXX in the future macros will be stored in localization resources together 
-    // with regular entities and this method will not be needed anymore
-    _getMacro(lang, id) {
-      switch(id) {
-        case 'plural':
-          return getPluralRule(lang.code);
-        default:
-          return undefined;
-      }
-    }
+        if (!hasUnresolved) {
+          return resolved;
+        }
 
-  }
+        return this.fetch(langs.slice(1)).then(nextLangs => this._resolve(nextLangs, keys, formatter, resolved));
+      }
+    }, {
+      key: 'resolveEntities',
+      value: function resolveEntities(langs, keys) {
+        return this.fetch(langs).then(langs => this._resolve(langs, keys, this._formatEntity));
+      }
+    }, {
+      key: 'resolveValues',
+      value: function resolveValues(langs, keys) {
+        return this.fetch(langs).then(langs => this._resolve(langs, keys, this._formatValue));
+      }
+    }, {
+      key: '_getEntity',
+      value: function _getEntity(lang, id) {
+        const cache = this._env._resCache;
+        const resIds = Array.from(this._env._resLists.get(this));
+
+        // Look for `id` in every resource in order.
+        for (let i = 0, resId; resId = resIds[i]; i++) {
+          const resource = cache.get(resId + lang.code + lang.src);
+          if (resource instanceof L10nError) {
+            continue;
+          }
+          if (id in resource) {
+            return resource[id];
+          }
+        }
+        return undefined;
+      }
+    }, {
+      key: '_getNumberFormatter',
+      value: function _getNumberFormatter(lang) {
+        if (!this._numberFormatters) {
+          this._numberFormatters = new Map();
+        }
+        if (!this._numberFormatters.has(lang)) {
+          const formatter = Intl.NumberFormat(lang, {
+            useGrouping: false
+          });
+          this._numberFormatters.set(lang, formatter);
+          return formatter;
+        }
+        return this._numberFormatters.get(lang);
+      }
+    }, {
+      key: '_getMacro',
+
+      // XXX in the future macros will be stored in localization resources together
+      // with regular entities and this method will not be needed anymore
+      value: function _getMacro(lang, id) {
+        switch (id) {
+          case 'plural':
+            return getPluralRule(lang.code);
+          default:
+            return undefined;
+        }
+      }
+    }]);
+
+    return Context;
+  })();
 
   function reportMissing(keys, formatter, resolved) {
     const missingIds = new Set();
@@ -1619,13 +1562,10 @@
       }
       const id = Array.isArray(key) ? key[0] : key;
       missingIds.add(id);
-      resolved[i] = formatter === this._formatValue ?
-        id : {value: id, attrs: null};
+      resolved[i] = formatter === this._formatValue ? id : { value: id, attrs: null };
     });
 
-    this._env.emit('notfounderror', new L10nError(
-      '"' + Array.from(missingIds).join(', ') + '"' +
-      ' not found in any language', missingIds), this);
+    this._env.emit('notfounderror', new L10nError('"' + Array.from(missingIds).join(', ') + '"' + ' not found in any language', missingIds), this);
 
     return resolved;
   }
@@ -1669,7 +1609,7 @@
     const newValue = Array.isArray(value) ? [] : Object.create(null);
     const keys = Object.keys(value);
 
-    for (let i = 0, key; (key = keys[i]); i++) {
+    for (let i = 0, key; key = keys[i]; i++) {
       newValue[key] = walkValue(value[key], fn);
     }
 
@@ -1725,32 +1665,26 @@
       const reExcluded = /(%[EO]?\w|\{\s*.+?\s*\}|&[#\w]+;|<\s*.+?\s*>)/;
 
       const charMaps = {
-        'fr-x-psaccent':
-          'ȦƁƇḒḖƑƓĦĪĴĶĿḾȠǾƤɊŘŞŦŬṼẆẊẎẐ[\\]^_`ȧƀƈḓḗƒɠħīĵķŀḿƞǿƥɋřşŧŭṽẇẋẏẑ',
+        'fr-x-psaccent': 'ȦƁƇḒḖƑƓĦĪĴĶĿḾȠǾƤɊŘŞŦŬṼẆẊẎẐ[\\]^_`ȧƀƈḓḗƒɠħīĵķŀḿƞǿƥɋřşŧŭṽẇẋẏẑ',
         'ar-x-psbidi':
-          // XXX Use pɟפ˥ʎ as replacements for ᗡℲ⅁⅂⅄. https://bugzil.la/1007340
-          '∀ԐↃpƎɟפHIſӼ˥WNOԀÒᴚS⊥∩ɅＭXʎZ[\\]ᵥ_,ɐqɔpǝɟƃɥıɾʞʅɯuodbɹsʇnʌʍxʎz',
+        // XXX Use pɟפ˥ʎ as replacements for ᗡℲ⅁⅂⅄. https://bugzil.la/1007340
+        '∀ԐↃpƎɟפHIſӼ˥WNOԀÒᴚS⊥∩ɅＭXʎZ[\\]ᵥ_,ɐqɔpǝɟƃɥıɾʞʅɯuodbɹsʇnʌʍxʎz'
       };
 
       const mods = {
-        'fr-x-psaccent': val =>
-          val.replace(reVowels, match => match + match.toLowerCase()),
+        'fr-x-psaccent': val => val.replace(reVowels, match => match + match.toLowerCase()),
 
         // Surround each word with Unicode formatting codes, RLO and PDF:
         //   U+202E:   RIGHT-TO-LEFT OVERRIDE (RLO)
         //   U+202C:   POP DIRECTIONAL FORMATTING (PDF)
         // See http://www.w3.org/International/questions/qa-bidi-controls
-        'ar-x-psbidi': val =>
-          val.replace(reWords, match => '\u202e' + match + '\u202c'),
+        'ar-x-psbidi': val => val.replace(reWords, match => '‮' + match + '‬')
       };
 
       // Replace each Latin letter with a Unicode character from map
-      const replaceChars =
-        (map, val) => val.replace(
-          reAlphas, match => map.charAt(match.charCodeAt(0) - 65));
+      const replaceChars = (map, val) => val.replace(reAlphas, match => map.charAt(match.charCodeAt(0) - 65));
 
-      const transform =
-        val => replaceChars(charMaps[id], mods[id](val));
+      const transform = val => replaceChars(charMaps[id], mods[id](val));
 
       // apply fn to translatable parts of val
       const apply = (fn, val) => {
@@ -1759,7 +1693,7 @@
         }
 
         const parts = val.split(reExcluded);
-        const modified = parts.map(function(part) {
+        const modified = parts.map(function (part) {
           if (reExcluded.test(part)) {
             return part;
           }
@@ -1786,13 +1720,44 @@
     }
   });
 
+  function emit(listeners, ...args) {
+    const type = args.shift();
+
+    if (listeners['*']) {
+      listeners['*'].slice().forEach(listener => listener.apply(this, args));
+    }
+
+    if (listeners[type]) {
+      listeners[type].slice().forEach(listener => listener.apply(this, args));
+    }
+  }
+
+  function addEventListener(listeners, type, listener) {
+    if (!(type in listeners)) {
+      listeners[type] = [];
+    }
+    listeners[type].push(listener);
+  }
+
+  function removeEventListener(listeners, type, listener) {
+    const typeListeners = listeners[type];
+    const pos = typeListeners.indexOf(listener);
+    if (pos === -1) {
+      return;
+    }
+
+    typeListeners.splice(pos, 1);
+  }
+
   const parsers = {
     properties: PropertiesParser,
-    l20n: L20nParser,
+    l20n: L20nParser
   };
 
-  class Env {
-    constructor(defaultLang, fetchResource) {
+  let Env = (function () {
+    function Env(defaultLang, fetchResource) {
+      _classCallCheck(this, Env);
+
       this.defaultLang = defaultLang;
       this.fetchResource = fetchResource;
 
@@ -1805,85 +1770,87 @@
       this.removeEventListener = removeEventListener.bind(this, listeners);
     }
 
-    createContext(resIds) {
-      const ctx = new Context(this);
-      this._resLists.set(ctx, new Set(resIds));
-      return ctx;
-    }
-
-    destroyContext(ctx) {
-      const lists = this._resLists;
-      const resList = lists.get(ctx);
-
-      lists.delete(ctx);
-      resList.forEach(
-        resId => deleteIfOrphan(this._resCache, lists, resId));
-    }
-
-    _parse(syntax, lang, data) {
-      const parser = parsers[syntax];
-      if (!parser) {
-        return data;
+    _createClass(Env, [{
+      key: 'createContext',
+      value: function createContext(resIds) {
+        const ctx = new Context(this);
+        this._resLists.set(ctx, new Set(resIds));
+        return ctx;
       }
+    }, {
+      key: 'destroyContext',
+      value: function destroyContext(ctx) {
+        const lists = this._resLists;
+        const resList = lists.get(ctx);
 
-      const emit = (type, err) => this.emit(type, amendError(lang, err));
-      return parser.parse.call(parser, emit, data);
-    }
-
-    _create(lang, entries) {
-      if (lang.src !== 'pseudo') {
-        return entries;
+        lists.delete(ctx);
+        resList.forEach(resId => deleteIfOrphan(this._resCache, lists, resId));
       }
+    }, {
+      key: '_parse',
+      value: function _parse(syntax, lang, data) {
+        const parser = parsers[syntax];
+        if (!parser) {
+          return data;
+        }
 
-      const pseudoentries = Object.create(null);
-      for (let key in entries) {
-        pseudoentries[key] = walkEntry(
-          entries[key], pseudo[lang.code].process);
+        const emit = (type, err) => this.emit(type, amendError(lang, err));
+        return parser.parse.call(parser, emit, data);
       }
-      return pseudoentries;
-    }
+    }, {
+      key: '_create',
+      value: function _create(lang, entries) {
+        if (lang.src !== 'pseudo') {
+          return entries;
+        }
 
-    _getResource(lang, res) {
-      const cache = this._resCache;
-      const id = res + lang.code + lang.src;
-
-      if (cache.has(id)) {
-        return cache.get(id);
+        const pseudoentries = Object.create(null);
+        for (let key in entries) {
+          pseudoentries[key] = walkEntry(entries[key], pseudo[lang.code].process);
+        }
+        return pseudoentries;
       }
+    }, {
+      key: '_getResource',
+      value: function _getResource(lang, res) {
+        const cache = this._resCache;
+        const id = res + lang.code + lang.src;
 
-      const syntax = res.substr(res.lastIndexOf('.') + 1);
+        if (cache.has(id)) {
+          return cache.get(id);
+        }
 
-      const saveEntries = data => {
-        const entries = this._parse(syntax, lang, data);
-        cache.set(id, this._create(lang, entries));
-      };
+        const syntax = res.substr(res.lastIndexOf('.') + 1);
 
-      const recover = err => {
-        err.lang = lang;
-        this.emit('fetcherror', err);
-        cache.set(id, err);
-      };
+        const saveEntries = data => {
+          const entries = this._parse(syntax, lang, data);
+          cache.set(id, this._create(lang, entries));
+        };
 
-      const langToFetch = lang.src === 'pseudo' ?
-        { code: this.defaultLang, src: 'app' } :
-        lang;
+        const recover = err => {
+          err.lang = lang;
+          this.emit('fetcherror', err);
+          cache.set(id, err);
+        };
 
-      const resource = this.fetchResource(res, langToFetch).then(
-        saveEntries, recover);
+        const langToFetch = lang.src === 'pseudo' ? { code: this.defaultLang, src: 'app' } : lang;
 
-      cache.set(id, resource);
+        const resource = this.fetchResource(res, langToFetch).then(saveEntries, recover);
 
-      return resource;
-    }
-  }
+        cache.set(id, resource);
+
+        return resource;
+      }
+    }]);
+
+    return Env;
+  })();
 
   function deleteIfOrphan(cache, lists, resId) {
-    const isNeeded = Array.from(lists).some(
-      ([ctx, resIds]) => resIds.has(resId));
+    const isNeeded = Array.from(lists).some(([ctx, resIds]) => resIds.has(resId));
 
     if (!isNeeded) {
-      cache.forEach((val, key) =>
-        key.startsWith(resId) ? cache.delete(key) : null);
+      cache.forEach((val, key) => key.startsWith(resId) ? cache.delete(key) : null);
     }
   }
 
@@ -1913,13 +1880,6 @@
     });
   }
 
-  // Intl.Locale
-  function getDirection(code) {
-    const tag = code.split('-')[0];
-    return ['ar', 'he', 'fa', 'ps', 'ur'].indexOf(tag) >= 0 ?
-      'rtl' : 'ltr';
-  }
-
   function prioritizeLocales(def, availableLangs, requested) {
     let supportedLocale;
     // Find the first locale in the requested list that is supported.
@@ -1930,8 +1890,7 @@
         break;
       }
     }
-    if (!supportedLocale ||
-        supportedLocale === def) {
+    if (!supportedLocale || supportedLocale === def) {
       return [def];
     }
 
@@ -1944,17 +1903,13 @@
     let appVersion = null;
 
     // XXX take last found instead of first?
-    const metas = head.querySelectorAll(
-      'meta[name="availableLanguages"],' +
-      'meta[name="defaultLanguage"],' +
-      'meta[name="appVersion"]');
+    const metas = head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]');
     for (let meta of metas) {
       const name = meta.getAttribute('name');
       const content = meta.getAttribute('content').trim();
       switch (name) {
         case 'availableLanguages':
-          availableLangs = getLangRevisionMap(
-            availableLangs, content);
+          availableLangs = getLangRevisionMap(availableLangs, content);
           break;
         case 'defaultLanguage':
           const [lang, rev] = getLangRevisionTuple(content);
@@ -1984,23 +1939,19 @@
   }
 
   function getLangRevisionTuple(str) {
-    const [lang, rev]  = str.trim().split(':');
+    const [lang, rev] = str.trim().split(':');
     // if revision is missing, use NaN
     return [lang, parseInt(rev)];
   }
 
-  function negotiateLanguages(
-    fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs,
-    requestedLangs) {
+  function negotiateLanguages(fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs, requestedLangs) {
 
-    const allAvailableLangs = Object.keys(availableLangs).concat(
-      additionalLangs || []).concat(Object.keys(pseudo));
-    const newLangs = prioritizeLocales(
-      defaultLang, allAvailableLangs, requestedLangs);
+    const allAvailableLangs = Object.keys(availableLangs).concat(additionalLangs || []).concat(Object.keys(pseudo));
+    const newLangs = prioritizeLocales(defaultLang, allAvailableLangs, requestedLangs);
 
     const langs = newLangs.map(code => ({
       code: code,
-      src: getLangSource(appVersion, availableLangs, additionalLangs, code),
+      src: getLangSource(appVersion, availableLangs, additionalLangs, code)
     }));
 
     if (!arrEqual(prevLangs, newLangs)) {
@@ -2011,12 +1962,11 @@
   }
 
   function arrEqual(arr1, arr2) {
-    return arr1.length === arr2.length &&
-      arr1.every((elem, i) => elem === arr2[i]);
+    return arr1.length === arr2.length && arr1.every((elem, i) => elem === arr2[i]);
   }
 
   function getMatchingLangpack(appVersion, langpacks) {
-    for (let i = 0, langpack; (langpack = langpacks[i]); i++) {
+    for (let i = 0, langpack; langpack = langpacks[i]; i++) {
       if (langpack.target === appVersion) {
         return langpack;
       }
@@ -2027,89 +1977,96 @@
   function getLangSource(appVersion, availableLangs, additionalLangs, code) {
     if (additionalLangs && additionalLangs[code]) {
       const lp = getMatchingLangpack(appVersion, additionalLangs[code]);
-      if (lp &&
-          (!(code in availableLangs) ||
-           parseInt(lp.revision) > availableLangs[code])) {
+      if (lp && (!(code in availableLangs) || parseInt(lp.revision) > availableLangs[code])) {
         return 'extra';
       }
     }
 
-    if ((code in pseudo) && !(code in availableLangs)) {
+    if (code in pseudo && !(code in availableLangs)) {
       return 'pseudo';
     }
 
     return 'app';
   }
 
-  class Remote {
-    constructor(fetchResource, broadcast, requestedLangs) {
+  let Remote = (function () {
+    function Remote(fetchResource, broadcast, requestedLangs) {
+      _classCallCheck(this, Remote);
+
       this.fetchResource = fetchResource;
       this.broadcast = broadcast;
       this.ctxs = new Map();
-      this.interactive = documentReady().then(
-        () => this.init(requestedLangs));
+      this.interactive = documentReady().then(() => this.init(requestedLangs));
     }
 
-    init(requestedLangs) {
-      const meta = getMeta(document.head);
-      this.defaultLanguage = meta.defaultLang;
-      this.availableLanguages = meta.availableLangs;
-      this.appVersion = meta.appVersion;
+    _createClass(Remote, [{
+      key: 'init',
+      value: function init(requestedLangs) {
+        const meta = getMeta(document.head);
+        this.defaultLanguage = meta.defaultLang;
+        this.availableLanguages = meta.availableLangs;
+        this.appVersion = meta.appVersion;
 
-      this.env = new Env(
-        this.defaultLanguage,
-        (...args) => this.fetchResource(this.appVersion, ...args));
+        this.env = new Env(this.defaultLanguage, (...args) => this.fetchResource(this.appVersion, ...args));
 
-      return this.requestLanguages(requestedLangs);
-    }
+        return this.requestLanguages(requestedLangs);
+      }
+    }, {
+      key: 'registerView',
+      value: function registerView(view, resources) {
+        return this.interactive.then(() => {
+          this.ctxs.set(view, this.env.createContext(resources));
+          return true;
+        });
+      }
+    }, {
+      key: 'unregisterView',
+      value: function unregisterView(view) {
+        return this.ctxs.delete(view);
+      }
+    }, {
+      key: 'resolveEntities',
+      value: function resolveEntities(view, langs, keys) {
+        return this.ctxs.get(view).resolveEntities(langs, keys);
+      }
+    }, {
+      key: 'formatValues',
+      value: function formatValues(view, keys) {
+        return this.languages.then(langs => this.ctxs.get(view).resolveValues(langs, keys));
+      }
+    }, {
+      key: 'resolvedLanguages',
+      value: function resolvedLanguages() {
+        return this.languages;
+      }
+    }, {
+      key: 'requestLanguages',
+      value: function requestLanguages(requestedLangs) {
+        return changeLanguages.call(this, getAdditionalLanguages(), requestedLangs);
+      }
+    }, {
+      key: 'getName',
+      value: function getName(code) {
+        return pseudo[code].name;
+      }
+    }, {
+      key: 'processString',
+      value: function processString(code, str) {
+        return pseudo[code].process(str);
+      }
+    }, {
+      key: 'handleEvent',
+      value: function handleEvent(evt) {
+        return changeLanguages.call(this, evt.detail || getAdditionalLanguages(), navigator.languages);
+      }
+    }]);
 
-    registerView(view, resources) {
-      return this.interactive.then(() => {
-        this.ctxs.set(view, this.env.createContext(resources));
-        return true;
-      });
-    }
-
-    unregisterView(view) {
-      return this.ctxs.delete(view);
-    }
-
-    resolveEntities(view, langs, keys) {
-      return this.ctxs.get(view).resolveEntities(langs, keys);
-    }
-
-    formatValues(view, keys) {
-      return this.languages.then(
-        langs => this.ctxs.get(view).resolveValues(langs, keys));
-    }
-
-    resolvedLanguages() {
-      return this.languages;
-    }
-
-    requestLanguages(requestedLangs) {
-      return changeLanguages.call(
-        this, getAdditionalLanguages(), requestedLangs);
-    }
-
-    getName(code) {
-      return pseudo[code].name;
-    }
-
-    processString(code, str) {
-      return pseudo[code].process(str);
-    }
-
-    handleEvent(evt) {
-      return changeLanguages.call(
-        this, evt.detail || getAdditionalLanguages(), navigator.languages);
-    }
-  }
+    return Remote;
+  })();
 
   function getAdditionalLanguages() {
     if (navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
-      return navigator.mozApps.getAdditionalLanguages().catch(
-        () => []);
+      return navigator.mozApps.getAdditionalLanguages().catch(() => []);
     }
 
     return Promise.resolve([]);
@@ -2117,451 +2074,17 @@
 
   function changeLanguages(additionalLangs, requestedLangs) {
     const prevLangs = this.languages || [];
-    return this.languages = Promise.all([
-      additionalLangs, prevLangs]).then(
-        ([additionalLangs, prevLangs]) => negotiateLanguages(
-          this.broadcast.bind(this, 'translateDocument'),
-          this.appVersion, this.defaultLanguage, this.availableLanguages,
-          additionalLangs, prevLangs, requestedLangs));
-  }
-
-  // match the opening angle bracket (<) in HTML tags, and HTML entities like
-  // &amp;, &#0038;, &#x0026;.
-  const reOverlay = /<|&#?\w+;/;
-
-  const allowed = {
-    elements: [
-      'a', 'em', 'strong', 'small', 's', 'cite', 'q', 'dfn', 'abbr', 'data',
-      'time', 'code', 'var', 'samp', 'kbd', 'sub', 'sup', 'i', 'b', 'u',
-      'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'
-    ],
-    attributes: {
-      global: [ 'title', 'aria-label', 'aria-valuetext', 'aria-moz-hint' ],
-      a: [ 'download' ],
-      area: [ 'download', 'alt' ],
-      // value is special-cased in isAttrAllowed
-      input: [ 'alt', 'placeholder' ],
-      menuitem: [ 'label' ],
-      menu: [ 'label' ],
-      optgroup: [ 'label' ],
-      option: [ 'label' ],
-      track: [ 'label' ],
-      img: [ 'alt' ],
-      textarea: [ 'placeholder' ],
-      th: [ 'abbr']
-    }
-  };
-
-  function overlayElement(element, translation) {
-    const value = translation.value;
-
-    if (typeof value === 'string') {
-      if (!reOverlay.test(value)) {
-        element.textContent = value;
-      } else {
-        // start with an inert template element and move its children into
-        // `element` but such that `element`'s own children are not replaced
-        const tmpl = element.ownerDocument.createElement('template');
-        tmpl.innerHTML = value;
-        // overlay the node with the DocumentFragment
-        overlay(element, tmpl.content);
-      }
-    }
-
-    for (let key in translation.attrs) {
-      const attrName = camelCaseToDashed(key);
-      if (isAttrAllowed({ name: attrName }, element)) {
-        element.setAttribute(attrName, translation.attrs[key]);
-      }
-    }
-  }
-
-  // The goal of overlay is to move the children of `translationElement`
-  // into `sourceElement` such that `sourceElement`'s own children are not
-  // replaced, but onle have their text nodes and their attributes modified.
-  //
-  // We want to make it possible for localizers to apply text-level semantics to
-  // the translations and make use of HTML entities. At the same time, we
-  // don't trust translations so we need to filter unsafe elements and
-  // attribtues out and we don't want to break the Web by replacing elements to
-  // which third-party code might have created references (e.g. two-way
-  // bindings in MVC frameworks).
-  function overlay(sourceElement, translationElement) {
-    const result = translationElement.ownerDocument.createDocumentFragment();
-    let k, attr;
-
-    // take one node from translationElement at a time and check it against
-    // the allowed list or try to match it with a corresponding element
-    // in the source
-    let childElement;
-    while ((childElement = translationElement.childNodes[0])) {
-      translationElement.removeChild(childElement);
-
-      if (childElement.nodeType === childElement.TEXT_NODE) {
-        result.appendChild(childElement);
-        continue;
-      }
-
-      const index = getIndexOfType(childElement);
-      const sourceChild = getNthElementOfType(sourceElement, childElement, index);
-      if (sourceChild) {
-        // there is a corresponding element in the source, let's use it
-        overlay(sourceChild, childElement);
-        result.appendChild(sourceChild);
-        continue;
-      }
-
-      if (isElementAllowed(childElement)) {
-        const sanitizedChild = childElement.ownerDocument.createElement(
-          childElement.nodeName);
-        overlay(sanitizedChild, childElement);
-        result.appendChild(sanitizedChild);
-        continue;
-      }
-
-      // otherwise just take this child's textContent
-      result.appendChild(
-        translationElement.ownerDocument.createTextNode(
-          childElement.textContent));
-    }
-
-    // clear `sourceElement` and append `result` which by this time contains
-    // `sourceElement`'s original children, overlayed with translation
-    sourceElement.textContent = '';
-    sourceElement.appendChild(result);
-
-    // if we're overlaying a nested element, translate the allowed
-    // attributes; top-level attributes are handled in `translateElement`
-    // XXX attributes previously set here for another language should be
-    // cleared if a new language doesn't use them; https://bugzil.la/922577
-    if (translationElement.attributes) {
-      for (k = 0, attr; (attr = translationElement.attributes[k]); k++) {
-        if (isAttrAllowed(attr, sourceElement)) {
-          sourceElement.setAttribute(attr.name, attr.value);
-        }
-      }
-    }
-  }
-
-  // XXX the allowed list should be amendable; https://bugzil.la/922573
-  function isElementAllowed(element) {
-    return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
-  }
-
-  function isAttrAllowed(attr, element) {
-    const attrName = attr.name.toLowerCase();
-    const tagName = element.tagName.toLowerCase();
-    // is it a globally safe attribute?
-    if (allowed.attributes.global.indexOf(attrName) !== -1) {
-      return true;
-    }
-    // are there no allowed attributes for this element?
-    if (!allowed.attributes[tagName]) {
-      return false;
-    }
-    // is it allowed on this element?
-    // XXX the allowed list should be amendable; https://bugzil.la/922573
-    if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
-      return true;
-    }
-    // special case for value on inputs with type button, reset, submit
-    if (tagName === 'input' && attrName === 'value') {
-      const type = element.type.toLowerCase();
-      if (type === 'submit' || type === 'button' || type === 'reset') {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  // Get n-th immediate child of context that is of the same type as element.
-  // XXX Use querySelector(':scope > ELEMENT:nth-of-type(index)'), when:
-  // 1) :scope is widely supported in more browsers and 2) it works with
-  // DocumentFragments.
-  function getNthElementOfType(context, element, index) {
-    /* jshint boss:true */
-    let nthOfType = 0;
-    for (let i = 0, child; child = context.children[i]; i++) {
-      if (child.nodeType === child.ELEMENT_NODE &&
-          child.tagName === element.tagName) {
-        if (nthOfType === index) {
-          return child;
-        }
-        nthOfType++;
-      }
-    }
-    return null;
-  }
-
-  // Get the index of the element among siblings of the same type.
-  function getIndexOfType(element) {
-    let index = 0;
-    let child;
-    while ((child = element.previousElementSibling)) {
-      if (child.tagName === element.tagName) {
-        index++;
-      }
-    }
-    return index;
-  }
-
-  function camelCaseToDashed(string) {
-    // XXX workaround for https://bugzil.la/1141934
-    if (string === 'ariaValueText') {
-      return 'aria-valuetext';
-    }
-
-    return string
-      .replace(/[A-Z]/g, function (match) {
-        return '-' + match.toLowerCase();
-      })
-      .replace(/^-/, '');
-  }
-
-  const reHtml = /[&<>]/g;
-  const htmlEntities = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-  };
-
-  function getResourceLinks(head) {
-    return Array.prototype.map.call(
-      head.querySelectorAll('link[rel="localization"]'),
-      el => el.getAttribute('href'));
-  }
-
-  function setAttributes(element, id, args) {
-    element.setAttribute('data-l10n-id', id);
-    if (args) {
-      element.setAttribute('data-l10n-args', JSON.stringify(args));
-    }
-  }
-
-  function getAttributes(element) {
-    return {
-      id: element.getAttribute('data-l10n-id'),
-      args: JSON.parse(element.getAttribute('data-l10n-args'))
-    };
-  }
-
-  function getTranslatables(element) {
-    const nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
-
-    if (typeof element.hasAttribute === 'function' &&
-        element.hasAttribute('data-l10n-id')) {
-      nodes.push(element);
-    }
-
-    return nodes;
-  }
-
-  function translateMutations(view, langs, mutations) {
-    const targets = new Set();
-
-    for (let mutation of mutations) {
-      switch (mutation.type) {
-        case 'attributes':
-          targets.add(mutation.target);
-          break;
-        case 'childList':
-          for (let addedNode of mutation.addedNodes) {
-            if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-              if (addedNode.childElementCount) {
-                getTranslatables(addedNode).forEach(targets.add.bind(targets));
-              } else {
-                if (addedNode.hasAttribute('data-l10n-id')) {
-                  targets.add(addedNode);
-                }
-              }
-            }
-          }
-          break;
-      }
-    }
-
-    if (targets.size === 0) {
-      return;
-    }
-
-    translateElements(view, langs, Array.from(targets));
-  }
-
-  function translateFragment(view, langs, frag) {
-    return translateElements(view, langs, getTranslatables(frag));
-  }
-
-  function getElementsTranslation(view, langs, elems) {
-    const keys = elems.map(elem => {
-      const id = elem.getAttribute('data-l10n-id');
-      const args = elem.getAttribute('data-l10n-args');
-      return args ? [
-        id,
-        JSON.parse(args.replace(reHtml, match => htmlEntities[match]))
-      ] : id;
-    });
-
-    return view._resolveEntities(langs, keys);
-  }
-
-  function translateElements(view, langs, elements) {
-    return getElementsTranslation(view, langs, elements).then(
-      translations => applyTranslations(view, elements, translations));
-  }
-
-  function applyTranslations(view, elems, translations) {
-    view._disconnect();
-    for (let i = 0; i < elems.length; i++) {
-      overlayElement(elems[i], translations[i]);
-    }
-    view._observe();
-  }
-
-  const observerConfig = {
-    attributes: true,
-    characterData: false,
-    childList: true,
-    subtree: true,
-    attributeFilter: ['data-l10n-id', 'data-l10n-args']
-  };
-
-  const readiness = new WeakMap();
-
-  class View {
-    constructor(client, doc) {
-      this._doc = doc;
-      this.pseudo = {
-        'fr-x-psaccent': createPseudo(this, 'fr-x-psaccent'),
-        'ar-x-psbidi': createPseudo(this, 'ar-x-psbidi')
-      };
-
-      this._interactive = documentReady().then(
-        () => init(this, client));
-
-      const observer = new MutationObserver(onMutations.bind(this));
-      this._observe = () => observer.observe(doc, observerConfig);
-      this._disconnect = () => observer.disconnect();
-
-      const translateView = langs => translateDocument(this, langs);
-      client.on('translateDocument', translateView);
-      this.ready = this._interactive.then(
-        client => client.method('resolvedLanguages')).then(
-        translateView);
-    }
-
-    requestLanguages(langs, global) {
-      return this._interactive.then(
-        client => client.method('requestLanguages', langs, global));
-    }
-
-    _resolveEntities(langs, keys) {
-      return this._interactive.then(
-        client => client.method('resolveEntities', client.id, langs, keys));
-    }
-
-    formatValue(id, args) {
-      return this._interactive.then(
-        client => client.method('formatValues', client.id, [[id, args]])).then(
-        values => values[0]);
-    }
-
-    formatValues(...keys) {
-      return this._interactive.then(
-        client => client.method('formatValues', client.id, keys));
-    }
-
-    translateFragment(frag) {
-      return this._interactive.then(
-        client => client.method('resolvedLanguages')).then(
-        langs => translateFragment(this, langs, frag));
-    }
-  }
-
-  View.prototype.setAttributes = setAttributes;
-  View.prototype.getAttributes = getAttributes;
-
-  function createPseudo(view, code) {
-    return {
-      getName: () => view._interactive.then(
-        client => client.method('getName', code)),
-      processString: str => view._interactive.then(
-        client => client.method('processString', code, str)),
-    };
-  }
-
-  function init(view, client) {
-    view._observe();
-    return client.method(
-      'registerView', client.id, getResourceLinks(view._doc.head)).then(
-        () => client);
-  }
-
-  function onMutations(mutations) {
-    return this._interactive.then(
-      client => client.method('resolvedLanguages')).then(
-      langs => translateMutations(this, langs, mutations));
-  }
-
-  function translateDocument(view, langs) {
-    const html = view._doc.documentElement;
-
-    if (readiness.has(html)) {
-      return translateFragment(view, langs, html).then(
-        () => setAllAndEmit(html, langs));
-    }
-
-    const translated =
-      // has the document been already pre-translated?
-      langs[0].code === html.getAttribute('lang') ?
-        Promise.resolve() :
-        translateFragment(view, langs, html).then(
-          () => setLangDir(html, langs));
-
-    return translated.then(() => {
-      setLangs(html, langs);
-      readiness.set(html, true);
-    });
-  }
-
-  function setLangs(html, langs) {
-    const codes = langs.map(lang => lang.code);
-    html.setAttribute('langs', codes.join(' '));
-  }
-
-  function setLangDir(html, langs) {
-    const code = langs[0].code;
-    html.setAttribute('lang', code);
-    html.setAttribute('dir', getDirection(code));
-  }
-
-  function setAllAndEmit(html, langs) {
-    setLangDir(html, langs);
-    setLangs(html, langs);
-    html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
-      bubbles: false,
-      cancelable: false,
-    }));
+    return this.languages = Promise.all([additionalLangs, prevLangs]).then(([additionalLangs, prevLangs]) => negotiateLanguages(this.broadcast.bind(this, 'translateDocument'), this.appVersion, this.defaultLanguage, this.availableLanguages, additionalLangs, prevLangs, requestedLangs));
   }
 
   const remote = new Remote(fetchResource, broadcast, navigator.languages);
   window.addEventListener('languagechange', remote);
   document.addEventListener('additionallanguageschange', remote);
 
-  document.l10n = new View(
-    new Client(remote), document);
-
-  //Bug 1204660 - Temporary proxy for shared code. Will be removed once
-  //              l10n.js migration is completed.
-  navigator.mozL10n = {
-    setAttributes: document.l10n.setAttributes,
-    getAttributes: document.l10n.getAttributes,
-    formatValue: (...args) => document.l10n.formatValue(...args),
-    translateFragment: (...args) => document.l10n.translateFragment(...args),
-    once: cb => document.l10n.ready.then(cb),
-    ready: cb => document.l10n.ready.then(() => {
-      document.addEventListener('DOMRetranslated', cb);
-      cb();
-    }),
-  };
-
+  remote.service = new Service('l20n').method('registerView', (...args) => remote.registerView(...args)).method('resolvedLanguages', (...args) => remote.resolvedLanguages(...args)).method('requestLanguages', (...args) => remote.requestLanguages(...args)).method('resolveEntities', (...args) => remote.resolveEntities(...args)).method('formatValues', (...args) => remote.formatValues(...args)).method('getName', (...args) => remote.getName(...args)).method('processString', (...args) => remote.processString(...args)).on('disconnect', clientId => remote.unregisterView(clientId)).listen(channel);
 })();
+// a-z
+// a-z
+// A-Z
+// a-f
+// A-F

@@ -430,34 +430,40 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     if (readiness.has(html)) {
       return _translateFragment(view, langs, html).then(function () {
-        return setDOMAttrsAndEmit(html, langs);
+        return setAllAndEmit(html, langs);
       });
     }
 
     var translated = langs[0].code === html.getAttribute('lang') ? Promise.resolve() : _translateFragment(view, langs, html).then(function () {
-      return setDOMAttrs(html, langs);
+      return setLangDir(html, langs);
     });
 
     return translated.then(function () {
-      return readiness.set(html, true);
+      setLangs(html, langs);
+      readiness.set(html, true);
     });
   }
 
-  function setDOMAttrsAndEmit(html, langs) {
-    setDOMAttrs(html, langs);
-    html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
-      bubbles: false,
-      cancelable: false
-    }));
-  }
-
-  function setDOMAttrs(html, langs) {
+  function setLangs(html, langs) {
     var codes = langs.map(function (lang) {
       return lang.code;
     });
     html.setAttribute('langs', codes.join(' '));
-    html.setAttribute('lang', codes[0]);
-    html.setAttribute('dir', getDirection(codes[0]));
+  }
+
+  function setLangDir(html, langs) {
+    var code = langs[0].code;
+    html.setAttribute('lang', code);
+    html.setAttribute('dir', getDirection(code));
+  }
+
+  function setAllAndEmit(html, langs) {
+    setLangDir(html, langs);
+    setLangs(html, langs);
+    html.parentNode.dispatchEvent(new CustomEvent('DOMRetranslated', {
+      bubbles: false,
+      cancelable: false
+    }));
   }
 
   var client = new Client({
