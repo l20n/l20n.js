@@ -1,51 +1,51 @@
 'use strict';
 
 import { documentReady, getDirection } from './shims';
+import { getResourceLinks, getMeta } from './head';
 import {
-  setAttributes, getAttributes, translateFragment, translateMutations,
-  getResourceLinks
+  initMutationObserver, translateRoots, observe, disconnect
+} from './observer';
+import {
+  setAttributes, getAttributes, translateFragment
 } from './dom';
 
-const observerConfig = {
-  attributes: true,
-  characterData: false,
-  childList: true,
-  subtree: true,
-  attributeFilter: ['data-l10n-id', 'data-l10n-args']
-};
-
-const readiness = new WeakMap();
+const viewProps = new WeakMap();
 
 export class View {
   constructor(client, doc) {
-    this._doc = doc;
     this.pseudo = {
       'fr-x-psaccent': createPseudo(this, 'fr-x-psaccent'),
       'ar-x-psbidi': createPseudo(this, 'ar-x-psbidi')
     };
 
-    this._interactive = documentReady().then(
-      () => init(this, client));
+    const initialized = documentReady().then(() => init(this, client));
+    this._interactive = initialized.then(() => client);
+    this.ready = initialized.then(langs => translateView(this, langs));
+    initMutationObserver(this);
 
-    const observer = new MutationObserver(onMutations.bind(this));
-    this._observe = () => observer.observe(doc, observerConfig);
-    this._disconnect = () => observer.disconnect();
+    viewProps.set(this, {
+      doc: doc,
+      ready: false
+    });
 
-    const translateView = langs => translateDocument(this, langs);
-    client.on('translateDocument', translateView);
-    this.ready = this._interactive.then(
-      client => client.method('resolvedLanguages')).then(
-      translateView);
+    client.on('languageschangerequest',
+      requestedLangs => this.requestLanguages(requestedLangs));
   }
 
-  requestLanguages(langs, global) {
-    return this._interactive.then(
-      client => client.method('requestLanguages', langs, global));
+  requestLanguages(requestedLangs, isGlobal) {
+    const method = isGlobal ?
+      client => client.method('requestLanguages', requestedLangs) :
+      client => changeLanguages(this, client, requestedLangs);
+    return this._interactive.then(method);
   }
 
-  _resolveEntities(langs, keys) {
+  handleEvent() {
+    return this.requestLanguages(navigator.languages);
+  }
+
+  formatEntities(...keys) {
     return this._interactive.then(
-      client => client.method('resolveEntities', client.id, langs, keys));
+      client => client.method('formatEntities', client.id, keys));
   }
 
   formatValue(id, args) {
@@ -60,9 +60,15 @@ export class View {
   }
 
   translateFragment(frag) {
-    return this._interactive.then(
-      client => client.method('resolvedLanguages')).then(
-      langs => translateFragment(this, langs, frag));
+    return translateFragment(this, frag);
+  }
+
+  observeRoot(root) {
+    observe(this, root);
+  }
+
+  disconnectRoot(root) {
+    disconnect(this, root);
   }
 }
 
@@ -79,23 +85,43 @@ function createPseudo(view, code) {
 }
 
 function init(view, client) {
-  view._observe();
-  return client.method(
-    'registerView', client.id, getResourceLinks(view._doc.head)).then(
-      () => client);
+  const doc = viewProps.get(view).doc;
+  const resources = getResourceLinks(doc.head);
+  const meta = getMeta(doc.head);
+  view.observeRoot(doc.documentElement);
+  return getAdditionalLanguages().then(
+    additionalLangs => client.method(
+      'registerView', client.id, resources, meta, additionalLangs,
+      navigator.languages));
 }
 
-function onMutations(mutations) {
-  return this._interactive.then(
-    client => client.method('resolvedLanguages')).then(
-    langs => translateMutations(this, langs, mutations));
+function changeLanguages(view, client, requestedLangs) {
+  const doc = viewProps.get(view).doc;
+  const meta = getMeta(doc.head);
+  return getAdditionalLanguages()
+    .then(additionalLangs => client.method(
+      'changeLanguages', client.id, meta, additionalLangs, requestedLangs
+    ))
+    .then(({langs, haveChanged}) => haveChanged ?
+      translateView(view, langs) : undefined
+    );
 }
 
-export function translateDocument(view, langs) {
-  const html = view._doc.documentElement;
+function getAdditionalLanguages() {
+  if (navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
+    return navigator.mozApps.getAdditionalLanguages()
+      .catch(() => Object.create(null));
+  }
 
-  if (readiness.has(html)) {
-    return translateFragment(view, langs, html).then(
+  return Promise.resolve(Object.create(null));
+}
+
+export function translateView(view, langs) {
+  const props = viewProps.get(view);
+  const html = props.doc.documentElement;
+
+  if (props.ready) {
+    return translateRoots(view).then(
       () => setAllAndEmit(html, langs));
   }
 
@@ -103,12 +129,12 @@ export function translateDocument(view, langs) {
     // has the document been already pre-translated?
     langs[0].code === html.getAttribute('lang') ?
       Promise.resolve() :
-      translateFragment(view, langs, html).then(
+      translateRoots(view).then(
         () => setLangDir(html, langs));
 
   return translated.then(() => {
     setLangs(html, langs);
-    readiness.set(html, true);
+    props.ready = true;
   });
 }
 

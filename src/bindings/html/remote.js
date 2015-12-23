@@ -2,58 +2,47 @@
 
 import { Env } from '../../lib/env';
 import { pseudo } from '../../lib/pseudo';
-import { documentReady } from './shims';
-import { getMeta, negotiateLanguages } from './langs';
+import { negotiateLanguages } from './langs';
 
 export class Remote {
-  constructor(fetchResource, broadcast, requestedLangs) {
-    this.fetchResource = fetchResource;
+  constructor(fetchResource, broadcast) {
     this.broadcast = broadcast;
+    this.env = new Env(fetchResource);
     this.ctxs = new Map();
-    this.interactive = documentReady().then(
-      () => this.init(requestedLangs));
   }
 
-  init(requestedLangs) {
-    const meta = getMeta(document.head);
-    this.defaultLanguage = meta.defaultLang;
-    this.availableLanguages = meta.availableLangs;
-    this.appVersion = meta.appVersion;
-
-    this.env = new Env(
-      this.defaultLanguage,
-      (...args) => this.fetchResource(this.appVersion, ...args));
-
-    return this.requestLanguages(requestedLangs);
-  }
-
-  registerView(view, resources) {
-    return this.interactive.then(() => {
-      this.ctxs.set(view, this.env.createContext(resources));
-      return true;
-    });
+  registerView(view, resources, meta, additionalLangs, requestedLangs) {
+    const { langs } = negotiateLanguages(
+      meta, additionalLangs, [], requestedLangs);
+    this.ctxs.set(view, this.env.createContext(langs, resources));
+    return langs;
   }
 
   unregisterView(view) {
-    return this.ctxs.delete(view);
+    this.ctxs.delete(view);
+    return true;
   }
 
-  resolveEntities(view, langs, keys) {
-    return this.ctxs.get(view).resolveEntities(langs, keys);
+  formatEntities(view, keys) {
+    return this.ctxs.get(view).formatEntities(...keys);
   }
 
   formatValues(view, keys) {
-    return this.languages.then(
-      langs => this.ctxs.get(view).resolveValues(langs, keys));
+    return this.ctxs.get(view).formatValues(...keys);
   }
 
-  resolvedLanguages() {
-    return this.languages;
+  changeLanguages(view, meta, additionalLangs, requestedLangs) {
+    const oldCtx = this.ctxs.get(view);
+    const prevLangs = oldCtx.langs;
+    const newLangs = negotiateLanguages(
+      meta, additionalLangs, prevLangs, requestedLangs);
+    this.ctxs.set(view, this.env.createContext(
+      newLangs.langs, oldCtx.resIds));
+    return newLangs;
   }
 
   requestLanguages(requestedLangs) {
-    return changeLanguages.call(
-      this, getAdditionalLanguages(), requestedLangs);
+    this.broadcast('languageschangerequest', requestedLangs);
   }
 
   getName(code) {
@@ -63,28 +52,4 @@ export class Remote {
   processString(code, str) {
     return pseudo[code].process(str);
   }
-
-  handleEvent(evt) {
-    return changeLanguages.call(
-      this, evt.detail || getAdditionalLanguages(), navigator.languages);
-  }
-}
-
-export function getAdditionalLanguages() {
-  if (navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
-    return navigator.mozApps.getAdditionalLanguages().catch(
-      () => []);
-  }
-
-  return Promise.resolve([]);
-}
-
-function changeLanguages(additionalLangs, requestedLangs) {
-  const prevLangs = this.languages || [];
-  return this.languages = Promise.all([
-    additionalLangs, prevLangs]).then(
-      ([additionalLangs, prevLangs]) => negotiateLanguages(
-        this.broadcast.bind(this, 'translateDocument'),
-        this.appVersion, this.defaultLanguage, this.availableLanguages,
-        additionalLangs, prevLangs, requestedLangs));
 }

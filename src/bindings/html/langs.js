@@ -3,76 +3,23 @@
 import { prioritizeLocales } from '../../lib/intl';
 import { pseudo } from '../../lib/pseudo';
 
-export function getMeta(head) {
-  let availableLangs = Object.create(null);
-  let defaultLang = null;
-  let appVersion = null;
-
-  // XXX take last found instead of first?
-  const metas = head.querySelectorAll(
-    'meta[name="availableLanguages"],' +
-    'meta[name="defaultLanguage"],' +
-    'meta[name="appVersion"]');
-  for (let meta of metas) {
-    const name = meta.getAttribute('name');
-    const content = meta.getAttribute('content').trim();
-    switch (name) {
-      case 'availableLanguages':
-        availableLangs = getLangRevisionMap(
-          availableLangs, content);
-        break;
-      case 'defaultLanguage':
-        const [lang, rev] = getLangRevisionTuple(content);
-        defaultLang = lang;
-        if (!(lang in availableLangs)) {
-          availableLangs[lang] = rev;
-        }
-        break;
-      case 'appVersion':
-        appVersion = content;
-    }
-  }
-
-  return {
-    defaultLang,
-    availableLangs,
-    appVersion
-  };
-}
-
-function getLangRevisionMap(seq, str) {
-  return str.split(',').reduce((seq, cur) => {
-    const [lang, rev] = getLangRevisionTuple(cur);
-    seq[lang] = rev;
-    return seq;
-  }, seq);
-}
-
-function getLangRevisionTuple(str) {
-  const [lang, rev]  = str.trim().split(':');
-  // if revision is missing, use NaN
-  return [lang, parseInt(rev)];
-}
-
 export function negotiateLanguages(
-  fn, appVersion, defaultLang, availableLangs, additionalLangs, prevLangs,
+  { appVersion, defaultLang, availableLangs }, additionalLangs, prevLangs,
   requestedLangs) {
 
-  const allAvailableLangs = Object.keys(availableLangs).concat(
-    additionalLangs || []).concat(Object.keys(pseudo));
+  const allAvailableLangs = Object.keys(availableLangs)
+    .concat(Object.keys(additionalLangs))
+    .concat(Object.keys(pseudo));
   const newLangs = prioritizeLocales(
     defaultLang, allAvailableLangs, requestedLangs);
 
   const langs = newLangs.map(code => ({
     code: code,
     src: getLangSource(appVersion, availableLangs, additionalLangs, code),
+    ver: appVersion,
   }));
 
-  if (!arrEqual(prevLangs, newLangs)) {
-    fn(langs);
-  }
-
-  return langs;
+  return { langs, haveChanged: !arrEqual(prevLangs, newLangs) };
 }
 
 function arrEqual(arr1, arr2) {

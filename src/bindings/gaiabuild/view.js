@@ -3,8 +3,8 @@
 import { pseudo } from '../../lib/pseudo';
 import { Env } from '../../lib/env';
 import { LegacyEnv } from './legacy/env';
-import { getResourceLinks, translateFragment } from '../../bindings/html/dom';
-import { getDirection } from '../../bindings/html/shims';
+import { translateFragment } from '../../bindings/html/dom';
+import { getResourceLinks } from '../../bindings/html/head';
 import { serializeContext } from './serialize';
 import { serializeLegacyContext } from './legacy/serialize';
 
@@ -12,6 +12,7 @@ export class View {
   constructor(htmloptimizer, fetchResource) {
     this.htmloptimizer = htmloptimizer;
     this.doc = htmloptimizer.document;
+    this.resLinks = getResourceLinks(this.doc.head);
 
     this.isEnabled = this.doc.querySelector('link[rel="localization"]');
     // XXX we should check if the app uses l10n.js instead, but due to lazy 
@@ -19,9 +20,9 @@ export class View {
     this.isLegacy = !this.doc.querySelector('script[src*="l20n"]');
 
     const EnvClass = this.isLegacy ? LegacyEnv : Env;
-    this.env = new EnvClass(
-      htmloptimizer.config.GAIA_DEFAULT_LOCALE, fetchResource);
-    this.ctx = this.env.createContext(getResourceLinks(this.doc.head));
+    this.env = new EnvClass(fetchResource);
+    this.sourceCtx = this.env.createContext(
+      [{ code: 'en-US', src: 'app' }], this.resLinks);
 
     // add the url of the currently processed webapp to all errors
     this.env.addEventListener('*', amendError.bind(this));
@@ -49,34 +50,36 @@ export class View {
     }
   }
 
-  _observe() {}
-  _disconnect() {}
-
-  _resolveEntities(langs, keys) {
-    return this.ctx.resolveEntities(langs, keys);
+  formatEntities(...keys) {
+    return this.ctx.formatEntities(...keys);
   }
 
   translateDocument(code) {
     const dir = getDirection(code);
-    const langs = [{ code, src: 'app' }];
+    const langs = [
+      { code, src: 'app' },
+      { code: 'en-US', src: 'app' }
+    ];
     const setDocLang = () => {
       this.doc.documentElement.lang = code;
       this.doc.documentElement.dir = dir;
     };
-    return this.ctx.fetch(langs).then(
-      langs => translateFragment(this, langs, this.doc.documentElement)).then(
-      setDocLang);
+
+    const ctx = this.env.createContext(langs, getResourceLinks(this.doc.head));
+    return translateFragment(ctx, this.doc.documentElement)
+      .then(setDocLang);
   }
 
   serializeResources(code) {
-    const lang = {
-      code,
-      src: code in pseudo ? 'pseudo' : 'app'
-    };
-    return fetchContext(this.ctx, lang).then(() => {
+    const langCtx = this.env.createContext(
+      [{ code, src: code in pseudo ? 'pseudo' : 'app' }], this.resLinks);
+
+    return Promise.all(
+      [this.sourceCtx, langCtx].map(ctx => ctx.fetch())
+    ).then(() => {
       const [errors, entries] = this.isLegacy ?
-        serializeLegacyContext(this.ctx, lang) :
-        serializeContext(this.ctx, lang);
+        serializeLegacyContext(langCtx) :
+        serializeContext(langCtx);
 
       if (errors.length) {
         const notFoundErrors = errors.filter(
@@ -88,12 +91,12 @@ export class View {
 
         if (notFoundErrors.length) {
           this.htmloptimizer.dump(
-            '[l10n] [' + lang.code + ']: ' + notFoundErrors.length +
+            '[l10n] [' + code + ']: ' + notFoundErrors.length +
             ' missing compared to en-US: ' + notFoundErrors.join(', '));
         }
         if (malformedErrors.length) {
           this.htmloptimizer.dump(
-            '[l10n] [' + lang.code + ']: ' + malformedErrors.length +
+            '[l10n] [' + code + ']: ' + malformedErrors.length +
             ' malformed compared to en-US: ' + malformedErrors.join(', '));
         }
       }
@@ -124,8 +127,8 @@ function stopBuild(err) {
   }
 }
 
-function fetchContext(ctx, lang) {
-  const sourceLang = { code: 'en-US', src: 'app' };
-  return Promise.all(
-    [sourceLang, lang].map(lang => ctx.fetch([lang])));
+function getDirection(code) {
+  const tag = code.split('-')[0];
+  return ['ar', 'he', 'fa', 'ps', 'ur'].indexOf(tag) >= 0 ?
+    'rtl' : 'ltr';
 }

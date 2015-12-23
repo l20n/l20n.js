@@ -5,6 +5,7 @@ import { Env } from '../../../src/lib/env';
 import { fetchResource } from '../../../src/runtime/node/io';
 import { L10nError } from '../../../src/lib/errors';
 
+const noop = () => undefined;
 const path = __dirname + '/..';
 const langs = [
   { code: 'en-US', src: 'app' },
@@ -17,26 +18,26 @@ describe('Caching resources', function() {
   var res3 = path + '/fixtures/missing.properties';
 
   beforeEach(function(done) {
-    env = new Env('en-US', fetchResource);
-    ctx1 = env.createContext([res1, res3]);
-    ctx2 = env.createContext([res1, res2]);
+    env = new Env(fetchResource);
+    ctx1 = env.createContext(langs, [res1, res3]);
+    ctx2 = env.createContext(langs, [res1, res2]);
     Promise.all([
-      ctx1.fetch(langs),
-      ctx2.fetch(langs)
-    ]).then(() => undefined).then(done, done);
+      ctx1.fetch(),
+      ctx2.fetch()
+    ]).then(noop).then(done, done);
   });
 
   it('caches resources', function() {
-    assert(env._resCache.get(res1 + 'en-USapp'));
-    assert(env._resCache.get(res2 + 'en-USapp'));
-    assert(env._resCache.get(res3 + 'en-USapp') instanceof L10nError);
+    assert(env.resCache.get(res1 + 'en-USapp'));
+    assert(env.resCache.get(res2 + 'en-USapp'));
+    assert(env.resCache.get(res3 + 'en-USapp') instanceof L10nError);
   });
 
   it('clears the cache only if no other ctx uses the resource', function() {
     env.destroyContext(ctx2);
-    assert(env._resCache.get(res1 + 'en-USapp'));
-    assert(!env._resCache.has(res2 + 'en-USapp'));
-    assert(env._resCache.get(res3 + 'en-USapp') instanceof L10nError);
+    assert(env.resCache.get(res1 + 'en-USapp'));
+    assert(!env.resCache.has(res2 + 'en-USapp'));
+    assert(env.resCache.get(res3 + 'en-USapp') instanceof L10nError);
   });
 
 });

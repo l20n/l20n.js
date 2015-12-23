@@ -1,5 +1,6 @@
 'use strict';
 
+import { disconnect, reconnect } from './observer';
 import { overlayElement } from './overlay';
 
 const reHtml = /[&<>]/g;
@@ -8,12 +9,6 @@ const htmlEntities = {
   '<': '&lt;',
   '>': '&gt;',
 };
-
-export function getResourceLinks(head) {
-  return Array.prototype.map.call(
-    head.querySelectorAll('link[rel="localization"]'),
-    el => el.getAttribute('href'));
-}
 
 export function setAttributes(element, id, args) {
   element.setAttribute('data-l10n-id', id);
@@ -40,7 +35,7 @@ function getTranslatables(element) {
   return nodes;
 }
 
-export function translateMutations(view, langs, mutations) {
+export function translateMutations(view, mutations) {
   const targets = new Set();
 
   for (let mutation of mutations) {
@@ -68,14 +63,14 @@ export function translateMutations(view, langs, mutations) {
     return;
   }
 
-  translateElements(view, langs, Array.from(targets));
+  translateElements(view, Array.from(targets));
 }
 
-export function translateFragment(view, langs, frag) {
-  return translateElements(view, langs, getTranslatables(frag));
+export function translateFragment(view, frag) {
+  return translateElements(view, getTranslatables(frag));
 }
 
-function getElementsTranslation(view, langs, elems) {
+function getElementsTranslation(view, elems) {
   const keys = elems.map(elem => {
     const id = elem.getAttribute('data-l10n-id');
     const args = elem.getAttribute('data-l10n-args');
@@ -85,18 +80,18 @@ function getElementsTranslation(view, langs, elems) {
     ] : id;
   });
 
-  return view._resolveEntities(langs, keys);
+  return view.formatEntities(...keys);
 }
 
-function translateElements(view, langs, elements) {
-  return getElementsTranslation(view, langs, elements).then(
+function translateElements(view, elements) {
+  return getElementsTranslation(view, elements).then(
     translations => applyTranslations(view, elements, translations));
 }
 
 function applyTranslations(view, elems, translations) {
-  view._disconnect();
+  disconnect(view, null, true);
   for (let i = 0; i < elems.length; i++) {
     overlayElement(elems[i], translations[i]);
   }
-  view._observe();
+  reconnect(view);
 }

@@ -6,18 +6,17 @@ import L20nParser from './format/l20n/entries/parser';
 import { walkEntry, pseudo } from './pseudo';
 import { emit, addEventListener, removeEventListener } from './events';
 
-const parsers = {
-  properties: PropertiesParser,
-  l20n: L20nParser,
-};
-
 export class Env {
-  constructor(defaultLang, fetchResource) {
-    this.defaultLang = defaultLang;
+  constructor(fetchResource) {
     this.fetchResource = fetchResource;
 
-    this._resLists = new Map();
-    this._resCache = new Map();
+    this.resCache = new Map();
+    this.resRefs = new Map();
+    this.numberFormatters = null;
+    this.parsers = {
+      properties: PropertiesParser,
+      l20n: L20nParser,
+    };
 
     const listeners = {};
     this.emit = emit.bind(this, listeners);
@@ -25,23 +24,32 @@ export class Env {
     this.removeEventListener = removeEventListener.bind(this, listeners);
   }
 
-  createContext(resIds) {
-    const ctx = new Context(this);
-    this._resLists.set(ctx, new Set(resIds));
+  createContext(langs, resIds) {
+    const ctx = new Context(this, langs, resIds);
+    resIds.forEach(resId => {
+      const usedBy = this.resRefs.get(resId) || 0;
+      this.resRefs.set(resId, usedBy + 1);
+    });
+
     return ctx;
   }
 
   destroyContext(ctx) {
-    const lists = this._resLists;
-    const resList = lists.get(ctx);
+    ctx.resIds.forEach(resId => {
+      const usedBy = this.resRefs.get(resId) || 0;
 
-    lists.delete(ctx);
-    resList.forEach(
-      resId => deleteIfOrphan(this._resCache, lists, resId));
+      if (usedBy > 1) {
+        return this.resRefs.set(resId, usedBy - 1);
+      }
+
+      this.resRefs.delete(resId);
+      this.resCache.forEach((val, key) =>
+        key.startsWith(resId) ? this.resCache.delete(key) : null);
+    });
   }
 
   _parse(syntax, lang, data) {
-    const parser = parsers[syntax];
+    const parser = this.parsers[syntax];
     if (!parser) {
       return data;
     }
@@ -64,7 +72,7 @@ export class Env {
   }
 
   _getResource(lang, res) {
-    const cache = this._resCache;
+    const cache = this.resCache;
     const id = res + lang.code + lang.src;
 
     if (cache.has(id)) {
@@ -85,11 +93,11 @@ export class Env {
     };
 
     const langToFetch = lang.src === 'pseudo' ?
-      { code: this.defaultLang, src: 'app' } :
+      { code: 'en-US', src: 'app', ver: lang.ver } :
       lang;
 
-    const resource = this.fetchResource(res, langToFetch).then(
-      saveEntries, recover);
+    const resource = this.fetchResource(res, langToFetch)
+      .then(saveEntries, recover);
 
     cache.set(id, resource);
 
@@ -97,17 +105,7 @@ export class Env {
   }
 }
 
-function deleteIfOrphan(cache, lists, resId) {
-  const isNeeded = Array.from(lists).some(
-    ([ctx, resIds]) => resIds.has(resId));
-
-  if (!isNeeded) {
-    cache.forEach((val, key) =>
-      key.startsWith(resId) ? cache.delete(key) : null);
-  }
-}
-
-export function amendError(lang, err) {
+function amendError(lang, err) {
   err.lang = lang;
   return err;
 }
