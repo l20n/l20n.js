@@ -5,6 +5,59 @@
   const Client = bridge.client;
   const channel = new BroadcastChannel('l20n-channel');
 
+  const observerConfig = {
+    attributes: true,
+    characterData: false,
+    childList: true,
+    subtree: true,
+    attributeFilter: ['data-l10n-id', 'data-l10n-args']
+  };
+
+  const observers = new WeakMap();
+
+  function initMutationObserver(view) {
+    observers.set(view, {
+      roots: new Set(),
+      observer: new MutationObserver(
+        mutations => translateMutations(view, mutations)),
+    });
+  }
+
+  function translateRoots(view) {
+    return Promise.all(
+      [...observers.get(view).roots].map(
+        root => translateFragment(view, root)));
+  }
+
+  function observe(view, root) {
+    const obs = observers.get(view);
+    if (obs) {
+      obs.roots.add(root);
+      obs.observer.observe(root, observerConfig);
+    }
+  }
+
+  function disconnect(view, root, allRoots) {
+    const obs = observers.get(view);
+    if (obs) {
+      obs.observer.disconnect();
+      if (allRoots) {
+        return;
+      }
+      obs.roots.delete(root);
+      obs.roots.forEach(
+        other => obs.observer.observe(other, observerConfig));
+    }
+  }
+
+  function reconnect(view) {
+    const obs = observers.get(view);
+    if (obs) {
+      obs.roots.forEach(
+        root => obs.observer.observe(root, observerConfig));
+    }
+  }
+
   // match the opening angle bracket (<) in HTML tags, and HTML entities like
   // &amp;, &#0038;, &#x0026;.
   const reOverlay = /<|&#?\w+;/;
@@ -205,12 +258,6 @@
     '>': '&gt;',
   };
 
-  function getResourceLinks(head) {
-    return Array.prototype.map.call(
-      head.querySelectorAll('link[rel="localization"]'),
-      el => el.getAttribute('href'));
-  }
-
   function setAttributes(element, id, args) {
     element.setAttribute('data-l10n-id', id);
     if (args) {
@@ -236,7 +283,7 @@
     return nodes;
   }
 
-  function translateMutations(view, langs, mutations) {
+  function translateMutations(view, mutations) {
     const targets = new Set();
 
     for (let mutation of mutations) {
@@ -264,14 +311,14 @@
       return;
     }
 
-    translateElements(view, langs, Array.from(targets));
+    translateElements(view, Array.from(targets));
   }
 
-  function translateFragment(view, langs, frag) {
-    return translateElements(view, langs, getTranslatables(frag));
+  function translateFragment(view, frag) {
+    return translateElements(view, getTranslatables(frag));
   }
 
-  function getElementsTranslation(view, langs, elems) {
+  function getElementsTranslation(view, elems) {
     const keys = elems.map(elem => {
       const id = elem.getAttribute('data-l10n-id');
       const args = elem.getAttribute('data-l10n-args');
@@ -281,20 +328,20 @@
       ] : id;
     });
 
-    return view._resolveEntities(langs, keys);
+    return view.formatEntities(...keys);
   }
 
-  function translateElements(view, langs, elements) {
-    return getElementsTranslation(view, langs, elements).then(
+  function translateElements(view, elements) {
+    return getElementsTranslation(view, elements).then(
       translations => applyTranslations(view, elements, translations));
   }
 
   function applyTranslations(view, elems, translations) {
-    view._disconnect();
+    disconnect(view, null, true);
     for (let i = 0; i < elems.length; i++) {
       overlayElement(elems[i], translations[i]);
     }
-    view._observe();
+    reconnect(view);
   }
 
   // Polyfill NodeList.prototype[Symbol.iterator] for Chrome.
@@ -325,46 +372,105 @@
       'rtl' : 'ltr';
   }
 
-  const observerConfig = {
-    attributes: true,
-    characterData: false,
-    childList: true,
-    subtree: true,
-    attributeFilter: ['data-l10n-id', 'data-l10n-args']
-  };
+  // Opera and Safari don't support it yet
+  if (navigator.languages === undefined) {
+    navigator.languages = [navigator.language];
+  }
 
-  const readiness = new WeakMap();
+  function getResourceLinks(head) {
+    return Array.prototype.map.call(
+      head.querySelectorAll('link[rel="localization"]'),
+      el => el.getAttribute('href'));
+  }
+
+  function getMeta(head) {
+    let availableLangs = Object.create(null);
+    let defaultLang = null;
+    let appVersion = null;
+
+    // XXX take last found instead of first?
+    const metas = Array.from(head.querySelectorAll(
+      'meta[name="availableLanguages"],' +
+      'meta[name="defaultLanguage"],' +
+      'meta[name="appVersion"]'));
+    for (let meta of metas) {
+      const name = meta.getAttribute('name');
+      const content = meta.getAttribute('content').trim();
+      switch (name) {
+        case 'availableLanguages':
+          availableLangs = getLangRevisionMap(
+            availableLangs, content);
+          break;
+        case 'defaultLanguage':
+          const [lang, rev] = getLangRevisionTuple(content);
+          defaultLang = lang;
+          if (!(lang in availableLangs)) {
+            availableLangs[lang] = rev;
+          }
+          break;
+        case 'appVersion':
+          appVersion = content;
+      }
+    }
+
+    return {
+      defaultLang,
+      availableLangs,
+      appVersion
+    };
+  }
+
+  function getLangRevisionMap(seq, str) {
+    return str.split(',').reduce((seq, cur) => {
+      const [lang, rev] = getLangRevisionTuple(cur);
+      seq[lang] = rev;
+      return seq;
+    }, seq);
+  }
+
+  function getLangRevisionTuple(str) {
+    const [lang, rev]  = str.trim().split(':');
+    // if revision is missing, use NaN
+    return [lang, parseInt(rev)];
+  }
+
+  const viewProps = new WeakMap();
 
   class View {
     constructor(client, doc) {
-      this._doc = doc;
       this.pseudo = {
         'fr-x-psaccent': createPseudo(this, 'fr-x-psaccent'),
         'ar-x-psbidi': createPseudo(this, 'ar-x-psbidi')
       };
 
-      this._interactive = documentReady().then(
-        () => init(this, client));
+      const initialized = documentReady().then(() => init(this, client));
+      this._interactive = initialized.then(() => client);
+      this.ready = initialized.then(langs => translateView(this, langs));
+      initMutationObserver(this);
 
-      const observer = new MutationObserver(onMutations.bind(this));
-      this._observe = () => observer.observe(doc, observerConfig);
-      this._disconnect = () => observer.disconnect();
+      viewProps.set(this, {
+        doc: doc,
+        ready: false
+      });
 
-      const translateView = langs => translateDocument(this, langs);
-      client.on('translateDocument', translateView);
-      this.ready = this._interactive.then(
-        client => client.method('resolvedLanguages')).then(
-        translateView);
+      client.on('languageschangerequest',
+        requestedLangs => this.requestLanguages(requestedLangs));
     }
 
-    requestLanguages(langs, global) {
-      return this._interactive.then(
-        client => client.method('requestLanguages', langs, global));
+    requestLanguages(requestedLangs, isGlobal) {
+      const method = isGlobal ?
+        client => client.method('requestLanguages', requestedLangs) :
+        client => changeLanguages(this, client, requestedLangs);
+      return this._interactive.then(method);
     }
 
-    _resolveEntities(langs, keys) {
+    handleEvent() {
+      return this.requestLanguages(navigator.languages);
+    }
+
+    formatEntities(...keys) {
       return this._interactive.then(
-        client => client.method('resolveEntities', client.id, langs, keys));
+        client => client.method('formatEntities', client.id, keys));
     }
 
     formatValue(id, args) {
@@ -379,9 +485,15 @@
     }
 
     translateFragment(frag) {
-      return this._interactive.then(
-        client => client.method('resolvedLanguages')).then(
-        langs => translateFragment(this, langs, frag));
+      return translateFragment(this, frag);
+    }
+
+    observeRoot(root) {
+      observe(this, root);
+    }
+
+    disconnectRoot(root) {
+      disconnect(this, root);
     }
   }
 
@@ -398,23 +510,43 @@
   }
 
   function init(view, client) {
-    view._observe();
-    return client.method(
-      'registerView', client.id, getResourceLinks(view._doc.head)).then(
-        () => client);
+    const doc = viewProps.get(view).doc;
+    const resources = getResourceLinks(doc.head);
+    const meta = getMeta(doc.head);
+    view.observeRoot(doc.documentElement);
+    return getAdditionalLanguages().then(
+      additionalLangs => client.method(
+        'registerView', client.id, resources, meta, additionalLangs,
+        navigator.languages));
   }
 
-  function onMutations(mutations) {
-    return this._interactive.then(
-      client => client.method('resolvedLanguages')).then(
-      langs => translateMutations(this, langs, mutations));
+  function changeLanguages(view, client, requestedLangs) {
+    const doc = viewProps.get(view).doc;
+    const meta = getMeta(doc.head);
+    return getAdditionalLanguages()
+      .then(additionalLangs => client.method(
+        'changeLanguages', client.id, meta, additionalLangs, requestedLangs
+      ))
+      .then(({langs, haveChanged}) => haveChanged ?
+        translateView(view, langs) : undefined
+      );
   }
 
-  function translateDocument(view, langs) {
-    const html = view._doc.documentElement;
+  function getAdditionalLanguages() {
+    if (navigator.mozApps && navigator.mozApps.getAdditionalLanguages) {
+      return navigator.mozApps.getAdditionalLanguages()
+        .catch(() => Object.create(null));
+    }
 
-    if (readiness.has(html)) {
-      return translateFragment(view, langs, html).then(
+    return Promise.resolve(Object.create(null));
+  }
+
+  function translateView(view, langs) {
+    const props = viewProps.get(view);
+    const html = props.doc.documentElement;
+
+    if (props.ready) {
+      return translateRoots(view).then(
         () => setAllAndEmit(html, langs));
     }
 
@@ -422,12 +554,12 @@
       // has the document been already pre-translated?
       langs[0].code === html.getAttribute('lang') ?
         Promise.resolve() :
-        translateFragment(view, langs, html).then(
+        translateRoots(view).then(
           () => setLangDir(html, langs));
 
     return translated.then(() => {
       setLangs(html, langs);
-      readiness.set(html, true);
+      props.ready = true;
     });
   }
 
@@ -457,10 +589,12 @@
     timeout: false
   });
 
+  document.l10n = new View(client, document);
+
   window.addEventListener('pageshow', () => client.connect());
   window.addEventListener('pagehide', () => client.disconnect());
-
-  document.l10n = new View(client, document);
+  window.addEventListener('languagechange', document.l10n);
+  document.addEventListener('additionallanguageschange', document.l10n);
 
   //Bug 1204660 - Temporary proxy for shared code. Will be removed once
   //              l10n.js migration is completed.

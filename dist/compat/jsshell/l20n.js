@@ -73,7 +73,8 @@
       }
 
       var ch = this._source[this._index];
-      var value = this.getValue(ch, index === undefined);
+      var hasIndex = index !== undefined;
+      var value = this.getValue(ch, hasIndex, hasIndex);
       var attrs = undefined;
 
       if (value === undefined) {
@@ -109,17 +110,18 @@
 
     getValue: function () {
       var ch = arguments.length <= 0 || arguments[0] === undefined ? this._source[this._index] : arguments[0];
-      var optional = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      var index = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      var required = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
 
       switch (ch) {
         case '\'':
         case '"':
           return this.getString(ch, 1);
         case '{':
-          return this.getHash();
+          return this.getHash(index);
       }
 
-      if (!optional) {
+      if (required) {
         throw this.error('Unknown value type');
       }
 
@@ -279,7 +281,8 @@
       }
       ++this._index;
       this.getWS();
-      var value = this.getValue();
+      var hasIndex = index !== undefined;
+      var value = this.getValue(undefined, hasIndex);
 
       if (key in attrs) {
         throw this.error('Duplicate attribute "' + key, 'duplicateerror');
@@ -295,7 +298,7 @@
       }
     },
 
-    getHash: function () {
+    getHash: function (index) {
       var items = Object.create(null);
 
       ++this._index;
@@ -336,6 +339,8 @@
 
       if (defKey) {
         items.__default = defKey;
+      } else if (!index) {
+        throw this.error('Unresolvable Hash Value');
       }
 
       return items;
@@ -647,9 +652,9 @@
         isSimpleValue = true;
       }
 
-      if (isSimpleValue && (!entries[id] || isSimpleNode)) {
+      if (isSimpleValue) {
         if (id in root) {
-          throw this.error();
+          throw this.error('Duplicated id: ' + id);
         }
         root[id] = value;
       } else {

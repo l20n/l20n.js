@@ -1,5 +1,36 @@
 (function () { 'use strict';
 
+  const observerConfig = {
+    attributes: true,
+    characterData: false,
+    childList: true,
+    subtree: true,
+    attributeFilter: ['data-l10n-id', 'data-l10n-args']
+  };
+
+  const observers = new WeakMap();
+
+  function disconnect(view, root, allRoots) {
+    const obs = observers.get(view);
+    if (obs) {
+      obs.observer.disconnect();
+      if (allRoots) {
+        return;
+      }
+      obs.roots.delete(root);
+      obs.roots.forEach(
+        other => obs.observer.observe(other, observerConfig));
+    }
+  }
+
+  function reconnect(view) {
+    const obs = observers.get(view);
+    if (obs) {
+      obs.roots.forEach(
+        root => obs.observer.observe(root, observerConfig));
+    }
+  }
+
   // match the opening angle bracket (<) in HTML tags, and HTML entities like
   // &amp;, &#0038;, &#x0026;.
   const reOverlay = /<|&#?\w+;/;
@@ -200,12 +231,6 @@
     '>': '&gt;',
   };
 
-  function getResourceLinks(head) {
-    return Array.prototype.map.call(
-      head.querySelectorAll('link[rel="localization"]'),
-      el => el.getAttribute('href'));
-  }
-
   function setAttributes(element, id, args) {
     element.setAttribute('data-l10n-id', id);
     if (args) {
@@ -231,7 +256,7 @@
     return nodes;
   }
 
-  function translateMutations(view, langs, mutations) {
+  function translateMutations(view, mutations) {
     const targets = new Set();
 
     for (let mutation of mutations) {
@@ -259,14 +284,14 @@
       return;
     }
 
-    translateElements(view, langs, Array.from(targets));
+    translateElements(view, Array.from(targets));
   }
 
-  function translateFragment(view, langs, frag) {
-    return translateElements(view, langs, getTranslatables(frag));
+  function translateFragment(view, frag) {
+    return translateElements(view, getTranslatables(frag));
   }
 
-  function getElementsTranslation(view, langs, elems) {
+  function getElementsTranslation(view, elems) {
     const keys = elems.map(elem => {
       const id = elem.getAttribute('data-l10n-id');
       const args = elem.getAttribute('data-l10n-args');
@@ -276,25 +301,24 @@
       ] : id;
     });
 
-    return view._resolveEntities(langs, keys);
+    return view.formatEntities(...keys);
   }
 
-  function translateElements(view, langs, elements) {
-    return getElementsTranslation(view, langs, elements).then(
+  function translateElements(view, elements) {
+    return getElementsTranslation(view, elements).then(
       translations => applyTranslations(view, elements, translations));
   }
 
   function applyTranslations(view, elems, translations) {
-    view._disconnect();
+    disconnect(view, null, true);
     for (let i = 0; i < elems.length; i++) {
       overlayElement(elems[i], translations[i]);
     }
-    view._observe();
+    reconnect(view);
   }
 
 
   var dom = {
-    getResourceLinks: getResourceLinks,
     setAttributes: setAttributes,
     getAttributes: getAttributes,
     translateMutations: translateMutations,

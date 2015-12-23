@@ -229,7 +229,8 @@ define(['exports'], function (exports) { 'use strict';
       }
 
       const ch = this._source.charAt(this._index);
-      const value = this.getValue(ch, index === undefined);
+      const hasIndex = index !== undefined;
+      const value = this.getValue(ch, hasIndex, hasIndex);
       let attrs;
 
       if (value === null) {
@@ -255,16 +256,16 @@ define(['exports'], function (exports) { 'use strict';
       return entity;
     }
 
-    getValue(ch = this._source[this._index], optional = false) {
+    getValue(ch = this._source[this._index], index = false, required = true) {
       switch (ch) {
         case '\'':
         case '"':
           return this.getString(ch, 1);
         case '{':
-          return this.getHash();
+          return this.getHash(index);
       }
 
-      if (!optional) {
+      if (required) {
         throw this.error('Unknown value type');
       }
       return null;
@@ -433,12 +434,16 @@ define(['exports'], function (exports) { 'use strict';
       }
       ++this._index;
       this.getWS();
-      const attr = new AST.Attribute(key, this.getValue(), index);
+      const hasIndex = index !== undefined;
+      const attr = new AST.Attribute(
+        key,
+        this.getValue(undefined, hasIndex),
+        index);
       this.setPosition(attr, start, this._index);
       return attr;
     }
 
-    getHash() {
+    getHash(index) {
       const start = this._index;
       let items = [];
 
@@ -460,6 +465,12 @@ define(['exports'], function (exports) { 'use strict';
         }
         if (!comma) {
           throw this.error('Expected "}"');
+        }
+      }
+
+      if (!index) {
+        if (!items.some(item => item.default)) {
+          throw this.error('Unresolvable Hash Value');
         }
       }
 

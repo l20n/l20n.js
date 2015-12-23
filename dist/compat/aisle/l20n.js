@@ -340,7 +340,8 @@ define(['exports'], function (exports) {
       }
 
       var ch = this._source.charAt(this._index);
-      var value = this.getValue(ch, index === undefined);
+      var hasIndex = index !== undefined;
+      var value = this.getValue(ch, hasIndex, hasIndex);
       var attrs = undefined;
 
       if (value === null) {
@@ -367,17 +368,18 @@ define(['exports'], function (exports) {
 
     ParseContext.prototype.getValue = function getValue() {
       var ch = arguments.length <= 0 || arguments[0] === undefined ? this._source[this._index] : arguments[0];
-      var optional = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      var index = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
+      var required = arguments.length <= 2 || arguments[2] === undefined ? true : arguments[2];
 
       switch (ch) {
         case '\'':
         case '"':
           return this.getString(ch, 1);
         case '{':
-          return this.getHash();
+          return this.getHash(index);
       }
 
-      if (!optional) {
+      if (required) {
         throw this.error('Unknown value type');
       }
       return null;
@@ -537,12 +539,13 @@ define(['exports'], function (exports) {
       }
       ++this._index;
       this.getWS();
-      var attr = new AST.Attribute(key, this.getValue(), index);
+      var hasIndex = index !== undefined;
+      var attr = new AST.Attribute(key, this.getValue(undefined, hasIndex), index);
       this.setPosition(attr, start, this._index);
       return attr;
     };
 
-    ParseContext.prototype.getHash = function getHash() {
+    ParseContext.prototype.getHash = function getHash(index) {
       var start = this._index;
       var items = [];
 
@@ -564,6 +567,14 @@ define(['exports'], function (exports) {
         }
         if (!comma) {
           throw this.error('Expected "}"');
+        }
+      }
+
+      if (!index) {
+        if (!items.some(function (item) {
+          return item.default;
+        })) {
+          throw this.error('Unresolvable Hash Value');
         }
       }
 
