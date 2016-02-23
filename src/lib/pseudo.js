@@ -9,7 +9,7 @@
  *
  * Currently, the following pseudolocales are supported:
  *
- *   qps-ploc - Ȧȧƈƈḗḗƞŧḗḗḓ Ḗḗƞɠŀīīşħ
+ *   fr-x-psaccent - Ȧȧƈƈḗḗƞŧḗḗḓ Ḗḗƞɠŀīīşħ
  *
  *     In Accented English all English letters are replaced by accented
  *     Unicode counterparts which don't impair the readability of the content.
@@ -18,9 +18,9 @@
  *     heuristics are used to make certain words longer to better simulate the
  *     experience of international users.
  *
- *   qps-plocm - ɥsıʅƃuƎ pǝɹoɹɹıW
+ *   ar-x-psbidi - ɥsıʅƃuƎ ıpıԐ
  *
- *     Mirrored English is a fake RTL locale.  All words are surrounded by
+ *     Bidi English is a fake RTL locale.  All words are surrounded by
  *     Unicode formatting marks forcing the RTL directionality of characters.
  *     In addition, to make the reversed text easier to read, individual
  *     letters are flipped.
@@ -107,9 +107,9 @@ function Pseudo(id, name, charMap, modFn) {
 }
 
 var PSEUDO = {
-  'qps-ploc': new Pseudo('qps-ploc', 'Runtime Accented',
+  'fr-x-psaccent': new Pseudo('fr-x-psaccent', 'Runtime Accented',
                          ACCENTED_MAP, makeLonger),
-  'qps-plocm': new Pseudo('qps-plocm', 'Runtime Mirrored',
+  'ar-x-psbidi': new Pseudo('ar-x-psbidi', 'Runtime Bidi',
                           FLIPPED_MAP, makeRTL)
 };
 

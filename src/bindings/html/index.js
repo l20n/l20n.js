@@ -8,7 +8,7 @@
 /* global walkContent, PSEUDO */
 /* exported onReady, whenInteractive, init */
 
-var rtlList = ['ar', 'he', 'fa', 'ps', 'qps-plocm', 'ur'];
+var rtlList = ['ar', 'he', 'fa', 'ps', 'ar-x-psbidi', 'ur'];
 var nodeObserver = null;
 var pendingElements = null;
 

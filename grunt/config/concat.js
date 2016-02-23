@@ -23,9 +23,14 @@ function strip(src) {
   return src;
 }
 
+var deprecationMessage = '!!! WARNING !!!\n\n' +
+  'The L10n.js library is deprecated.\n' +
+  'For any new code use L20n.js located in ./shared/js/intl/l20n.js';
+
 var clientsideOpts = {
   separator: '',
   banner: '' +
+    '/*\n\n' + deprecationMessage + '\n\n*/\n' +
     '(function(window, undefined) {\n' +
     '  \'use strict\';\n' +
     '\n' +
