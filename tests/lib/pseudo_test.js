@@ -46,7 +46,7 @@ describe('pseudo strategy', function() {
   describe('accented English', function(){
 
     before(function() {
-      strategy = PSEUDO['qps-ploc'].translate;
+      strategy = PSEUDO['fr-x-psaccent'].translate;
       source = [
         'foo=Foo',
 
@@ -112,7 +112,7 @@ describe('pseudo strategy', function() {
     /* jshint -W100 */
 
     before(function() {
-      strategy = PSEUDO['qps-plocm'].translate;
+      strategy = PSEUDO['ar-x-psbidi'].translate;
       source = [
         'foo=Foo',
 

@@ -59,26 +59,22 @@ document.l10n = {
     navigator.mozL10n.ctx.requestLocales.apply(
       navigator.mozL10n.ctx, langs);
   },
-  pseudo: {
-    'qps-ploc': {
-      getName: function() {
-        return Promise.resolve(navigator.mozL10n.qps['qps-ploc'].name);
-      },
-      processString: function(s) {
-        return Promise.resolve(
-          navigator.mozL10n.qps['qps-ploc'].translate(s));
-      }
-    },
-    'qps-plocm': {
-      getName: function() {
-        return Promise.resolve(navigator.mozL10n.qps['qps-plocm'].name);
-      },
-      processString: function(s) {
-        return Promise.resolve(
-          navigator.mozL10n.qps['qps-plocm'].translate(s));
-      }
+  get pseudo() {
+    var result = {};
+    /*jshint -W083 */
+    for (var code in navigator.mozL10n.qps) {
+      result[code] = {
+        getName: function() {
+          return Promise.resolve(navigator.mozL10n.qps[code].name);
+        },
+        processString: function(s) {
+         return Promise.resolve(
+          navigator.mozL10n.qps[code].translate(s));
+        }
+      };
     }
-  },
+    return result;
+  }
 };
 
 navigator.mozL10n.ready(function() {
