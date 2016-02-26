@@ -1,5 +1,3 @@
-'use strict';
-
 import { L10nError } from './errors';
 import { format } from './resolver';
 import { getPluralRule } from './plurals';
@@ -82,8 +80,7 @@ export class Context {
       }
 
       this.emit('notfounderror',
-        new L10nError('"' + id + '"' + ' not found in ' + lang.code,
-          id, lang));
+        new L10nError('"' + id + '" not found in ' + lang.code, id, lang));
       hasUnresolved = true;
     });
 

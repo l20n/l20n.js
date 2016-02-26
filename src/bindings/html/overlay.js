@@ -1,5 +1,3 @@
-'use strict';
-
 // match the opening angle bracket (<) in HTML tags, and HTML entities like
 // &amp;, &#0038;, &#x0026;.
 const reOverlay = /<|&#?\w+;/;
@@ -11,19 +9,19 @@ const allowed = {
     'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'
   ],
   attributes: {
-    global: [ 'title', 'aria-label', 'aria-valuetext', 'aria-moz-hint' ],
-    a: [ 'download' ],
-    area: [ 'download', 'alt' ],
+    global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
+    a: ['download'],
+    area: ['download', 'alt'],
     // value is special-cased in isAttrAllowed
-    input: [ 'alt', 'placeholder' ],
-    menuitem: [ 'label' ],
-    menu: [ 'label' ],
-    optgroup: [ 'label' ],
-    option: [ 'label' ],
-    track: [ 'label' ],
-    img: [ 'alt' ],
-    textarea: [ 'placeholder' ],
-    th: [ 'abbr']
+    input: ['alt', 'placeholder'],
+    menuitem: ['label'],
+    menu: ['label'],
+    optgroup: ['label'],
+    option: ['label'],
+    track: ['label'],
+    img: ['alt'],
+    textarea: ['placeholder'],
+    th: ['abbr']
   }
 };
 
@@ -187,9 +185,7 @@ function camelCaseToDashed(string) {
   }
 
   return string
-    .replace(/[A-Z]/g, function (match) {
-      return '-' + match.toLowerCase();
-    })
+    .replace(/[A-Z]/g, match => '-' + match.toLowerCase())
     .replace(/^-/, '');
 }
 

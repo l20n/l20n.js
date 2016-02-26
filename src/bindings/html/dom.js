@@ -1,5 +1,3 @@
-'use strict';
-
 import { disconnect, reconnect } from './observer';
 import { overlayElement } from './overlay';
 

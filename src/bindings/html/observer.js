@@ -1,5 +1,3 @@
-'use strict';
-
 import { translateFragment, translateMutations } from './dom';
 
 const observerConfig = {
@@ -21,8 +19,8 @@ export function initMutationObserver(view) {
 }
 
 export function translateRoots(view) {
-  return Promise.all(
-    [...observers.get(view).roots].map(
+  const roots = Array.from(observers.get(view).roots);
+  return Promise.all(roots.map(
       root => translateFragment(view, root)));
 }
 

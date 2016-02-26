@@ -1,5 +1,3 @@
-'use strict';
-
 export function getResourceLinks(head) {
   return Array.prototype.map.call(
     head.querySelectorAll('link[rel="localization"]'),
@@ -44,10 +42,10 @@ export function getMeta(head) {
 }
 
 function getLangRevisionMap(seq, str) {
-  return str.split(',').reduce((seq, cur) => {
+  return str.split(',').reduce((prevSeq, cur) => {
     const [lang, rev] = getLangRevisionTuple(cur);
-    seq[lang] = rev;
-    return seq;
+    prevSeq[lang] = rev;
+    return prevSeq;
   }, seq);
 }
 
