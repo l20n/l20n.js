@@ -16,6 +16,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   L10nError.prototype = Object.create(Error.prototype);
   L10nError.prototype.constructor = L10nError;
 
+  var HTTP_STATUS_CODE_OK = 200;
+
   function load(type, url) {
     return new Promise(function (resolve, reject) {
       var xhr = new XMLHttpRequest();
@@ -30,9 +32,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         xhr.responseType = 'json';
       }
 
-      xhr.addEventListener('load', function io_onload(e) {
-        if (e.target.status === 200 || e.target.status === 0) {
-          resolve(e.target.response || e.target.responseText);
+      xhr.addEventListener('load', function (e) {
+        if (e.target.status === HTTP_STATUS_CODE_OK || e.target.status === 0) {
+          resolve(e.target.response);
         } else {
           reject(new L10nError('Not found: ' + url));
         }
@@ -180,7 +182,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function translateRoots(view) {
-    return Promise.all([].concat(observers.get(view).roots).map(function (root) {
+    var roots = Array.from(observers.get(view).roots);
+    return Promise.all(roots.map(function (root) {
       return _translateFragment(view, root);
     }));
   }
@@ -565,14 +568,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function getLangRevisionMap(seq, str) {
-    return str.split(',').reduce(function (seq, cur) {
+    return str.split(',').reduce(function (prevSeq, cur) {
       var _getLangRevisionTuple2 = getLangRevisionTuple(cur);
 
       var lang = _getLangRevisionTuple2[0];
       var rev = _getLangRevisionTuple2[1];
 
-      seq[lang] = rev;
-      return seq;
+      prevSeq[lang] = rev;
+      return prevSeq;
     }, seq);
   }
 
@@ -1475,7 +1478,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           return formatter.call(_this6, lang, args, entity, id);
         }
 
-        _this6.emit('notfounderror', new L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang));
+        _this6.emit('notfounderror', new L10nError('"' + id + '" not found in ' + lang.code, id, lang));
         hasUnresolved = true;
       });
 
@@ -1628,7 +1631,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     },
 
     parseEntity: function (id, value, entries) {
-      var name, key;
+      var name = undefined,
+          key = undefined;
 
       var pos = id.indexOf('[');
       if (pos !== -1) {
@@ -1645,7 +1649,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         throw this.error('Error in ID: "' + name + '".' + ' Nested attributes are not supported.');
       }
 
-      var attr;
+      var attr = undefined;
       if (nameElements.length > 1) {
         name = nameElements[0];
         attr = nameElements[1];
@@ -1898,7 +1902,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         throw this.error('Unknown value type');
       }
 
-      return;
+      return undefined;
     },
 
     getWS: function () {
@@ -2370,9 +2374,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
       };
 
+      var ASCII_LETTER_A = 65;
       var replaceChars = function (map, val) {
         return val.replace(reAlphas, function (match) {
-          return map.charAt(match.charCodeAt(0) - 65);
+          return map.charAt(match.charCodeAt(0) - ASCII_LETTER_A);
         });
       };
 
@@ -2472,10 +2477,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return data;
       }
 
-      var emit = function (type, err) {
+      var emitAndAmend = function (type, err) {
         return _this12.emit(type, amendError(lang, err));
       };
-      return parser.parse.call(parser, emit, data);
+      return parser.parse(emitAndAmend, data);
     };
 
     Env.prototype._create = function _create(lang, entries) {
@@ -3436,9 +3441,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     },
 
     dumpEntity: function (entity) {
-      var id,
-          val = null,
-          attrs = {};
+      var id = undefined,
+          val = null;
+      var attrs = {};
       var index = '';
 
       for (var key in entity) {
@@ -3582,9 +3587,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     dumpHash: function (hash, depth) {
       var items = [];
-      var str;
+      var str = undefined;
 
-      var defIndex;
+      var defIndex = undefined;
       if ('__default' in hash) {
         defIndex = hash.__default;
       }
@@ -3630,9 +3635,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }
 
     function dumpEntity(entity) {
-      var id,
-          val = null,
-          attrs = {};
+      var id = undefined,
+          val = null;
+      var attrs = {};
       var index = '';
 
       for (var key in entity) {
@@ -3703,7 +3708,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     function dumpHash(hash, depth) {
       var items = [];
-      var str;
+      var str = undefined;
 
       for (var key in hash) {
         str = '  ' + key + ': ' + dumpValue(hash[key]);

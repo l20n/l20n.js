@@ -9,8 +9,10 @@
   L10nError.prototype = Object.create(Error.prototype);
   L10nError.prototype.constructor = L10nError;
 
+  const HTTP_STATUS_CODE_OK = 200;
+
   function load(type, url) {
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
 
       if (xhr.overrideMimeType) {
@@ -23,10 +25,10 @@
         xhr.responseType = 'json';
       }
 
-      xhr.addEventListener('load', function io_onload(e) {
-        if (e.target.status === 200 || e.target.status === 0) {
-          // Sinon.JS's FakeXHR doesn't have the response property
-          resolve(e.target.response || e.target.responseText);
+      xhr.addEventListener('load', e => {
+        if (e.target.status === HTTP_STATUS_CODE_OK ||
+            e.target.status === 0) {
+          resolve(e.target.response);
         } else {
           reject(new L10nError('Not found: ' + url));
         }
@@ -141,8 +143,8 @@
   }
 
   function translateRoots(view) {
-    return Promise.all(
-      [...observers.get(view).roots].map(
+    const roots = Array.from(observers.get(view).roots);
+    return Promise.all(roots.map(
         root => translateFragment(view, root)));
   }
 
@@ -186,19 +188,19 @@
       'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'
     ],
     attributes: {
-      global: [ 'title', 'aria-label', 'aria-valuetext', 'aria-moz-hint' ],
-      a: [ 'download' ],
-      area: [ 'download', 'alt' ],
+      global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
+      a: ['download'],
+      area: ['download', 'alt'],
       // value is special-cased in isAttrAllowed
-      input: [ 'alt', 'placeholder' ],
-      menuitem: [ 'label' ],
-      menu: [ 'label' ],
-      optgroup: [ 'label' ],
-      option: [ 'label' ],
-      track: [ 'label' ],
-      img: [ 'alt' ],
-      textarea: [ 'placeholder' ],
-      th: [ 'abbr']
+      input: ['alt', 'placeholder'],
+      menuitem: ['label'],
+      menu: ['label'],
+      optgroup: ['label'],
+      option: ['label'],
+      track: ['label'],
+      img: ['alt'],
+      textarea: ['placeholder'],
+      th: ['abbr']
     }
   };
 
@@ -362,9 +364,7 @@
     }
 
     return string
-      .replace(/[A-Z]/g, function (match) {
-        return '-' + match.toLowerCase();
-      })
+      .replace(/[A-Z]/g, match => '-' + match.toLowerCase())
       .replace(/^-/, '');
   }
 
@@ -538,10 +538,10 @@
   }
 
   function getLangRevisionMap(seq, str) {
-    return str.split(',').reduce((seq, cur) => {
+    return str.split(',').reduce((prevSeq, cur) => {
       const [lang, rev] = getLangRevisionTuple(cur);
-      seq[lang] = rev;
-      return seq;
+      prevSeq[lang] = rev;
+      return prevSeq;
     }, seq);
   }
 
@@ -790,7 +790,7 @@
   }
 
   function interpolate(locals, ctx, lang, args, arr) {
-    return arr.reduce(function([localsSeq, valueSeq], cur) {
+    return arr.reduce(([localsSeq, valueSeq], cur) => {
       if (typeof cur === 'string') {
         return [localsSeq, valueSeq + cur];
       } else {
@@ -869,6 +869,8 @@
 
     throw new L10nError('Unresolvable value');
   }
+
+  /*eslint no-magic-numbers: [0]*/
 
   const locales2rules = {
     'af': 3,
@@ -1317,7 +1319,7 @@
     // return a function that gives the plural form name for a given integer
     const index = locales2rules[code.replace(/-.*$/, '')];
     if (!(index in pluralRules)) {
-      return function() { return 'other'; };
+      return () => 'other';
     }
     return pluralRules[index];
   }
@@ -1325,14 +1327,14 @@
   // Safari 9 and iOS 9 does not support Intl
   const L20nIntl = typeof Intl !== 'undefined' ?
     Intl : {
-    NumberFormat: function() {
-      return {
-        format: function(v) {
-          return v;
-        }
-      };
-    }
-  };
+      NumberFormat: function() {
+        return {
+          format: function(v) {
+            return v;
+          }
+        };
+      }
+    };
 
   class Context {
     constructor(env, langs, resIds) {
@@ -1411,8 +1413,7 @@
         }
 
         this.emit('notfounderror',
-          new L10nError('"' + id + '"' + ' not found in ' + lang.code,
-            id, lang));
+          new L10nError('"' + id + '" not found in ' + lang.code, id, lang));
         hasUnresolved = true;
       });
 
@@ -1495,7 +1496,7 @@
     return resolved;
   }
 
-  var MAX_PLACEABLES$2 = 100;
+  const MAX_PLACEABLES$2 = 100;
 
   var PropertiesParser = {
     patterns: null,
@@ -1521,14 +1522,14 @@
       }
       this.emit = emit;
 
-      var entries = {};
+      const entries = {};
 
-      var lines = source.match(this.patterns.entries);
+      const lines = source.match(this.patterns.entries);
       if (!lines) {
         return entries;
       }
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
 
         if (this.patterns.comment.test(line)) {
           continue;
@@ -1538,7 +1539,7 @@
           line = line.slice(0, -1) + lines[++i].trim();
         }
 
-        var entityMatch = line.match(this.patterns.entity);
+        const entityMatch = line.match(this.patterns.entity);
         if (entityMatch) {
           try {
             this.parseEntity(entityMatch[1], entityMatch[2], entries);
@@ -1553,9 +1554,9 @@
     },
 
     parseEntity: function(id, value, entries) {
-      var name, key;
+      let name, key;
 
-      var pos = id.indexOf('[');
+      const pos = id.indexOf('[');
       if (pos !== -1) {
         name = id.substr(0, pos);
         key = id.substring(pos + 1, id.length - 1);
@@ -1564,14 +1565,14 @@
         key = null;
       }
 
-      var nameElements = name.split('.');
+      const nameElements = name.split('.');
 
       if (nameElements.length > 2) {
         throw this.error('Error in ID: "' + name + '".' +
             ' Nested attributes are not supported.');
       }
 
-      var attr;
+      let attr;
       if (nameElements.length > 1) {
         name = nameElements[0];
         attr = nameElements[1];
@@ -1587,13 +1588,13 @@
     },
 
     setEntityValue: function(id, attr, key, rawValue, entries) {
-      var value = rawValue.indexOf('{{') > -1 ?
+      const value = rawValue.indexOf('{{') > -1 ?
         this.parseString(rawValue) : rawValue;
 
-      var isSimpleValue = typeof value === 'string';
-      var root = entries;
+      let isSimpleValue = typeof value === 'string';
+      let root = entries;
 
-      var isSimpleNode = typeof entries[id] === 'string';
+      let isSimpleNode = typeof entries[id] === 'string';
 
       if (!entries[id] && (attr || key || !isSimpleValue)) {
         entries[id] = Object.create(null);
@@ -1643,18 +1644,18 @@
     },
 
     parseString: function(str) {
-      var chunks = str.split(this.patterns.placeables);
-      var complexStr = [];
+      const chunks = str.split(this.patterns.placeables);
+      const complexStr = [];
 
-      var len = chunks.length;
-      var placeablesCount = (len - 1) / 2;
+      const len = chunks.length;
+      const placeablesCount = (len - 1) / 2;
 
       if (placeablesCount >= MAX_PLACEABLES$2) {
         throw this.error('Too many placeables (' + placeablesCount +
                             ', max allowed is ' + MAX_PLACEABLES$2 + ')');
       }
 
-      for (var i = 0; i < chunks.length; i++) {
+      for (let i = 0; i < chunks.length; i++) {
         if (chunks[i].length === 0) {
           continue;
         }
@@ -1671,13 +1672,13 @@
       if (str.lastIndexOf('\\') !== -1) {
         str = str.replace(this.patterns.controlChars, '$1');
       }
-      return str.replace(this.patterns.unicode, function(match, token) {
-        return String.fromCodePoint(parseInt(token, 16));
-      });
+      return str.replace(this.patterns.unicode,
+        (match, token) => String.fromCodePoint(parseInt(token, 16))
+      );
     },
 
     parseIndex: function(str) {
-      var match = str.match(this.patterns.index);
+      const match = str.match(this.patterns.index);
       if (!match) {
         throw new L10nError('Malformed index');
       }
@@ -1823,7 +1824,7 @@
         throw this.error('Unknown value type');
       }
 
-      return;
+      return undefined;
     },
 
     getWS: function() {
@@ -1868,7 +1869,7 @@
 
     getUnicodeChar: function() {
       for (let i = 0; i < 4; i++) {
-        let cc = this._source.charCodeAt(++this._index);
+        const cc = this._source.charCodeAt(++this._index);
         if ((cc > 96 && cc < 103) || // a-f
             (cc > 64 && cc < 71) ||  // A-F
             (cc > 47 && cc < 58)) {  // 0-9
@@ -2083,7 +2084,7 @@
       let exp = this.getPrimaryExpression();
 
       while (true) {
-        let ch = this._source[this._index];
+        const ch = this._source[this._index];
         if (ch === '.' || ch === '[') {
           ++this._index;
           exp = this.getPropertyExpression(exp, ch === '[');
@@ -2169,7 +2170,7 @@
       while (!closed) {
         items.push(callback.call(this));
         this.getWS();
-        let ch = this._source.charAt(this._index);
+        const ch = this._source.charAt(this._index);
         switch (ch) {
           case ',':
             ++this._index;
@@ -2200,7 +2201,7 @@
         nextComment = this._length;
       }
 
-      let nextEntry = Math.min(nextEntity, nextComment);
+      const nextEntry = Math.min(nextEntity, nextComment);
 
       this._index = nextEntry;
     },
@@ -2337,9 +2338,10 @@
       };
 
       // Replace each Latin letter with a Unicode character from map
+      const ASCII_LETTER_A = 65;
       const replaceChars =
         (map, val) => val.replace(
-          reAlphas, match => map.charAt(match.charCodeAt(0) - 65));
+          reAlphas, match => map.charAt(match.charCodeAt(0) - ASCII_LETTER_A));
 
       const transform =
         val => replaceChars(charMaps[id], mods[id](val));
@@ -2351,7 +2353,7 @@
         }
 
         const parts = val.split(reExcluded);
-        const modified = parts.map(function(part) {
+        const modified = parts.map((part) => {
           if (reExcluded.test(part)) {
             return part;
           }
@@ -2426,8 +2428,8 @@
         return data;
       }
 
-      const emit = (type, err) => this.emit(type, amendError(lang, err));
-      return parser.parse.call(parser, emit, data);
+      const emitAndAmend = (type, err) => this.emit(type, amendError(lang, err));
+      return parser.parse(emitAndAmend, data);
     }
 
     _create(lang, entries) {
@@ -2770,7 +2772,7 @@
     }
 
     getResource() {
-      let resource = new AST.Resource();
+      const resource = new AST.Resource();
       this.setPosition(resource, 0, this._length);
       resource._errors = [];
 
@@ -2906,7 +2908,7 @@
 
     getUnicodeChar() {
       for (let i = 0; i < 4; i++) {
-        let cc = this._source.charCodeAt(++this._index);
+        const cc = this._source.charCodeAt(++this._index);
         if ((cc > 96 && cc < 103) || // a-f
             (cc > 64 && cc < 71) ||  // A-F
             (cc > 47 && cc < 58)) {  // 0-9
@@ -2918,7 +2920,7 @@
     }
 
     getString(opchar, opcharLen) {
-      let body = [];
+      const body = [];
       let buf = '';
       let placeables = 0;
 
@@ -2929,7 +2931,7 @@
       let closed = false;
 
       while (!closed) {
-        let ch = this._source[++this._index];
+        const ch = this._source[++this._index];
         
         switch (ch) {
           case '\\':
@@ -3036,7 +3038,7 @@
 
     getHash(index) {
       const start = this._index;
-      let items = [];
+      const items = [];
 
       ++this._index;
       this.getWS();
@@ -3112,7 +3114,7 @@
       let exp = this.getPrimaryExpression();
 
       while (true) {
-        let ch = this._source[this._index];
+        const ch = this._source[this._index];
         if (ch === '.' || ch === '[') {
           ++this._index;
           exp = this.getPropertyExpression(exp, ch === '[', start);
@@ -3177,7 +3179,7 @@
     }
 
     getItemList(callback, closeChar) {
-      let items = [];
+      const items = [];
       let closed = false;
 
       this.getWS();
@@ -3190,7 +3192,7 @@
       while (!closed) {
         items.push(callback.call(this));
         this.getWS();
-        let ch = this._source.charAt(this._index);
+        const ch = this._source.charAt(this._index);
         switch (ch) {
           case ',':
             ++this._index;
@@ -3212,11 +3214,11 @@
       const pos = this._index;
 
       let start = this._source.lastIndexOf('<', pos - 1);
-      let lastClose = this._source.lastIndexOf('>', pos - 1);
+      const lastClose = this._source.lastIndexOf('>', pos - 1);
       start = lastClose > start ? lastClose + 1 : start;
-      let context = this._source.slice(start, pos + 10);
+      const context = this._source.slice(start, pos + 10);
 
-      let msg = message + ' at pos ' + pos + ': `' + context + '`';
+      const msg = message + ' at pos ' + pos + ': `' + context + '`';
 
       const err = new L10nError(msg);
       err._pos = {start: pos, end: undefined};
@@ -3238,7 +3240,7 @@
         nextComment = this._length;
       }
 
-      let nextEntry = Math.min(nextEntity, nextComment);
+      const nextEntry = Math.min(nextEntity, nextComment);
 
       this._index = nextEntry;
 
@@ -3259,8 +3261,8 @@
 
   var ASTSerializer = {
     serialize: function(ast) {
-      var string = '';
-      for (var id in ast) {
+      let string = '';
+      for (const id in ast) {
         string += this.dumpEntry(ast[id]) + '\n';
       }
       return string;
@@ -3283,10 +3285,11 @@
     },
 
     dumpEntity: function(entity) {
-      var id, val = null, attrs = {};
-      var index = '';
+      let id, val = null;
+      const attrs = {};
+      let index = '';
 
-      for (var key in entity) {
+      for (const key in entity) {
         switch (key) {
           case '$v':
             val = entity.$v;
@@ -3345,8 +3348,8 @@
     },
 
     dumpComplexString: function(chunks) {
-      var str = '"';
-      for (var i = 0; i < chunks.length; i++) {
+      let str = '"';
+      for (let i = 0; i < chunks.length; i++) {
         if (typeof chunks[i] === 'string') {
           str += chunks[i].replace(/"/g, '\\"');
         } else {
@@ -3357,8 +3360,8 @@
     },
 
     dumpAttributes: function(attrs) {
-      var str = '';
-      for (var key in attrs) {
+      let str = '';
+      for (const key in attrs) {
         if (attrs[key].x) {
           str += '  ' + key + this.dumpIndex(attrs[key].x) + ': ' +
             this.dumpValue(attrs[key].v, 1) + '\n';
@@ -3395,15 +3398,15 @@
     },
 
     dumpCallExpression: function(exp) {
-      var pexp = this.dumpExpression(exp.v);
+      let pexp = this.dumpExpression(exp.v);
 
-      var attrs = this.dumpItemList(exp.a, this.dumpExpression.bind(this));
+      const attrs = this.dumpItemList(exp.a, this.dumpExpression.bind(this));
       pexp += '(' + attrs + ')';
       return pexp;
     },
 
     dumpPrimaryExpression: function(exp) {
-      var ret = '';
+      let ret = '';
 
       if (typeof(exp) === 'string') {
         return exp;
@@ -3432,15 +3435,15 @@
     },
 
     dumpHash: function(hash, depth) {
-      var items = [];
-      var str;
+      const items = [];
+      let str;
 
-      var defIndex;
+      let defIndex;
       if ('__default' in hash) {
         defIndex = hash.__default;
       }
 
-      for (var key in hash) {
+      for (const key in hash) {
         let indent = '  ';
         if (key.charAt(0) === '_' && key.charAt(1) === '_') {
           continue;
@@ -3453,7 +3456,7 @@
         items.push(str);
       }
 
-      let indent = new Array(depth + 1).join('  '); // str.repeat
+      const indent = new Array(depth + 1).join('  '); // str.repeat
       return '{\n' + indent + items.join(',\n' + indent) + '\n'+indent+'}';
     },
 
@@ -3471,8 +3474,8 @@
 
   function EntriesSerializer() {
     this.serialize = function (ast) {
-      var string = '';
-      for (var id in ast) {
+      let string = '';
+      for (const id in ast) {
         string += dumpEntry(ast[id]) + '\n';
       }
 
@@ -3484,10 +3487,11 @@
     }
 
     function dumpEntity(entity) {
-      var id, val = null, attrs = {};
-      var index = '';
+      let id, val = null;
+      const attrs = {};
+      let index = '';
 
-      for (var key in entity) {
+      for (const key in entity) {
         switch (key) {
           case '$v':
             val = entity.$v;
@@ -3543,8 +3547,8 @@
     }
 
     function dumpComplexString(chunks) {
-      var str = '"';
-      for (var i = 0; i < chunks.length; i++) {
+      let str = '"';
+      for (let i = 0; i < chunks.length; i++) {
         if (typeof chunks[i] === 'string') {
           str += chunks[i];
         } else {
@@ -3555,21 +3559,21 @@
     }
 
     function dumpHash(hash, depth) {
-      var items = [];
-      var str;
+      const items = [];
+      let str;
 
-      for (var key in hash) {
+      for (const key in hash) {
         str = '  ' + key + ': ' + dumpValue(hash[key]);
         items.push(str);
       }
 
-      var indent = depth ? '  ' : '';
+      const indent = depth ? '  ' : '';
       return '{\n' + indent + items.join(',\n' + indent) + '\n'+indent+'}';
     }
 
     function dumpAttributes(attrs) {
-      var str = '';
-      for (var key in attrs) {
+      let str = '';
+      for (const key in attrs) {
         if (attrs[key].$x) {
           str += '  ' + key + dumpIndex(attrs[key].$x) + ': ' +
             dumpValue(attrs[key].$v, 1) + '\n';

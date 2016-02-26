@@ -28,7 +28,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function translateRoots(view) {
-    return Promise.all([].concat(observers.get(view).roots).map(function (root) {
+    var roots = Array.from(observers.get(view).roots);
+    return Promise.all(roots.map(function (root) {
       return _translateFragment(view, root);
     }));
   }
@@ -413,14 +414,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
   }
 
   function getLangRevisionMap(seq, str) {
-    return str.split(',').reduce(function (seq, cur) {
+    return str.split(',').reduce(function (prevSeq, cur) {
       var _getLangRevisionTuple2 = getLangRevisionTuple(cur);
 
       var lang = _getLangRevisionTuple2[0];
       var rev = _getLangRevisionTuple2[1];
 
-      seq[lang] = rev;
-      return seq;
+      prevSeq[lang] = rev;
+      return prevSeq;
     }, seq);
   }
 

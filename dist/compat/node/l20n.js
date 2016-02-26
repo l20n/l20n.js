@@ -740,7 +740,7 @@ var Context = (function () {
         return formatter.call(_this3, lang, args, entity, id);
       }
 
-      _this3.emit('notfounderror', new L10nError('"' + id + '"' + ' not found in ' + lang.code, id, lang));
+      _this3.emit('notfounderror', new L10nError('"' + id + '" not found in ' + lang.code, id, lang));
       hasUnresolved = true;
     });
 
@@ -893,7 +893,8 @@ var PropertiesParser = {
   },
 
   parseEntity: function (id, value, entries) {
-    var name, key;
+    var name = undefined,
+        key = undefined;
 
     var pos = id.indexOf('[');
     if (pos !== -1) {
@@ -910,7 +911,7 @@ var PropertiesParser = {
       throw this.error('Error in ID: "' + name + '".' + ' Nested attributes are not supported.');
     }
 
-    var attr;
+    var attr = undefined;
     if (nameElements.length > 1) {
       name = nameElements[0];
       attr = nameElements[1];
@@ -1163,7 +1164,7 @@ var L20nParser = {
       throw this.error('Unknown value type');
     }
 
-    return;
+    return undefined;
   },
 
   getWS: function () {
@@ -1635,9 +1636,10 @@ function createGetter(id, name) {
       }
     };
 
+    var ASCII_LETTER_A = 65;
     var replaceChars = function (map, val) {
       return val.replace(reAlphas, function (match) {
-        return map.charAt(match.charCodeAt(0) - 65);
+        return map.charAt(match.charCodeAt(0) - ASCII_LETTER_A);
       });
     };
 
@@ -1776,10 +1778,10 @@ var Env$1 = (function () {
       return data;
     }
 
-    var emit = function (type, err) {
+    var emitAndAmend = function (type, err) {
       return _this10.emit(type, amendError(lang, err));
     };
-    return parser.parse.call(parser, emit, data);
+    return parser.parse(emitAndAmend, data);
   };
 
   Env$1.prototype._create = function _create(lang, entries) {

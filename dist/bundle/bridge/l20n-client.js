@@ -24,8 +24,8 @@
   }
 
   function translateRoots(view) {
-    return Promise.all(
-      [...observers.get(view).roots].map(
+    const roots = Array.from(observers.get(view).roots);
+    return Promise.all(roots.map(
         root => translateFragment(view, root)));
   }
 
@@ -69,19 +69,19 @@
       'mark', 'ruby', 'rt', 'rp', 'bdi', 'bdo', 'span', 'br', 'wbr'
     ],
     attributes: {
-      global: [ 'title', 'aria-label', 'aria-valuetext', 'aria-moz-hint' ],
-      a: [ 'download' ],
-      area: [ 'download', 'alt' ],
+      global: ['title', 'aria-label', 'aria-valuetext', 'aria-moz-hint'],
+      a: ['download'],
+      area: ['download', 'alt'],
       // value is special-cased in isAttrAllowed
-      input: [ 'alt', 'placeholder' ],
-      menuitem: [ 'label' ],
-      menu: [ 'label' ],
-      optgroup: [ 'label' ],
-      option: [ 'label' ],
-      track: [ 'label' ],
-      img: [ 'alt' ],
-      textarea: [ 'placeholder' ],
-      th: [ 'abbr']
+      input: ['alt', 'placeholder'],
+      menuitem: ['label'],
+      menu: ['label'],
+      optgroup: ['label'],
+      option: ['label'],
+      track: ['label'],
+      img: ['alt'],
+      textarea: ['placeholder'],
+      th: ['abbr']
     }
   };
 
@@ -245,9 +245,7 @@
     }
 
     return string
-      .replace(/[A-Z]/g, function (match) {
-        return '-' + match.toLowerCase();
-      })
+      .replace(/[A-Z]/g, match => '-' + match.toLowerCase())
       .replace(/^-/, '');
   }
 
@@ -421,10 +419,10 @@
   }
 
   function getLangRevisionMap(seq, str) {
-    return str.split(',').reduce((seq, cur) => {
+    return str.split(',').reduce((prevSeq, cur) => {
       const [lang, rev] = getLangRevisionTuple(cur);
-      seq[lang] = rev;
-      return seq;
+      prevSeq[lang] = rev;
+      return prevSeq;
     }, seq);
   }
 

@@ -9,8 +9,10 @@ function L10nError(message, id, lang) {
 L10nError.prototype = Object.create(Error.prototype);
 L10nError.prototype.constructor = L10nError;
 
+const HTTP_STATUS_CODE_OK = 200;
+
 function load(type, url) {
-  return new Promise(function(resolve, reject) {
+  return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
     if (xhr.overrideMimeType) {
@@ -23,10 +25,10 @@ function load(type, url) {
       xhr.responseType = 'json';
     }
 
-    xhr.addEventListener('load', function io_onload(e) {
-      if (e.target.status === 200 || e.target.status === 0) {
-        // Sinon.JS's FakeXHR doesn't have the response property
-        resolve(e.target.response || e.target.responseText);
+    xhr.addEventListener('load', e => {
+      if (e.target.status === HTTP_STATUS_CODE_OK ||
+          e.target.status === 0) {
+        resolve(e.target.response);
       } else {
         reject(new L10nError('Not found: ' + url));
       }
@@ -161,7 +163,7 @@ function subPlaceable(locals, ctx, lang, args, id) {
 }
 
 function interpolate(locals, ctx, lang, args, arr) {
-  return arr.reduce(function([localsSeq, valueSeq], cur) {
+  return arr.reduce(([localsSeq, valueSeq], cur) => {
     if (typeof cur === 'string') {
       return [localsSeq, valueSeq + cur];
     } else {
@@ -240,6 +242,8 @@ function resolveValue(locals, ctx, lang, args, expr, index) {
 
   throw new L10nError('Unresolvable value');
 }
+
+/*eslint no-magic-numbers: [0]*/
 
 const locales2rules = {
   'af': 3,
@@ -688,7 +692,7 @@ function getPluralRule(code) {
   // return a function that gives the plural form name for a given integer
   const index = locales2rules[code.replace(/-.*$/, '')];
   if (!(index in pluralRules)) {
-    return function() { return 'other'; };
+    return () => 'other';
   }
   return pluralRules[index];
 }
@@ -696,14 +700,14 @@ function getPluralRule(code) {
 // Safari 9 and iOS 9 does not support Intl
 const L20nIntl = typeof Intl !== 'undefined' ?
   Intl : {
-  NumberFormat: function() {
-    return {
-      format: function(v) {
-        return v;
-      }
-    };
-  }
-};
+    NumberFormat: function() {
+      return {
+        format: function(v) {
+          return v;
+        }
+      };
+    }
+  };
 
 class Context {
   constructor(env, langs, resIds) {
@@ -782,8 +786,7 @@ class Context {
       }
 
       this.emit('notfounderror',
-        new L10nError('"' + id + '"' + ' not found in ' + lang.code,
-          id, lang));
+        new L10nError('"' + id + '" not found in ' + lang.code, id, lang));
       hasUnresolved = true;
     });
 
@@ -866,7 +869,7 @@ function reportMissing(keys, formatter, resolved) {
   return resolved;
 }
 
-var MAX_PLACEABLES = 100;
+const MAX_PLACEABLES = 100;
 
 var PropertiesParser = {
   patterns: null,
@@ -892,14 +895,14 @@ var PropertiesParser = {
     }
     this.emit = emit;
 
-    var entries = {};
+    const entries = {};
 
-    var lines = source.match(this.patterns.entries);
+    const lines = source.match(this.patterns.entries);
     if (!lines) {
       return entries;
     }
-    for (var i = 0; i < lines.length; i++) {
-      var line = lines[i];
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i];
 
       if (this.patterns.comment.test(line)) {
         continue;
@@ -909,7 +912,7 @@ var PropertiesParser = {
         line = line.slice(0, -1) + lines[++i].trim();
       }
 
-      var entityMatch = line.match(this.patterns.entity);
+      const entityMatch = line.match(this.patterns.entity);
       if (entityMatch) {
         try {
           this.parseEntity(entityMatch[1], entityMatch[2], entries);
@@ -924,9 +927,9 @@ var PropertiesParser = {
   },
 
   parseEntity: function(id, value, entries) {
-    var name, key;
+    let name, key;
 
-    var pos = id.indexOf('[');
+    const pos = id.indexOf('[');
     if (pos !== -1) {
       name = id.substr(0, pos);
       key = id.substring(pos + 1, id.length - 1);
@@ -935,14 +938,14 @@ var PropertiesParser = {
       key = null;
     }
 
-    var nameElements = name.split('.');
+    const nameElements = name.split('.');
 
     if (nameElements.length > 2) {
       throw this.error('Error in ID: "' + name + '".' +
           ' Nested attributes are not supported.');
     }
 
-    var attr;
+    let attr;
     if (nameElements.length > 1) {
       name = nameElements[0];
       attr = nameElements[1];
@@ -958,13 +961,13 @@ var PropertiesParser = {
   },
 
   setEntityValue: function(id, attr, key, rawValue, entries) {
-    var value = rawValue.indexOf('{{') > -1 ?
+    const value = rawValue.indexOf('{{') > -1 ?
       this.parseString(rawValue) : rawValue;
 
-    var isSimpleValue = typeof value === 'string';
-    var root = entries;
+    let isSimpleValue = typeof value === 'string';
+    let root = entries;
 
-    var isSimpleNode = typeof entries[id] === 'string';
+    let isSimpleNode = typeof entries[id] === 'string';
 
     if (!entries[id] && (attr || key || !isSimpleValue)) {
       entries[id] = Object.create(null);
@@ -1014,18 +1017,18 @@ var PropertiesParser = {
   },
 
   parseString: function(str) {
-    var chunks = str.split(this.patterns.placeables);
-    var complexStr = [];
+    const chunks = str.split(this.patterns.placeables);
+    const complexStr = [];
 
-    var len = chunks.length;
-    var placeablesCount = (len - 1) / 2;
+    const len = chunks.length;
+    const placeablesCount = (len - 1) / 2;
 
     if (placeablesCount >= MAX_PLACEABLES) {
       throw this.error('Too many placeables (' + placeablesCount +
                           ', max allowed is ' + MAX_PLACEABLES + ')');
     }
 
-    for (var i = 0; i < chunks.length; i++) {
+    for (let i = 0; i < chunks.length; i++) {
       if (chunks[i].length === 0) {
         continue;
       }
@@ -1042,13 +1045,13 @@ var PropertiesParser = {
     if (str.lastIndexOf('\\') !== -1) {
       str = str.replace(this.patterns.controlChars, '$1');
     }
-    return str.replace(this.patterns.unicode, function(match, token) {
-      return String.fromCodePoint(parseInt(token, 16));
-    });
+    return str.replace(this.patterns.unicode,
+      (match, token) => String.fromCodePoint(parseInt(token, 16))
+    );
   },
 
   parseIndex: function(str) {
-    var match = str.match(this.patterns.index);
+    const match = str.match(this.patterns.index);
     if (!match) {
       throw new L10nError('Malformed index');
     }
@@ -1194,7 +1197,7 @@ var L20nParser = {
       throw this.error('Unknown value type');
     }
 
-    return;
+    return undefined;
   },
 
   getWS: function() {
@@ -1239,7 +1242,7 @@ var L20nParser = {
 
   getUnicodeChar: function() {
     for (let i = 0; i < 4; i++) {
-      let cc = this._source.charCodeAt(++this._index);
+      const cc = this._source.charCodeAt(++this._index);
       if ((cc > 96 && cc < 103) || // a-f
           (cc > 64 && cc < 71) ||  // A-F
           (cc > 47 && cc < 58)) {  // 0-9
@@ -1454,7 +1457,7 @@ var L20nParser = {
     let exp = this.getPrimaryExpression();
 
     while (true) {
-      let ch = this._source[this._index];
+      const ch = this._source[this._index];
       if (ch === '.' || ch === '[') {
         ++this._index;
         exp = this.getPropertyExpression(exp, ch === '[');
@@ -1540,7 +1543,7 @@ var L20nParser = {
     while (!closed) {
       items.push(callback.call(this));
       this.getWS();
-      let ch = this._source.charAt(this._index);
+      const ch = this._source.charAt(this._index);
       switch (ch) {
         case ',':
           ++this._index;
@@ -1571,7 +1574,7 @@ var L20nParser = {
       nextComment = this._length;
     }
 
-    let nextEntry = Math.min(nextEntity, nextComment);
+    const nextEntry = Math.min(nextEntity, nextComment);
 
     this._index = nextEntry;
   },
@@ -1708,9 +1711,10 @@ function createGetter(id, name) {
     };
 
     // Replace each Latin letter with a Unicode character from map
+    const ASCII_LETTER_A = 65;
     const replaceChars =
       (map, val) => val.replace(
-        reAlphas, match => map.charAt(match.charCodeAt(0) - 65));
+        reAlphas, match => map.charAt(match.charCodeAt(0) - ASCII_LETTER_A));
 
     const transform =
       val => replaceChars(charMaps[id], mods[id](val));
@@ -1722,7 +1726,7 @@ function createGetter(id, name) {
       }
 
       const parts = val.split(reExcluded);
-      const modified = parts.map(function(part) {
+      const modified = parts.map((part) => {
         if (reExcluded.test(part)) {
           return part;
         }
@@ -1828,8 +1832,8 @@ class Env$1 {
       return data;
     }
 
-    const emit = (type, err) => this.emit(type, amendError(lang, err));
-    return parser.parse.call(parser, emit, data);
+    const emitAndAmend = (type, err) => this.emit(type, amendError(lang, err));
+    return parser.parse(emitAndAmend, data);
   }
 
   _create(lang, entries) {

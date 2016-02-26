@@ -125,7 +125,7 @@
         throw this.error('Unknown value type');
       }
 
-      return;
+      return undefined;
     },
 
     getWS: function () {
@@ -578,7 +578,8 @@
     },
 
     parseEntity: function (id, value, entries) {
-      var name, key;
+      var name = undefined,
+          key = undefined;
 
       var pos = id.indexOf('[');
       if (pos !== -1) {
@@ -595,7 +596,7 @@
         throw this.error('Error in ID: "' + name + '".' + ' Nested attributes are not supported.');
       }
 
-      var attr;
+      var attr = undefined;
       if (nameElements.length > 1) {
         name = nameElements[0];
         attr = nameElements[1];
