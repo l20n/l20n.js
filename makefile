@@ -6,6 +6,7 @@ RUNTIMES := $(wildcard src/runtime/*)
 
 .PHONY: build $(RUNTIMES)
 build: $(RUNTIMES)
+	babel --presets es2015 --out-dir dist/compat/web dist/bundle/web
 
 $(RUNTIMES):
 	@$(MAKE) -s -C $@
