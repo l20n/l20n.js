@@ -1,14 +1,6 @@
 'use strict';
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
-
-function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -80,7 +72,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
     var valuesOf = function valuesOf(opts) {
       return Object.keys(opts).reduce(function (seq, cur) {
-        return Object.assign({}, seq, _defineProperty({}, cur, opts[cur].valueOf()));
+        var _Object$assign;
+
+        return Object.assign({}, seq, (_Object$assign = {}, _Object$assign[cur] = opts[cur].valueOf(), _Object$assign));
       }, {});
     };
 
@@ -88,82 +82,69 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
 
     var mapValues = regeneratorRuntime.mark(function mapValues(arr) {
-      var values, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, elem;
+      var values, _iterator, _isArray, _i, _ref7, elem;
 
       return regeneratorRuntime.wrap(function mapValues$(_context) {
         while (1) {
           switch (_context.prev = _context.next) {
             case 0:
               values = new FTLList();
-              _iteratorNormalCompletion = true;
-              _didIteratorError = false;
-              _iteratorError = undefined;
-              _context.prev = 4;
-              _iterator = arr[Symbol.iterator]();
+              _iterator = arr, _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();
 
-            case 6:
-              if (_iteratorNormalCompletion = (_step = _iterator.next()).done) {
-                _context.next = 15;
+            case 2:
+              if (!_isArray) {
+                _context.next = 8;
                 break;
               }
 
-              elem = _step.value;
-              _context.t0 = values;
-              return _context.delegateYield(Value(elem), 't1', 10);
+              if (!(_i >= _iterator.length)) {
+                _context.next = 5;
+                break;
+              }
 
-            case 10:
+              return _context.abrupt('break', 19);
+
+            case 5:
+              _ref7 = _iterator[_i++];
+              _context.next = 12;
+              break;
+
+            case 8:
+              _i = _iterator.next();
+
+              if (!_i.done) {
+                _context.next = 11;
+                break;
+              }
+
+              return _context.abrupt('break', 19);
+
+            case 11:
+              _ref7 = _i.value;
+
+            case 12:
+              elem = _ref7;
+              _context.t0 = values;
+              return _context.delegateYield(Value(elem), 't1', 15);
+
+            case 15:
               _context.t2 = _context.t1;
 
               _context.t0.push.call(_context.t0, _context.t2);
 
-            case 12:
-              _iteratorNormalCompletion = true;
-              _context.next = 6;
-              break;
-
-            case 15:
-              _context.next = 21;
-              break;
-
             case 17:
-              _context.prev = 17;
-              _context.t3 = _context['catch'](4);
-              _didIteratorError = true;
-              _iteratorError = _context.t3;
+              _context.next = 2;
+              break;
 
-            case 21:
-              _context.prev = 21;
-              _context.prev = 22;
-
-              if (!_iteratorNormalCompletion && _iterator.return) {
-                _iterator.return();
-              }
-
-            case 24:
-              _context.prev = 24;
-
-              if (!_didIteratorError) {
-                _context.next = 27;
-                break;
-              }
-
-              throw _iteratorError;
-
-            case 27:
-              return _context.finish(24);
-
-            case 28:
-              return _context.finish(21);
-
-            case 29:
+            case 19:
               return _context.abrupt('return', values);
 
-            case 30:
+            case 20:
             case 'end':
               return _context.stop();
           }
         }
-      }, mapValues, this, [[4, 17, 21, 29], [22,, 24, 28]]);
+      }, mapValues, this);
     });
 
     // Helper for choosing entity value
@@ -171,98 +152,85 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
     var DefaultMember = regeneratorRuntime.mark(function DefaultMember(members) {
       var allowNoDefault = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
 
-      var _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, member;
+      var _iterator2, _isArray2, _i2, _ref8, member;
 
       return regeneratorRuntime.wrap(function DefaultMember$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
             case 0:
-              _iteratorNormalCompletion2 = true;
-              _didIteratorError2 = false;
-              _iteratorError2 = undefined;
-              _context2.prev = 3;
-              _iterator2 = members[Symbol.iterator]();
+              _iterator2 = members, _isArray2 = Array.isArray(_iterator2), _i2 = 0, _iterator2 = _isArray2 ? _iterator2 : _iterator2[Symbol.iterator]();
 
-            case 5:
-              if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {
-                _context2.next = 12;
+            case 1:
+              if (!_isArray2) {
+                _context2.next = 7;
                 break;
               }
 
-              member = _step2.value;
+              if (!(_i2 >= _iterator2.length)) {
+                _context2.next = 4;
+                break;
+              }
+
+              return _context2.abrupt('break', 16);
+
+            case 4:
+              _ref8 = _iterator2[_i2++];
+              _context2.next = 11;
+              break;
+
+            case 7:
+              _i2 = _iterator2.next();
+
+              if (!_i2.done) {
+                _context2.next = 10;
+                break;
+              }
+
+              return _context2.abrupt('break', 16);
+
+            case 10:
+              _ref8 = _i2.value;
+
+            case 11:
+              member = _ref8;
 
               if (!member.def) {
-                _context2.next = 9;
+                _context2.next = 14;
                 break;
               }
 
               return _context2.abrupt('return', member);
 
-            case 9:
-              _iteratorNormalCompletion2 = true;
-              _context2.next = 5;
-              break;
-
-            case 12:
-              _context2.next = 18;
-              break;
-
             case 14:
-              _context2.prev = 14;
-              _context2.t0 = _context2['catch'](3);
-              _didIteratorError2 = true;
-              _iteratorError2 = _context2.t0;
+              _context2.next = 1;
+              break;
 
-            case 18:
-              _context2.prev = 18;
-              _context2.prev = 19;
-
-              if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                _iterator2.return();
-              }
-
-            case 21:
-              _context2.prev = 21;
-
-              if (!_didIteratorError2) {
-                _context2.next = 24;
-                break;
-              }
-
-              throw _iteratorError2;
-
-            case 24:
-              return _context2.finish(21);
-
-            case 25:
-              return _context2.finish(18);
-
-            case 26:
+            case 16:
               if (allowNoDefault) {
-                _context2.next = 29;
+                _context2.next = 19;
                 break;
               }
 
-              _context2.next = 29;
+              _context2.next = 19;
               return tell(new RangeError('No default'));
 
-            case 29:
+            case 19:
               return _context2.abrupt('return', { val: new FTLNone() });
 
-            case 30:
+            case 20:
             case 'end':
               return _context2.stop();
           }
         }
-      }, DefaultMember, this, [[3, 14, 18, 26], [19,, 21, 25]]);
+      }, DefaultMember, this);
     });
 
     // Half-resolved expressions evaluate to raw Runtime AST nodes
 
-    var EntityReference = regeneratorRuntime.mark(function EntityReference(_ref13) {
-      var name = _ref13.name;
+    var EntityReference = regeneratorRuntime.mark(function EntityReference(_ref9) {
+      var name = _ref9.name;
 
-      var _ref14, ctx, entity;
+      var _ref10, ctx, entity;
 
       return regeneratorRuntime.wrap(function EntityReference$(_context3) {
         while (1) {
@@ -272,8 +240,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
               return ask();
 
             case 2:
-              _ref14 = _context3.sent;
-              ctx = _ref14.ctx;
+              _ref10 = _context3.sent;
+              ctx = _ref10.ctx;
               entity = ctx.messages.get(name);
 
               if (entity) {
@@ -297,11 +265,11 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         }
       }, EntityReference, this);
     });
-    var MemberExpression = regeneratorRuntime.mark(function MemberExpression(_ref15) {
-      var obj = _ref15.obj;
-      var key = _ref15.key;
+    var MemberExpression = regeneratorRuntime.mark(function MemberExpression(_ref11) {
+      var obj = _ref11.obj;
+      var key = _ref11.key;
 
-      var entity, _ref16, ctx, keyword, _iteratorNormalCompletion3, _didIteratorError3, _iteratorError3, _iterator3, _step3, member, memberKey;
+      var entity, _ref12, ctx, keyword, _iterator3, _isArray3, _i3, _ref13, member, memberKey;
 
       return regeneratorRuntime.wrap(function MemberExpression$(_context4) {
         while (1) {
@@ -324,101 +292,88 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
               return ask();
 
             case 6:
-              _ref16 = _context4.sent;
-              ctx = _ref16.ctx;
+              _ref12 = _context4.sent;
+              ctx = _ref12.ctx;
               return _context4.delegateYield(Value(key), 't1', 9);
 
             case 9:
               keyword = _context4.t1;
-              _iteratorNormalCompletion3 = true;
-              _didIteratorError3 = false;
-              _iteratorError3 = undefined;
-              _context4.prev = 13;
-              _iterator3 = entity.traits[Symbol.iterator]();
+              _iterator3 = entity.traits, _isArray3 = Array.isArray(_iterator3), _i3 = 0, _iterator3 = _isArray3 ? _iterator3 : _iterator3[Symbol.iterator]();
 
-            case 15:
-              if (_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done) {
-                _context4.next = 24;
+            case 11:
+              if (!_isArray3) {
+                _context4.next = 17;
                 break;
               }
 
-              member = _step3.value;
-              return _context4.delegateYield(Value(member.key), 't2', 18);
+              if (!(_i3 >= _iterator3.length)) {
+                _context4.next = 14;
+                break;
+              }
 
-            case 18:
+              return _context4.abrupt('break', 28);
+
+            case 14:
+              _ref13 = _iterator3[_i3++];
+              _context4.next = 21;
+              break;
+
+            case 17:
+              _i3 = _iterator3.next();
+
+              if (!_i3.done) {
+                _context4.next = 20;
+                break;
+              }
+
+              return _context4.abrupt('break', 28);
+
+            case 20:
+              _ref13 = _i3.value;
+
+            case 21:
+              member = _ref13;
+              return _context4.delegateYield(Value(member.key), 't2', 23);
+
+            case 23:
               memberKey = _context4.t2;
 
               if (!keyword.match(ctx, memberKey)) {
-                _context4.next = 21;
+                _context4.next = 26;
                 break;
               }
 
               return _context4.abrupt('return', member);
 
-            case 21:
-              _iteratorNormalCompletion3 = true;
-              _context4.next = 15;
-              break;
-
-            case 24:
-              _context4.next = 30;
-              break;
-
             case 26:
-              _context4.prev = 26;
-              _context4.t3 = _context4['catch'](13);
-              _didIteratorError3 = true;
-              _iteratorError3 = _context4.t3;
+              _context4.next = 11;
+              break;
 
-            case 30:
-              _context4.prev = 30;
-              _context4.prev = 31;
-
-              if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                _iterator3.return();
-              }
-
-            case 33:
-              _context4.prev = 33;
-
-              if (!_didIteratorError3) {
-                _context4.next = 36;
-                break;
-              }
-
-              throw _iteratorError3;
-
-            case 36:
-              return _context4.finish(33);
-
-            case 37:
-              return _context4.finish(30);
-
-            case 38:
-              _context4.next = 40;
+            case 28:
+              _context4.next = 30;
               return tell(new ReferenceError('Unknown trait: ' + keyword.toString(ctx)));
 
-            case 40:
-              return _context4.delegateYield(Entity(entity), 't4', 41);
+            case 30:
+              return _context4.delegateYield(Entity(entity), 't3', 31);
 
-            case 41:
-              _context4.t5 = _context4.t4;
+            case 31:
+              _context4.t4 = _context4.t3;
               return _context4.abrupt('return', {
-                val: _context4.t5
+                val: _context4.t4
               });
 
-            case 43:
+            case 33:
             case 'end':
               return _context4.stop();
           }
         }
-      }, MemberExpression, this, [[13, 26, 30, 38], [31,, 33, 37]]);
+      }, MemberExpression, this);
     });
-    var SelectExpression = regeneratorRuntime.mark(function SelectExpression(_ref17) {
-      var exp = _ref17.exp;
-      var vars = _ref17.vars;
+    var SelectExpression = regeneratorRuntime.mark(function SelectExpression(_ref14) {
+      var exp = _ref14.exp;
+      var vars = _ref14.vars;
 
-      var selector, _iteratorNormalCompletion4, _didIteratorError4, _iteratorError4, _iterator4, _step4, variant, key, _ref18, _ctx;
+      var selector, _iterator4, _isArray4, _i4, _ref15, variant, key, _ref16, _ctx;
 
       return regeneratorRuntime.wrap(function SelectExpression$(_context5) {
         while (1) {
@@ -440,97 +395,84 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
               return _context5.abrupt('return', _context5.t1);
 
             case 5:
-              _iteratorNormalCompletion4 = true;
-              _didIteratorError4 = false;
-              _iteratorError4 = undefined;
-              _context5.prev = 8;
-              _iterator4 = vars[Symbol.iterator]();
+              _iterator4 = vars, _isArray4 = Array.isArray(_iterator4), _i4 = 0, _iterator4 = _isArray4 ? _iterator4 : _iterator4[Symbol.iterator]();
 
-            case 10:
-              if (_iteratorNormalCompletion4 = (_step4 = _iterator4.next()).done) {
-                _context5.next = 25;
+            case 6:
+              if (!_isArray4) {
+                _context5.next = 12;
                 break;
               }
 
-              variant = _step4.value;
-              return _context5.delegateYield(Value(variant.key), 't2', 13);
+              if (!(_i4 >= _iterator4.length)) {
+                _context5.next = 9;
+                break;
+              }
 
-            case 13:
+              return _context5.abrupt('break', 29);
+
+            case 9:
+              _ref15 = _iterator4[_i4++];
+              _context5.next = 16;
+              break;
+
+            case 12:
+              _i4 = _iterator4.next();
+
+              if (!_i4.done) {
+                _context5.next = 15;
+                break;
+              }
+
+              return _context5.abrupt('break', 29);
+
+            case 15:
+              _ref15 = _i4.value;
+
+            case 16:
+              variant = _ref15;
+              return _context5.delegateYield(Value(variant.key), 't2', 18);
+
+            case 18:
               key = _context5.t2;
 
               if (!(key instanceof FTLNumber && selector instanceof FTLNumber && key.valueOf() === selector.valueOf())) {
-                _context5.next = 16;
+                _context5.next = 21;
                 break;
               }
 
               return _context5.abrupt('return', variant);
 
-            case 16:
-              _context5.next = 18;
+            case 21:
+              _context5.next = 23;
               return ask();
 
-            case 18:
-              _ref18 = _context5.sent;
-              _ctx = _ref18.ctx;
+            case 23:
+              _ref16 = _context5.sent;
+              _ctx = _ref16.ctx;
 
               if (!(key instanceof FTLKeyword && key.match(_ctx, selector))) {
-                _context5.next = 22;
+                _context5.next = 27;
                 break;
               }
 
               return _context5.abrupt('return', variant);
 
-            case 22:
-              _iteratorNormalCompletion4 = true;
-              _context5.next = 10;
-              break;
-
-            case 25:
-              _context5.next = 31;
-              break;
-
             case 27:
-              _context5.prev = 27;
-              _context5.t3 = _context5['catch'](8);
-              _didIteratorError4 = true;
-              _iteratorError4 = _context5.t3;
+              _context5.next = 6;
+              break;
+
+            case 29:
+              return _context5.delegateYield(DefaultMember(vars), 't3', 30);
+
+            case 30:
+              return _context5.abrupt('return', _context5.t3);
 
             case 31:
-              _context5.prev = 31;
-              _context5.prev = 32;
-
-              if (!_iteratorNormalCompletion4 && _iterator4.return) {
-                _iterator4.return();
-              }
-
-            case 34:
-              _context5.prev = 34;
-
-              if (!_didIteratorError4) {
-                _context5.next = 37;
-                break;
-              }
-
-              throw _iteratorError4;
-
-            case 37:
-              return _context5.finish(34);
-
-            case 38:
-              return _context5.finish(31);
-
-            case 39:
-              return _context5.delegateYield(DefaultMember(vars), 't4', 40);
-
-            case 40:
-              return _context5.abrupt('return', _context5.t4);
-
-            case 41:
             case 'end':
               return _context5.stop();
           }
         }
-      }, SelectExpression, this, [[8, 27, 31, 39], [32,, 34, 38]]);
+      }, SelectExpression, this);
     });
 
     // Fully-resolved expressions evaluate to FTL types
@@ -631,10 +573,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         }
       }, Value, this);
     });
-    var ExternalArgument = regeneratorRuntime.mark(function ExternalArgument(_ref19) {
-      var name = _ref19.name;
+    var ExternalArgument = regeneratorRuntime.mark(function ExternalArgument(_ref17) {
+      var name = _ref17.name;
 
-      var _ref20, args, arg;
+      var _ref18, args, arg;
 
       return regeneratorRuntime.wrap(function ExternalArgument$(_context7) {
         while (1) {
@@ -644,8 +586,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
               return ask();
 
             case 2:
-              _ref20 = _context7.sent;
-              args = _ref20.args;
+              _ref18 = _context7.sent;
+              args = _ref18.args;
 
               if (!(!args || !args.hasOwnProperty(name))) {
                 _context7.next = 8;
@@ -712,10 +654,10 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         }
       }, ExternalArgument, this);
     });
-    var FunctionReference = regeneratorRuntime.mark(function FunctionReference(_ref21) {
-      var name = _ref21.name;
+    var FunctionReference = regeneratorRuntime.mark(function FunctionReference(_ref19) {
+      var name = _ref19.name;
 
-      var _ref22, functions, func;
+      var _ref20, functions, func;
 
       return regeneratorRuntime.wrap(function FunctionReference$(_context8) {
         while (1) {
@@ -725,8 +667,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
               return ask();
 
             case 2:
-              _ref22 = _context8.sent;
-              functions = _ref22.ctx.functions;
+              _ref20 = _context8.sent;
+              functions = _ref20.ctx.functions;
               func = functions[name] || builtins[name];
 
               if (func) {
@@ -762,11 +704,11 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         }
       }, FunctionReference, this);
     });
-    var CallExpression = regeneratorRuntime.mark(function CallExpression(_ref23) {
-      var name = _ref23.name;
-      var args = _ref23.args;
+    var CallExpression = regeneratorRuntime.mark(function CallExpression(_ref21) {
+      var name = _ref21.name;
+      var args = _ref21.args;
 
-      var callee, posargs, keyargs, _iteratorNormalCompletion5, _didIteratorError5, _iteratorError5, _iterator5, _step5, _arg;
+      var callee, posargs, keyargs, _iterator5, _isArray5, _i5, _ref22, _arg;
 
       return regeneratorRuntime.wrap(function CallExpression$(_context9) {
         while (1) {
@@ -787,92 +729,79 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
             case 4:
               posargs = [];
               keyargs = [];
-              _iteratorNormalCompletion5 = true;
-              _didIteratorError5 = false;
-              _iteratorError5 = undefined;
-              _context9.prev = 9;
-              _iterator5 = args[Symbol.iterator]();
+              _iterator5 = args, _isArray5 = Array.isArray(_iterator5), _i5 = 0, _iterator5 = _isArray5 ? _iterator5 : _iterator5[Symbol.iterator]();
 
-            case 11:
-              if (_iteratorNormalCompletion5 = (_step5 = _iterator5.next()).done) {
-                _context9.next = 25;
+            case 7:
+              if (!_isArray5) {
+                _context9.next = 13;
                 break;
               }
 
-              _arg = _step5.value;
-
-              if (!(_arg.type === 'kv')) {
-                _context9.next = 18;
+              if (!(_i5 >= _iterator5.length)) {
+                _context9.next = 10;
                 break;
               }
 
-              return _context9.delegateYield(Value(_arg.val), 't1', 15);
+              return _context9.abrupt('break', 29);
 
-            case 15:
-              keyargs[_arg.name] = _context9.t1;
-              _context9.next = 22;
+            case 10:
+              _ref22 = _iterator5[_i5++];
+              _context9.next = 17;
               break;
 
-            case 18:
-              _context9.t2 = posargs;
-              return _context9.delegateYield(Value(_arg), 't3', 20);
+            case 13:
+              _i5 = _iterator5.next();
+
+              if (!_i5.done) {
+                _context9.next = 16;
+                break;
+              }
+
+              return _context9.abrupt('break', 29);
+
+            case 16:
+              _ref22 = _i5.value;
+
+            case 17:
+              _arg = _ref22;
+
+              if (!(_arg.type === 'kv')) {
+                _context9.next = 23;
+                break;
+              }
+
+              return _context9.delegateYield(Value(_arg.val), 't1', 20);
 
             case 20:
+              keyargs[_arg.name] = _context9.t1;
+              _context9.next = 27;
+              break;
+
+            case 23:
+              _context9.t2 = posargs;
+              return _context9.delegateYield(Value(_arg), 't3', 25);
+
+            case 25:
               _context9.t4 = _context9.t3;
 
               _context9.t2.push.call(_context9.t2, _context9.t4);
 
-            case 22:
-              _iteratorNormalCompletion5 = true;
-              _context9.next = 11;
-              break;
-
-            case 25:
-              _context9.next = 31;
-              break;
-
             case 27:
-              _context9.prev = 27;
-              _context9.t5 = _context9['catch'](9);
-              _didIteratorError5 = true;
-              _iteratorError5 = _context9.t5;
+              _context9.next = 7;
+              break;
 
-            case 31:
-              _context9.prev = 31;
-              _context9.prev = 32;
-
-              if (!_iteratorNormalCompletion5 && _iterator5.return) {
-                _iterator5.return();
-              }
-
-            case 34:
-              _context9.prev = 34;
-
-              if (!_didIteratorError5) {
-                _context9.next = 37;
-                break;
-              }
-
-              throw _iteratorError5;
-
-            case 37:
-              return _context9.finish(34);
-
-            case 38:
-              return _context9.finish(31);
-
-            case 39:
+            case 29:
               return _context9.abrupt('return', callee(posargs, keyargs));
 
-            case 40:
+            case 30:
             case 'end':
               return _context9.stop();
           }
         }
-      }, CallExpression, this, [[9, 27, 31, 39], [32,, 34, 38]]);
+      }, CallExpression, this);
     });
     var Pattern = regeneratorRuntime.mark(function Pattern(ptn) {
-      var _ref24, ctx, dirty, result, _iteratorNormalCompletion6, _didIteratorError6, _iteratorError6, _iterator6, _step6, part, value, str;
+      var _ref23, ctx, dirty, result, _iterator6, _isArray6, _i6, _ref24, part, value, str;
 
       return regeneratorRuntime.wrap(function Pattern$(_context10) {
         while (1) {
@@ -882,9 +811,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
               return ask();
 
             case 2:
-              _ref24 = _context10.sent;
-              ctx = _ref24.ctx;
-              dirty = _ref24.dirty;
+              _ref23 = _context10.sent;
+              ctx = _ref23.ctx;
+              dirty = _ref23.dirty;
 
               if (!dirty.has(ptn)) {
                 _context10.next = 9;
@@ -901,118 +830,105 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
               dirty.add(ptn);
               result = '';
-              _iteratorNormalCompletion6 = true;
-              _didIteratorError6 = false;
-              _iteratorError6 = undefined;
-              _context10.prev = 14;
-              _iterator6 = ptn[Symbol.iterator]();
+              _iterator6 = ptn, _isArray6 = Array.isArray(_iterator6), _i6 = 0, _iterator6 = _isArray6 ? _iterator6 : _iterator6[Symbol.iterator]();
 
-            case 16:
-              if (_iteratorNormalCompletion6 = (_step6 = _iterator6.next()).done) {
-                _context10.next = 41;
+            case 12:
+              if (!_isArray6) {
+                _context10.next = 18;
                 break;
               }
 
-              part = _step6.value;
-
-              if (!(typeof part === 'string')) {
-                _context10.next = 22;
+              if (!(_i6 >= _iterator6.length)) {
+                _context10.next = 15;
                 break;
               }
 
-              result += part;
-              _context10.next = 38;
+              return _context10.abrupt('break', 45);
+
+            case 15:
+              _ref24 = _iterator6[_i6++];
+              _context10.next = 22;
               break;
 
+            case 18:
+              _i6 = _iterator6.next();
+
+              if (!_i6.done) {
+                _context10.next = 21;
+                break;
+              }
+
+              return _context10.abrupt('break', 45);
+
+            case 21:
+              _ref24 = _i6.value;
+
             case 22:
-              if (!(part.length === 1)) {
+              part = _ref24;
+
+              if (!(typeof part === 'string')) {
                 _context10.next = 27;
                 break;
               }
 
-              return _context10.delegateYield(Value(part[0]), 't1', 24);
-
-            case 24:
-              _context10.t0 = _context10.t1;
-              _context10.next = 29;
+              result += part;
+              _context10.next = 43;
               break;
 
             case 27:
-              return _context10.delegateYield(mapValues(part), 't2', 28);
+              if (!(part.length === 1)) {
+                _context10.next = 32;
+                break;
+              }
 
-            case 28:
-              _context10.t0 = _context10.t2;
+              return _context10.delegateYield(Value(part[0]), 't1', 29);
 
             case 29:
+              _context10.t0 = _context10.t1;
+              _context10.next = 34;
+              break;
+
+            case 32:
+              return _context10.delegateYield(mapValues(part), 't2', 33);
+
+            case 33:
+              _context10.t0 = _context10.t2;
+
+            case 34:
               value = _context10.t0;
               str = value.toString(ctx);
 
               if (!(str.length > MAX_PLACEABLE_LENGTH)) {
-                _context10.next = 37;
+                _context10.next = 42;
                 break;
               }
 
-              _context10.next = 34;
+              _context10.next = 39;
               return tell(new RangeError('Too many characters in placeable ' + ('(' + str.length + ', max allowed is ' + MAX_PLACEABLE_LENGTH + ')')));
 
-            case 34:
+            case 39:
               result += FSI + str.substr(0, MAX_PLACEABLE_LENGTH) + PDI;
-              _context10.next = 38;
+              _context10.next = 43;
               break;
 
-            case 37:
+            case 42:
               result += FSI + str + PDI;
 
-            case 38:
-              _iteratorNormalCompletion6 = true;
-              _context10.next = 16;
-              break;
-
-            case 41:
-              _context10.next = 47;
-              break;
-
             case 43:
-              _context10.prev = 43;
-              _context10.t3 = _context10['catch'](14);
-              _didIteratorError6 = true;
-              _iteratorError6 = _context10.t3;
+              _context10.next = 12;
+              break;
 
-            case 47:
-              _context10.prev = 47;
-              _context10.prev = 48;
-
-              if (!_iteratorNormalCompletion6 && _iterator6.return) {
-                _iterator6.return();
-              }
-
-            case 50:
-              _context10.prev = 50;
-
-              if (!_didIteratorError6) {
-                _context10.next = 53;
-                break;
-              }
-
-              throw _iteratorError6;
-
-            case 53:
-              return _context10.finish(50);
-
-            case 54:
-              return _context10.finish(47);
-
-            case 55:
+            case 45:
 
               dirty.delete(ptn);
               return _context10.abrupt('return', result);
 
-            case 57:
+            case 47:
             case 'end':
               return _context10.stop();
           }
         }
-      }, Pattern, this, [[14, 43, 47, 55], [48,, 50, 54]]);
+      }, Pattern, this);
     });
     var Entity = regeneratorRuntime.mark(function Entity(entity) {
       var allowNoDefault = arguments.length <= 1 || arguments[1] === undefined ? false : arguments[1];
@@ -1104,30 +1020,22 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
     var prioritizeLocales = function prioritizeLocales(def, availableLangs, requested) {
       var supportedLocales = new Set();
-      var _iteratorNormalCompletion7 = true;
-      var _didIteratorError7 = false;
-      var _iteratorError7 = undefined;
+      for (var _iterator7 = requested, _isArray7 = Array.isArray(_iterator7), _i7 = 0, _iterator7 = _isArray7 ? _iterator7 : _iterator7[Symbol.iterator]();;) {
+        var _ref26;
 
-      try {
-        for (var _iterator7 = requested[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {
-          var lang = _step7.value;
-
-          if (availableLangs.has(lang)) {
-            supportedLocales.add(lang);
-          }
+        if (_isArray7) {
+          if (_i7 >= _iterator7.length) break;
+          _ref26 = _iterator7[_i7++];
+        } else {
+          _i7 = _iterator7.next();
+          if (_i7.done) break;
+          _ref26 = _i7.value;
         }
-      } catch (err) {
-        _didIteratorError7 = true;
-        _iteratorError7 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion7 && _iterator7.return) {
-            _iterator7.return();
-          }
-        } finally {
-          if (_didIteratorError7) {
-            throw _iteratorError7;
-          }
+
+        var lang = _ref26;
+
+        if (availableLangs.has(lang)) {
+          supportedLocales.add(lang);
         }
       }
 
@@ -1150,16 +1058,14 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
           return prev[i];
         }
 
-        var _ref28 = Array.isArray(key) ? key : [key, undefined];
+        var _ref36 = Array.isArray(key) ? key : [key, undefined];
 
-        var _ref29 = _slicedToArray(_ref28, 2);
-
-        var id = _ref29[0];
-        var args = _ref29[1];
+        var id = _ref36[0];
+        var args = _ref36[1];
 
 
         var result = method.call(_this17, ctx, id, args);
-        errors.push.apply(errors, _toConsumableArray(result[1]));
+        errors.push.apply(errors, result[1]);
         // XXX Depending on the kind of errors it might be better to return prev[i]
         // here;  for instance, when the current translation is completely missing
         return result;
@@ -1187,10 +1093,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
       var _ctx$formatToPrimitiv = ctx.formatToPrimitive(entity, args);
 
-      var _ctx$formatToPrimitiv2 = _slicedToArray(_ctx$formatToPrimitiv, 2);
-
-      var value = _ctx$formatToPrimitiv2[0];
-      var errors = _ctx$formatToPrimitiv2[1];
+      var value = _ctx$formatToPrimitiv[0];
+      var errors = _ctx$formatToPrimitiv[1];
 
 
       var formatted = {
@@ -1200,37 +1104,27 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
       if (entity.traits) {
         formatted.attrs = Object.create(null);
-        var _iteratorNormalCompletion14 = true;
-        var _didIteratorError14 = false;
-        var _iteratorError14 = undefined;
+        for (var _iterator14 = entity.traits, _isArray14 = Array.isArray(_iterator14), _i14 = 0, _iterator14 = _isArray14 ? _iterator14 : _iterator14[Symbol.iterator]();;) {
+          var _ref37;
 
-        try {
-          for (var _iterator14 = entity.traits[Symbol.iterator](), _step14; !(_iteratorNormalCompletion14 = (_step14 = _iterator14.next()).done); _iteratorNormalCompletion14 = true) {
-            var trait = _step14.value;
-
-            var _ctx$format = ctx.format(trait, args);
-
-            var _ctx$format2 = _slicedToArray(_ctx$format, 2);
-
-            var attrValue = _ctx$format2[0];
-            var attrErrors = _ctx$format2[1];
-
-            errors.push.apply(errors, _toConsumableArray(attrErrors));
-            formatted.attrs[trait.key.name] = attrValue;
+          if (_isArray14) {
+            if (_i14 >= _iterator14.length) break;
+            _ref37 = _iterator14[_i14++];
+          } else {
+            _i14 = _iterator14.next();
+            if (_i14.done) break;
+            _ref37 = _i14.value;
           }
-        } catch (err) {
-          _didIteratorError14 = true;
-          _iteratorError14 = err;
-        } finally {
-          try {
-            if (!_iteratorNormalCompletion14 && _iterator14.return) {
-              _iterator14.return();
-            }
-          } finally {
-            if (_didIteratorError14) {
-              throw _iteratorError14;
-            }
-          }
+
+          var trait = _ref37;
+
+          var _ctx$format = ctx.format(trait, args);
+
+          var attrValue = _ctx$format[0];
+          var attrErrors = _ctx$format[1];
+
+          errors.push.apply(errors, attrErrors);
+          formatted.attrs[trait.key.name] = attrValue;
         }
       }
 
@@ -1251,9 +1145,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
     };
 
     var fetchFirstBundle = function fetchFirstBundle(bundles, createContext) {
-      var _bundles = _slicedToArray(bundles, 1);
-
-      var bundle = _bundles[0];
+      var bundle = bundles[0];
 
 
       if (!bundle) {
@@ -1278,8 +1170,8 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
     };
 
     var equal = function equal(bundles1, bundles2) {
-      return bundles1.length === bundles2.length && bundles1.every(function (_ref32, i) {
-        var lang = _ref32.lang;
+      return bundles1.length === bundles2.length && bundles1.every(function (_ref39, i) {
+        var lang = _ref39.lang;
         return lang === bundles2[i].lang;
       });
     };
@@ -1462,11 +1354,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
     var getResourceLinks = function getResourceLinks(head) {
       return Array.prototype.map.call(head.querySelectorAll('link[rel="localization"]'), function (el) {
         return [el.getAttribute('href'), el.getAttribute('name') || 'main'];
-      }).reduce(function (seq, _ref33) {
-        var _ref34 = _slicedToArray(_ref33, 2);
-
-        var href = _ref34[0];
-        var name = _ref34[1];
+      }).reduce(function (seq, _ref40) {
+        var href = _ref40[0];
+        var name = _ref40[1];
         return seq.set(name, (seq.get(name) || []).concat(href));
       }, new Map());
     };
@@ -1478,41 +1368,33 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
       // XXX take last found instead of first?
       var metas = Array.from(head.querySelectorAll('meta[name="availableLanguages"],' + 'meta[name="defaultLanguage"],' + 'meta[name="appVersion"]'));
-      var _iteratorNormalCompletion15 = true;
-      var _didIteratorError15 = false;
-      var _iteratorError15 = undefined;
+      for (var _iterator15 = metas, _isArray15 = Array.isArray(_iterator15), _i15 = 0, _iterator15 = _isArray15 ? _iterator15 : _iterator15[Symbol.iterator]();;) {
+        var _ref41;
 
-      try {
-        for (var _iterator15 = metas[Symbol.iterator](), _step15; !(_iteratorNormalCompletion15 = (_step15 = _iterator15.next()).done); _iteratorNormalCompletion15 = true) {
-          var meta = _step15.value;
-
-          var name = meta.getAttribute('name');
-          var _content = meta.getAttribute('content').trim();
-          switch (name) {
-            case 'availableLanguages':
-              availableLangs = new Set(_content.split(',').map(function (lang) {
-                return lang.trim();
-              }));
-              break;
-            case 'defaultLanguage':
-              defaultLang = _content;
-              break;
-            case 'appVersion':
-              appVersion = _content;
-          }
+        if (_isArray15) {
+          if (_i15 >= _iterator15.length) break;
+          _ref41 = _iterator15[_i15++];
+        } else {
+          _i15 = _iterator15.next();
+          if (_i15.done) break;
+          _ref41 = _i15.value;
         }
-      } catch (err) {
-        _didIteratorError15 = true;
-        _iteratorError15 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion15 && _iterator15.return) {
-            _iterator15.return();
-          }
-        } finally {
-          if (_didIteratorError15) {
-            throw _iteratorError15;
-          }
+
+        var meta = _ref41;
+
+        var name = meta.getAttribute('name');
+        var _content = meta.getAttribute('content').trim();
+        switch (name) {
+          case 'availableLanguages':
+            availableLangs = new Set(_content.split(',').map(function (lang) {
+              return lang.trim();
+            }));
+            break;
+          case 'defaultLanguage':
+            defaultLang = _content;
+            break;
+          case 'appVersion':
+            appVersion = _content;
         }
       }
 
@@ -1996,7 +1878,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function L10nError(message, id, lang) {
         _classCallCheck(this, L10nError);
 
-        var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(L10nError).call(this));
+        var _this = _possibleConstructorReturn(this, _Error.call(this));
 
         _this.name = 'L10nError';
         _this.message = message;
@@ -2019,493 +1901,490 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         this._lastGoodEntryEnd = 0;
       }
 
-      _createClass(ParseContext, [{
-        key: 'getResource',
-        value: function getResource() {
-          var entries = {};
-          var errors = [];
+      ParseContext.prototype.getResource = function getResource() {
+        var entries = {};
+        var errors = [];
 
-          this.getWS();
-          while (this._index < this._length) {
-            try {
-              var entry = this.getEntry();
-              if (!entry) {
-                this.getWS();
-                continue;
-              }
-
-              var id = entry.id;
-              entries[id] = {};
-
-              if (entry.traits !== null && entry.traits.length !== 0) {
-                entries[id].traits = entry.traits;
-                if (entry.value) {
-                  entries[id].val = entry.value;
-                }
-              } else {
-                entries[id] = entry.value;
-              }
-              this._lastGoodEntryEnd = this._index;
-            } catch (e) {
-              if (e instanceof L10nError) {
-                errors.push(e);
-                this.getJunkEntry();
-              } else {
-                throw e;
-              }
-            }
-            this.getWS();
-          }
-
-          return [entries, errors];
-        }
-      }, {
-        key: 'getEntry',
-        value: function getEntry() {
-          if (this._index !== 0 && this._source[this._index - 1] !== '\n') {
-            throw this.error('Expected new line and a new entry');
-          }
-
-          if (this._source[this._index] === '#') {
-            this.getComment();
-            return;
-          }
-
-          if (this._source[this._index] === '[') {
-            this.getSection();
-            return;
-          }
-
-          if (this._index < this._length && this._source[this._index] !== '\n') {
-            return this.getEntity();
-          }
-        }
-      }, {
-        key: 'getSection',
-        value: function getSection() {
-          this._index += 1;
-          if (this._source[this._index] !== '[') {
-            throw this.error('Expected "[[" to open a section');
-          }
-
-          this._index += 1;
-
-          this.getLineWS();
-          this.getKeyword();
-          this.getLineWS();
-
-          if (this._source[this._index] !== ']' || this._source[this._index + 1] !== ']') {
-            throw this.error('Expected "]]" to close a section');
-          }
-
-          this._index += 2;
-
-          // sections are ignored in the runtime ast
-          return undefined;
-        }
-      }, {
-        key: 'getEntity',
-        value: function getEntity() {
-          var id = this.getIdentifier();
-
-          var traits = null;
-          var value = null;
-
-          this.getLineWS();
-
-          var ch = this._source[this._index];
-
-          if (ch !== '=') {
-            throw this.error('Expected "=" after Entity ID');
-          }
-          ch = this._source[++this._index];
-
-          this.getLineWS();
-
-          value = this.getPattern();
-
-          ch = this._source[this._index];
-
-          if (ch === '\n') {
-            this._index++;
-            this.getLineWS();
-            ch = this._source[this._index];
-          }
-
-          if (ch === '[' && this._source[this._index + 1] !== '[' || ch === '*') {
-            traits = this.getMembers();
-          } else if (value === null) {
-            throw this.error('Expected a value (like: " = value") or a trait (like: "[key] value")');
-          }
-
-          return {
-            id: id,
-            value: value,
-            traits: traits
-          };
-        }
-      }, {
-        key: 'getWS',
-        value: function getWS() {
-          var cc = this._source.charCodeAt(this._index);
-          // space, \n, \t, \r
-          while (cc === 32 || cc === 10 || cc === 9 || cc === 13) {
-            cc = this._source.charCodeAt(++this._index);
-          }
-        }
-      }, {
-        key: 'getLineWS',
-        value: function getLineWS() {
-          var cc = this._source.charCodeAt(this._index);
-          // space, \t
-          while (cc === 32 || cc === 9) {
-            cc = this._source.charCodeAt(++this._index);
-          }
-        }
-      }, {
-        key: 'getIdentifier',
-        value: function getIdentifier() {
-          var name = '';
-
-          var start = this._index;
-          var cc = this._source.charCodeAt(this._index);
-
-          if (cc >= 97 && cc <= 122 || // a-z
-          cc >= 65 && cc <= 90 || // A-Z
-          cc === 95) {
-            // _
-            cc = this._source.charCodeAt(++this._index);
-          } else if (name.length === 0) {
-            throw this.error('Expected an identifier (starting with [a-zA-Z_])');
-          }
-
-          while (cc >= 97 && cc <= 122 || // a-z
-          cc >= 65 && cc <= 90 || // A-Z
-          cc >= 48 && cc <= 57 || // 0-9
-          cc === 95 || cc === 45) {
-            // _-
-            cc = this._source.charCodeAt(++this._index);
-          }
-
-          name += this._source.slice(start, this._index);
-
-          return name;
-        }
-      }, {
-        key: 'getKeyword',
-        value: function getKeyword() {
-          var name = '';
-          var namespace = this.getIdentifier();
-
-          if (this._source[this._index] === '/') {
-            this._index++;
-          } else if (namespace) {
-            name = namespace;
-            namespace = null;
-          }
-
-          var start = this._index;
-          var cc = this._source.charCodeAt(this._index);
-
-          if (cc >= 97 && cc <= 122 || // a-z
-          cc >= 65 && cc <= 90 || // A-Z
-          cc === 95 || cc === 32) {
-            //  _
-            cc = this._source.charCodeAt(++this._index);
-          } else if (name.length === 0) {
-            throw this.error('Expected an identifier (starting with [a-zA-Z_])');
-          }
-
-          while (cc >= 97 && cc <= 122 || // a-z
-          cc >= 65 && cc <= 90 || // A-Z
-          cc >= 48 && cc <= 57 || // 0-9
-          cc === 95 || cc === 45 || cc === 32) {
-            //  _-
-            cc = this._source.charCodeAt(++this._index);
-          }
-
-          name += this._source.slice(start, this._index).trimRight();
-
-          return namespace ? { type: 'kw', ns: namespace, name: name } : { type: 'kw', name: name };
-        }
-      }, {
-        key: 'getPattern',
-        value: function getPattern() {
-          var start = this._index;
-          if (this._source[start] === '"') {
-            return this.getComplexPattern();
-          }
-          var eol = this._source.indexOf('\n', this._index);
-
-          if (eol === -1) {
-            eol = this._length;
-          }
-
-          var line = this._source.slice(start, eol);
-
-          if (line.indexOf('{') !== -1) {
-            return this.getComplexPattern();
-          }
-
-          this._index = eol + 1;
-
-          this.getWS();
-
-          if (this._source[this._index] === '|') {
-            this._index = start;
-            return this.getComplexPattern();
-          }
-
-          return this._source.slice(start, eol);
-        }
-      }, {
-        key: 'getComplexPattern',
-        value: function getComplexPattern() {
-          var buffer = '';
-          var content = [];
-          var quoteDelimited = null;
-          var firstLine = true;
-
-          var ch = this._source[this._index];
-
-          if (ch === '\\' && (this._source[this._index + 1] === '"' || this._source[this._index + 1] === '{' || this._source[this._index + 1] === '\\')) {
-            buffer += this._source[this._index + 1];
-            this._index += 2;
-            ch = this._source[this._index];
-          } else if (ch === '"') {
-            quoteDelimited = true;
-            this._index++;
-            ch = this._source[this._index];
-          }
-
-          while (this._index < this._length) {
-            if (ch === '\n') {
-              if (quoteDelimited) {
-                throw this.error('Unclosed string');
-              }
-              this._index++;
-              this.getLineWS();
-              if (this._source[this._index] !== '|') {
-                break;
-              }
-              if (firstLine && buffer.length) {
-                throw this.error('Multiline string should have the ID line empty');
-              }
-              firstLine = false;
-              this._index++;
-              if (this._source[this._index] === ' ') {
-                this._index++;
-              }
-              if (buffer.length) {
-                buffer += '\n';
-              }
-              ch = this._source[this._index];
-              continue;
-            } else if (ch === '\\') {
-              var ch2 = this._source[this._index + 1];
-              if (quoteDelimited && ch2 === '"' || ch2 === '{') {
-                ch = ch2;
-                this._index++;
-              }
-            } else if (quoteDelimited && ch === '"') {
-              this._index++;
-              quoteDelimited = false;
-              break;
-            } else if (ch === '{') {
-              if (buffer.length) {
-                content.push(buffer);
-              }
-              buffer = '';
-              content.push(this.getPlaceable());
-              ch = this._source[this._index];
-              continue;
-            }
-
-            if (ch) {
-              buffer += ch;
-            }
-            this._index++;
-            ch = this._source[this._index];
-          }
-
-          if (quoteDelimited) {
-            throw this.error('Unclosed string');
-          }
-
-          if (buffer.length) {
-            content.push(buffer);
-          }
-
-          if (content.length === 0) {
-            if (quoteDelimited !== null) {
-              return '';
-            } else {
-              return null;
-            }
-          }
-
-          if (content.length === 1 && typeof content[0] === 'string') {
-            return content[0];
-          }
-
-          return content;
-        }
-      }, {
-        key: 'getPlaceable',
-        value: function getPlaceable() {
-          this._index++;
-
-          var expressions = [];
-
-          this.getLineWS();
-
-          while (this._index < this._length) {
-            var _start = this._index;
-            try {
-              expressions.push(this.getPlaceableExpression());
-            } catch (e) {
-              throw this.error(e.description, _start);
-            }
-            this.getWS();
-            if (this._source[this._index] === '}') {
-              this._index++;
-              break;
-            } else if (this._source[this._index] === ',') {
-              this._index++;
+        this.getWS();
+        while (this._index < this._length) {
+          try {
+            var entry = this.getEntry();
+            if (!entry) {
               this.getWS();
+              continue;
+            }
+
+            var id = entry.id;
+            entries[id] = {};
+
+            if (entry.traits !== null && entry.traits.length !== 0) {
+              entries[id].traits = entry.traits;
+              if (entry.value) {
+                entries[id].val = entry.value;
+              }
             } else {
-              throw this.error('Expected "}" or ","');
+              entries[id] = entry.value;
+            }
+            this._lastGoodEntryEnd = this._index;
+          } catch (e) {
+            if (e instanceof L10nError) {
+              errors.push(e);
+              this.getJunkEntry();
+            } else {
+              throw e;
             }
           }
-
-          return expressions;
+          this.getWS();
         }
-      }, {
-        key: 'getPlaceableExpression',
-        value: function getPlaceableExpression() {
-          var selector = this.getCallExpression();
-          var members = null;
+
+        return [entries, errors];
+      };
+
+      ParseContext.prototype.getEntry = function getEntry() {
+        if (this._index !== 0 && this._source[this._index - 1] !== '\n') {
+          throw this.error('Expected new line and a new entry');
+        }
+
+        if (this._source[this._index] === '#') {
+          this.getComment();
+          return;
+        }
+
+        if (this._source[this._index] === '[') {
+          this.getSection();
+          return;
+        }
+
+        if (this._index < this._length && this._source[this._index] !== '\n') {
+          return this.getEntity();
+        }
+      };
+
+      ParseContext.prototype.getSection = function getSection() {
+        this._index += 1;
+        if (this._source[this._index] !== '[') {
+          throw this.error('Expected "[[" to open a section');
+        }
+
+        this._index += 1;
+
+        this.getLineWS();
+        this.getKeyword();
+        this.getLineWS();
+
+        if (this._source[this._index] !== ']' || this._source[this._index + 1] !== ']') {
+          throw this.error('Expected "]]" to close a section');
+        }
+
+        this._index += 2;
+
+        // sections are ignored in the runtime ast
+        return undefined;
+      };
+
+      ParseContext.prototype.getEntity = function getEntity() {
+        var id = this.getIdentifier();
+
+        var traits = null;
+        var value = null;
+
+        this.getLineWS();
+
+        var ch = this._source[this._index];
+
+        if (ch !== '=') {
+          throw this.error('Expected "=" after Entity ID');
+        }
+        ch = this._source[++this._index];
+
+        this.getLineWS();
+
+        value = this.getPattern();
+
+        ch = this._source[this._index];
+
+        if (ch === '\n') {
+          this._index++;
+          this.getLineWS();
+          ch = this._source[this._index];
+        }
+
+        if (ch === '[' && this._source[this._index + 1] !== '[' || ch === '*') {
+          traits = this.getMembers();
+        } else if (value === null) {
+          throw this.error('Expected a value (like: " = value") or a trait (like: "[key] value")');
+        }
+
+        return {
+          id: id,
+          value: value,
+          traits: traits
+        };
+      };
+
+      ParseContext.prototype.getWS = function getWS() {
+        var cc = this._source.charCodeAt(this._index);
+        // space, \n, \t, \r
+        while (cc === 32 || cc === 10 || cc === 9 || cc === 13) {
+          cc = this._source.charCodeAt(++this._index);
+        }
+      };
+
+      ParseContext.prototype.getLineWS = function getLineWS() {
+        var cc = this._source.charCodeAt(this._index);
+        // space, \t
+        while (cc === 32 || cc === 9) {
+          cc = this._source.charCodeAt(++this._index);
+        }
+      };
+
+      ParseContext.prototype.getIdentifier = function getIdentifier() {
+        var name = '';
+
+        var start = this._index;
+        var cc = this._source.charCodeAt(this._index);
+
+        if (cc >= 97 && cc <= 122 || // a-z
+        cc >= 65 && cc <= 90 || // A-Z
+        cc === 95) {
+          // _
+          cc = this._source.charCodeAt(++this._index);
+        } else if (name.length === 0) {
+          throw this.error('Expected an identifier (starting with [a-zA-Z_])');
+        }
+
+        while (cc >= 97 && cc <= 122 || // a-z
+        cc >= 65 && cc <= 90 || // A-Z
+        cc >= 48 && cc <= 57 || // 0-9
+        cc === 95 || cc === 45) {
+          // _-
+          cc = this._source.charCodeAt(++this._index);
+        }
+
+        name += this._source.slice(start, this._index);
+
+        return name;
+      };
+
+      ParseContext.prototype.getKeyword = function getKeyword() {
+        var name = '';
+        var namespace = this.getIdentifier();
+
+        if (this._source[this._index] === '/') {
+          this._index++;
+        } else if (namespace) {
+          name = namespace;
+          namespace = null;
+        }
+
+        var start = this._index;
+        var cc = this._source.charCodeAt(this._index);
+
+        if (cc >= 97 && cc <= 122 || // a-z
+        cc >= 65 && cc <= 90 || // A-Z
+        cc === 95 || cc === 32) {
+          //  _
+          cc = this._source.charCodeAt(++this._index);
+        } else if (name.length === 0) {
+          throw this.error('Expected an identifier (starting with [a-zA-Z_])');
+        }
+
+        while (cc >= 97 && cc <= 122 || // a-z
+        cc >= 65 && cc <= 90 || // A-Z
+        cc >= 48 && cc <= 57 || // 0-9
+        cc === 95 || cc === 45 || cc === 32) {
+          //  _-
+          cc = this._source.charCodeAt(++this._index);
+        }
+
+        name += this._source.slice(start, this._index).trimRight();
+
+        return namespace ? { type: 'kw', ns: namespace, name: name } : { type: 'kw', name: name };
+      };
+
+      ParseContext.prototype.getPattern = function getPattern() {
+        var start = this._index;
+        if (this._source[start] === '"') {
+          return this.getComplexPattern();
+        }
+        var eol = this._source.indexOf('\n', this._index);
+
+        if (eol === -1) {
+          eol = this._length;
+        }
+
+        var line = this._source.slice(start, eol);
+
+        if (line.indexOf('{') !== -1) {
+          return this.getComplexPattern();
+        }
+
+        this._index = eol + 1;
+
+        this.getWS();
+
+        if (this._source[this._index] === '|') {
+          this._index = start;
+          return this.getComplexPattern();
+        }
+
+        return this._source.slice(start, eol);
+      };
+
+      ParseContext.prototype.getComplexPattern = function getComplexPattern() {
+        var buffer = '';
+        var content = [];
+        var quoteDelimited = null;
+        var firstLine = true;
+
+        var ch = this._source[this._index];
+
+        if (ch === '\\' && (this._source[this._index + 1] === '"' || this._source[this._index + 1] === '{' || this._source[this._index + 1] === '\\')) {
+          buffer += this._source[this._index + 1];
+          this._index += 2;
+          ch = this._source[this._index];
+        } else if (ch === '"') {
+          quoteDelimited = true;
+          this._index++;
+          ch = this._source[this._index];
+        }
+
+        while (this._index < this._length) {
+          if (ch === '\n') {
+            if (quoteDelimited) {
+              throw this.error('Unclosed string');
+            }
+            this._index++;
+            this.getLineWS();
+            if (this._source[this._index] !== '|') {
+              break;
+            }
+            if (firstLine && buffer.length) {
+              throw this.error('Multiline string should have the ID line empty');
+            }
+            firstLine = false;
+            this._index++;
+            if (this._source[this._index] === ' ') {
+              this._index++;
+            }
+            if (buffer.length) {
+              buffer += '\n';
+            }
+            ch = this._source[this._index];
+            continue;
+          } else if (ch === '\\') {
+            var ch2 = this._source[this._index + 1];
+            if (quoteDelimited && ch2 === '"' || ch2 === '{') {
+              ch = ch2;
+              this._index++;
+            }
+          } else if (quoteDelimited && ch === '"') {
+            this._index++;
+            quoteDelimited = false;
+            break;
+          } else if (ch === '{') {
+            if (buffer.length) {
+              content.push(buffer);
+            }
+            buffer = '';
+            content.push(this.getPlaceable());
+            ch = this._source[this._index];
+            continue;
+          }
+
+          if (ch) {
+            buffer += ch;
+          }
+          this._index++;
+          ch = this._source[this._index];
+        }
+
+        if (quoteDelimited) {
+          throw this.error('Unclosed string');
+        }
+
+        if (buffer.length) {
+          content.push(buffer);
+        }
+
+        if (content.length === 0) {
+          if (quoteDelimited !== null) {
+            return '';
+          } else {
+            return null;
+          }
+        }
+
+        if (content.length === 1 && typeof content[0] === 'string') {
+          return content[0];
+        }
+
+        return content;
+      };
+
+      ParseContext.prototype.getPlaceable = function getPlaceable() {
+        this._index++;
+
+        var expressions = [];
+
+        this.getLineWS();
+
+        while (this._index < this._length) {
+          var _start = this._index;
+          try {
+            expressions.push(this.getPlaceableExpression());
+          } catch (e) {
+            throw this.error(e.description, _start);
+          }
+          this.getWS();
+          if (this._source[this._index] === '}') {
+            this._index++;
+            break;
+          } else if (this._source[this._index] === ',') {
+            this._index++;
+            this.getWS();
+          } else {
+            throw this.error('Expected "}" or ","');
+          }
+        }
+
+        return expressions;
+      };
+
+      ParseContext.prototype.getPlaceableExpression = function getPlaceableExpression() {
+        var selector = this.getCallExpression();
+        var members = null;
+
+        this.getWS();
+
+        if (this._source[this._index] !== '}' && this._source[this._index] !== ',') {
+          if (this._source[this._index] !== '-' || this._source[this._index + 1] !== '>') {
+            throw this.error('Expected "}", "," or "->"');
+          }
+          this._index += 2; // ->
+
+          this.getLineWS();
+
+          if (this._source[this._index] !== '\n') {
+            throw this.error('Members should be listed in a new line');
+          }
 
           this.getWS();
 
-          if (this._source[this._index] !== '}' && this._source[this._index] !== ',') {
-            if (this._source[this._index] !== '-' || this._source[this._index + 1] !== '>') {
-              throw this.error('Expected "}", "," or "->"');
-            }
-            this._index += 2; // ->
+          members = this.getMembers();
 
-            this.getLineWS();
-
-            if (this._source[this._index] !== '\n') {
-              throw this.error('Members should be listed in a new line');
-            }
-
-            this.getWS();
-
-            members = this.getMembers();
-
-            if (members.length === 0) {
-              throw this.error('Expected members for the select expression');
-            }
+          if (members.length === 0) {
+            throw this.error('Expected members for the select expression');
           }
-
-          if (members === null) {
-            return selector;
-          }
-          return {
-            type: 'sel',
-            exp: selector,
-            vars: members
-          };
         }
-      }, {
-        key: 'getCallExpression',
-        value: function getCallExpression() {
-          var exp = this.getMemberExpression();
 
-          if (this._source[this._index] !== '(') {
-            return exp;
-          }
-
-          this._index++;
-
-          var args = this.getCallArgs();
-
-          this._index++;
-
-          if (exp.type = 'ref') {
-            exp.type = 'fun';
-          }
-
-          return {
-            type: 'call',
-            name: exp,
-            args: args
-          };
+        if (members === null) {
+          return selector;
         }
-      }, {
-        key: 'getCallArgs',
-        value: function getCallArgs() {
-          var args = [];
+        return {
+          type: 'sel',
+          exp: selector,
+          vars: members
+        };
+      };
 
-          if (this._source[this._index] === ')') {
-            return args;
-          }
+      ParseContext.prototype.getCallExpression = function getCallExpression() {
+        var exp = this.getMemberExpression();
 
-          while (this._index < this._length) {
-            this.getLineWS();
+        if (this._source[this._index] !== '(') {
+          return exp;
+        }
 
-            var _exp = this.getCallExpression();
+        this._index++;
 
-            if (_exp.type !== 'ref' || _exp.namespace !== undefined) {
-              args.push(_exp);
-            } else {
-              this.getLineWS();
+        var args = this.getCallArgs();
 
-              if (this._source[this._index] === ':') {
-                this._index++;
-                this.getLineWS();
+        this._index++;
 
-                var val = this.getCallExpression();
+        if (exp.type = 'ref') {
+          exp.type = 'fun';
+        }
 
-                if (val.type === 'ref' || val.type === 'member') {
-                  this._index = this._source.lastIndexOf('=', this._index) + 1;
-                  throw this.error('Expected string in quotes');
-                }
+        return {
+          type: 'call',
+          name: exp,
+          args: args
+        };
+      };
 
-                args.push({
-                  type: 'kv',
-                  name: _exp.name,
-                  val: val
-                });
-              } else {
-                args.push(_exp);
-              }
-            }
+      ParseContext.prototype.getCallArgs = function getCallArgs() {
+        var args = [];
 
-            this.getLineWS();
-
-            if (this._source[this._index] === ')') {
-              break;
-            } else if (this._source[this._index] === ',') {
-              this._index++;
-            } else {
-              throw this.error('Expected "," or ")"');
-            }
-          }
-
+        if (this._source[this._index] === ')') {
           return args;
         }
-      }, {
-        key: 'getNumber',
-        value: function getNumber() {
-          var num = '';
-          var cc = this._source.charCodeAt(this._index);
 
-          if (cc === 45) {
-            num += '-';
-            cc = this._source.charCodeAt(++this._index);
+        while (this._index < this._length) {
+          this.getLineWS();
+
+          var _exp = this.getCallExpression();
+
+          if (_exp.type !== 'ref' || _exp.namespace !== undefined) {
+            args.push(_exp);
+          } else {
+            this.getLineWS();
+
+            if (this._source[this._index] === ':') {
+              this._index++;
+              this.getLineWS();
+
+              var val = this.getCallExpression();
+
+              if (val.type === 'ref' || val.type === 'member') {
+                this._index = this._source.lastIndexOf('=', this._index) + 1;
+                throw this.error('Expected string in quotes');
+              }
+
+              args.push({
+                type: 'kv',
+                name: _exp.name,
+                val: val
+              });
+            } else {
+              args.push(_exp);
+            }
           }
+
+          this.getLineWS();
+
+          if (this._source[this._index] === ')') {
+            break;
+          } else if (this._source[this._index] === ',') {
+            this._index++;
+          } else {
+            throw this.error('Expected "," or ")"');
+          }
+        }
+
+        return args;
+      };
+
+      ParseContext.prototype.getNumber = function getNumber() {
+        var num = '';
+        var cc = this._source.charCodeAt(this._index);
+
+        if (cc === 45) {
+          num += '-';
+          cc = this._source.charCodeAt(++this._index);
+        }
+
+        if (cc < 48 || cc > 57) {
+          throw this.error('Unknown literal "' + num + '"');
+        }
+
+        while (cc >= 48 && cc <= 57) {
+          num += this._source[this._index++];
+          cc = this._source.charCodeAt(this._index);
+        }
+
+        if (cc === 46) {
+          num += this._source[this._index++];
+          cc = this._source.charCodeAt(this._index);
 
           if (cc < 48 || cc > 57) {
             throw this.error('Unknown literal "' + num + '"');
@@ -2515,242 +2394,219 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
             num += this._source[this._index++];
             cc = this._source.charCodeAt(this._index);
           }
+        }
 
-          if (cc === 46) {
-            num += this._source[this._index++];
-            cc = this._source.charCodeAt(this._index);
+        return {
+          type: 'num',
+          val: num
+        };
+      };
 
-            if (cc < 48 || cc > 57) {
-              throw this.error('Unknown literal "' + num + '"');
-            }
+      ParseContext.prototype.getMemberExpression = function getMemberExpression() {
+        var exp = this.getLiteral();
 
-            while (cc >= 48 && cc <= 57) {
-              num += this._source[this._index++];
-              cc = this._source.charCodeAt(this._index);
-            }
-          }
-
-          return {
-            type: 'num',
-            val: num
+        while (this._source[this._index] === '[') {
+          var _keyword = this.getMemberKey();
+          exp = {
+            type: 'mem',
+            key: _keyword,
+            obj: exp
           };
         }
-      }, {
-        key: 'getMemberExpression',
-        value: function getMemberExpression() {
-          var exp = this.getLiteral();
 
-          while (this._source[this._index] === '[') {
-            var _keyword = this.getMemberKey();
-            exp = {
-              type: 'mem',
-              key: _keyword,
-              obj: exp
-            };
+        return exp;
+      };
+
+      ParseContext.prototype.getMembers = function getMembers() {
+        var members = [];
+
+        while (this._index < this._length) {
+          if ((this._source[this._index] !== '[' || this._source[this._index + 1] === '[') && this._source[this._index] !== '*') {
+            break;
           }
-
-          return exp;
-        }
-      }, {
-        key: 'getMembers',
-        value: function getMembers() {
-          var members = [];
-
-          while (this._index < this._length) {
-            if ((this._source[this._index] !== '[' || this._source[this._index + 1] === '[') && this._source[this._index] !== '*') {
-              break;
-            }
-            var def = false;
-            if (this._source[this._index] === '*') {
-              this._index++;
-              def = true;
-            }
-
-            if (this._source[this._index] !== '[') {
-              throw this.error('Expected "["');
-            }
-
-            var key = this.getMemberKey();
-
-            this.getLineWS();
-
-            var value = this.getPattern();
-
-            var member = {
-              key: key,
-              val: value
-            };
-            if (def) {
-              member.def = true;
-            }
-            members.push(member);
-
-            this.getWS();
-          }
-
-          return members;
-        }
-      }, {
-        key: 'getMemberKey',
-        value: function getMemberKey() {
-          this._index++;
-
-          var cc = this._source.charCodeAt(this._index);
-          var literal = void 0;
-
-          if (cc >= 48 && cc <= 57 || cc === 45) {
-            literal = this.getNumber();
-          } else {
-            literal = this.getKeyword();
-          }
-
-          if (this._source[this._index] !== ']') {
-            throw this.error('Expected "]"');
-          }
-
-          this._index++;
-          return literal;
-        }
-      }, {
-        key: 'getLiteral',
-        value: function getLiteral() {
-          var cc = this._source.charCodeAt(this._index);
-          if (cc >= 48 && cc <= 57 || cc === 45) {
-            return this.getNumber();
-          } else if (cc === 34) {
-            // "
-            return this.getPattern();
-          } else if (cc === 36) {
-            // $
+          var def = false;
+          if (this._source[this._index] === '*') {
             this._index++;
-            return {
-              type: 'ext',
-              name: this.getIdentifier()
-            };
+            def = true;
           }
 
+          if (this._source[this._index] !== '[') {
+            throw this.error('Expected "["');
+          }
+
+          var key = this.getMemberKey();
+
+          this.getLineWS();
+
+          var value = this.getPattern();
+
+          var member = {
+            key: key,
+            val: value
+          };
+          if (def) {
+            member.def = true;
+          }
+          members.push(member);
+
+          this.getWS();
+        }
+
+        return members;
+      };
+
+      ParseContext.prototype.getMemberKey = function getMemberKey() {
+        this._index++;
+
+        var cc = this._source.charCodeAt(this._index);
+        var literal = void 0;
+
+        if (cc >= 48 && cc <= 57 || cc === 45) {
+          literal = this.getNumber();
+        } else {
+          literal = this.getKeyword();
+        }
+
+        if (this._source[this._index] !== ']') {
+          throw this.error('Expected "]"');
+        }
+
+        this._index++;
+        return literal;
+      };
+
+      ParseContext.prototype.getLiteral = function getLiteral() {
+        var cc = this._source.charCodeAt(this._index);
+        if (cc >= 48 && cc <= 57 || cc === 45) {
+          return this.getNumber();
+        } else if (cc === 34) {
+          // "
+          return this.getPattern();
+        } else if (cc === 36) {
+          // $
+          this._index++;
           return {
-            type: 'ref',
+            type: 'ext',
             name: this.getIdentifier()
           };
         }
-      }, {
-        key: 'getComment',
-        value: function getComment() {
-          var eol = this._source.indexOf('\n', this._index);
 
-          while (eol !== -1 && this._source[eol + 1] === '#') {
-            this._index = eol + 2;
+        return {
+          type: 'ref',
+          name: this.getIdentifier()
+        };
+      };
 
-            eol = this._source.indexOf('\n', this._index);
+      ParseContext.prototype.getComment = function getComment() {
+        var eol = this._source.indexOf('\n', this._index);
 
-            if (eol === -1) {
-              break;
-            }
-          }
+        while (eol !== -1 && this._source[eol + 1] === '#') {
+          this._index = eol + 2;
+
+          eol = this._source.indexOf('\n', this._index);
 
           if (eol === -1) {
-            this._index = this._length;
-          } else {
-            this._index = eol + 1;
+            break;
           }
         }
-      }, {
-        key: 'error',
-        value: function error(message) {
-          var start = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
 
-          var pos = this._index;
-
-          if (start === null) {
-            start = pos;
-          }
-          start = this._findEntityStart(start);
-
-          var context = this._source.slice(start, pos + 10);
-
-          var msg = '\n\n  ' + message + '\nat pos ' + pos + ':\n------\n…' + context + '\n------';
-          var err = new L10nError(msg);
-
-          var row = this._source.slice(0, pos).split('\n').length;
-          var col = pos - this._source.lastIndexOf('\n', pos - 1);
-          err._pos = { start: pos, end: undefined, col: col, row: row };
-          err.offset = pos - start;
-          err.description = message;
-          err.context = context;
-          return err;
+        if (eol === -1) {
+          this._index = this._length;
+        } else {
+          this._index = eol + 1;
         }
-      }, {
-        key: 'getJunkEntry',
-        value: function getJunkEntry() {
-          var pos = this._index;
+      };
 
-          var nextEntity = this._findNextEntryStart(pos);
+      ParseContext.prototype.error = function error(message) {
+        var start = arguments.length <= 1 || arguments[1] === undefined ? null : arguments[1];
 
-          if (nextEntity === -1) {
-            nextEntity = this._length;
-          }
+        var pos = this._index;
 
-          this._index = nextEntity;
-
-          var entityStart = this._findEntityStart(pos);
-
-          if (entityStart < this._lastGoodEntryEnd) {
-            entityStart = this._lastGoodEntryEnd;
-          }
+        if (start === null) {
+          start = pos;
         }
-      }, {
-        key: '_findEntityStart',
-        value: function _findEntityStart(pos) {
-          var start = pos;
+        start = this._findEntityStart(start);
 
-          while (true) {
-            start = this._source.lastIndexOf('\n', start - 2);
-            if (start === -1 || start === 0) {
-              start = 0;
-              break;
-            }
-            var _cc = this._source.charCodeAt(start + 1);
+        var context = this._source.slice(start, pos + 10);
 
-            if (_cc >= 97 && _cc <= 122 || // a-z
-            _cc >= 65 && _cc <= 90 || // A-Z
-            _cc === 95) {
-              // _
-              start++;
-              break;
-            }
-          }
+        var msg = '\n\n  ' + message + '\nat pos ' + pos + ':\n------\n…' + context + '\n------';
+        var err = new L10nError(msg);
 
-          return start;
+        var row = this._source.slice(0, pos).split('\n').length;
+        var col = pos - this._source.lastIndexOf('\n', pos - 1);
+        err._pos = { start: pos, end: undefined, col: col, row: row };
+        err.offset = pos - start;
+        err.description = message;
+        err.context = context;
+        return err;
+      };
+
+      ParseContext.prototype.getJunkEntry = function getJunkEntry() {
+        var pos = this._index;
+
+        var nextEntity = this._findNextEntryStart(pos);
+
+        if (nextEntity === -1) {
+          nextEntity = this._length;
         }
-      }, {
-        key: '_findNextEntryStart',
-        value: function _findNextEntryStart(pos) {
-          var start = pos;
 
-          while (true) {
-            if (start === 0 || this._source[start - 1] === '\n') {
-              var _cc2 = this._source.charCodeAt(start);
+        this._index = nextEntity;
 
-              if (_cc2 >= 97 && _cc2 <= 122 || // a-z
-              _cc2 >= 65 && _cc2 <= 90 || // A-Z
-              _cc2 === 95 || _cc2 === 35 || _cc2 === 91) {
-                // _#[
-                break;
-              }
-            }
+        var entityStart = this._findEntityStart(pos);
 
-            start = this._source.indexOf('\n', start);
+        if (entityStart < this._lastGoodEntryEnd) {
+          entityStart = this._lastGoodEntryEnd;
+        }
+      };
 
-            if (start === -1) {
-              break;
-            }
+      ParseContext.prototype._findEntityStart = function _findEntityStart(pos) {
+        var start = pos;
+
+        while (true) {
+          start = this._source.lastIndexOf('\n', start - 2);
+          if (start === -1 || start === 0) {
+            start = 0;
+            break;
+          }
+          var _cc = this._source.charCodeAt(start + 1);
+
+          if (_cc >= 97 && _cc <= 122 || // a-z
+          _cc >= 65 && _cc <= 90 || // A-Z
+          _cc === 95) {
+            // _
             start++;
+            break;
+          }
+        }
+
+        return start;
+      };
+
+      ParseContext.prototype._findNextEntryStart = function _findNextEntryStart(pos) {
+        var start = pos;
+
+        while (true) {
+          if (start === 0 || this._source[start - 1] === '\n') {
+            var _cc2 = this._source.charCodeAt(start);
+
+            if (_cc2 >= 97 && _cc2 <= 122 || // a-z
+            _cc2 >= 65 && _cc2 <= 90 || // A-Z
+            _cc2 === 95 || _cc2 === 35 || _cc2 === 91) {
+              // _#[
+              break;
+            }
           }
 
-          return start;
+          start = this._source.indexOf('\n', start);
+
+          if (start === -1) {
+            break;
+          }
+          start++;
         }
-      }]);
+
+        return start;
+      };
 
       return ParseContext;
     }();
@@ -2769,35 +2625,27 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         this.fn = fn;
       }
 
-      _createClass(ReadWrite, [{
-        key: 'run',
-        value: function run(ctx) {
-          return this.fn(ctx);
-        }
-      }, {
-        key: 'flatMap',
-        value: function flatMap(fn) {
-          var _this2 = this;
+      ReadWrite.prototype.run = function run(ctx) {
+        return this.fn(ctx);
+      };
 
-          return new ReadWrite(function (ctx) {
-            var _run = _this2.run(ctx);
+      ReadWrite.prototype.flatMap = function flatMap(fn) {
+        var _this2 = this;
 
-            var _run2 = _slicedToArray(_run, 2);
+        return new ReadWrite(function (ctx) {
+          var _run = _this2.run(ctx);
 
-            var cur = _run2[0];
-            var curErrs = _run2[1];
+          var cur = _run[0];
+          var curErrs = _run[1];
 
-            var _fn$run = fn(cur).run(ctx);
+          var _fn$run = fn(cur).run(ctx);
 
-            var _fn$run2 = _slicedToArray(_fn$run, 2);
+          var val = _fn$run[0];
+          var valErrs = _fn$run[1];
 
-            var val = _fn$run2[0];
-            var valErrs = _fn$run2[1];
-
-            return [val, [].concat(_toConsumableArray(curErrs), _toConsumableArray(valErrs))];
-          });
-        }
-      }]);
+          return [val, [].concat(curErrs, valErrs)];
+        });
+      };
 
       return ReadWrite;
     }();
@@ -2810,12 +2658,9 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         this.opts = opts;
       }
 
-      _createClass(FTLBase, [{
-        key: 'valueOf',
-        value: function valueOf() {
-          return this.value;
-        }
-      }]);
+      FTLBase.prototype.valueOf = function valueOf() {
+        return this.value;
+      };
 
       return FTLBase;
     }();
@@ -2826,15 +2671,12 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function FTLNone() {
         _classCallCheck(this, FTLNone);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(FTLNone).apply(this, arguments));
+        return _possibleConstructorReturn(this, _FTLBase.apply(this, arguments));
       }
 
-      _createClass(FTLNone, [{
-        key: 'toString',
-        value: function toString() {
-          return this.value || '???';
-        }
-      }]);
+      FTLNone.prototype.toString = function toString() {
+        return this.value || '???';
+      };
 
       return FTLNone;
     }(FTLBase);
@@ -2845,16 +2687,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function FTLNumber(value, opts) {
         _classCallCheck(this, FTLNumber);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(FTLNumber).call(this, parseFloat(value), opts));
+        return _possibleConstructorReturn(this, _FTLBase2.call(this, parseFloat(value), opts));
       }
 
-      _createClass(FTLNumber, [{
-        key: 'toString',
-        value: function toString(ctx) {
-          var nf = ctx._memoizeIntlObject(Intl.NumberFormat, this.opts);
-          return nf.format(this.value);
-        }
-      }]);
+      FTLNumber.prototype.toString = function toString(ctx) {
+        var nf = ctx._memoizeIntlObject(Intl.NumberFormat, this.opts);
+        return nf.format(this.value);
+      };
 
       return FTLNumber;
     }(FTLBase);
@@ -2865,16 +2704,13 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function FTLDateTime(value, opts) {
         _classCallCheck(this, FTLDateTime);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(FTLDateTime).call(this, new Date(value), opts));
+        return _possibleConstructorReturn(this, _FTLBase3.call(this, new Date(value), opts));
       }
 
-      _createClass(FTLDateTime, [{
-        key: 'toString',
-        value: function toString(ctx) {
-          var dtf = ctx._memoizeIntlObject(Intl.DateTimeFormat, this.opts);
-          return dtf.format(this.value);
-        }
-      }]);
+      FTLDateTime.prototype.toString = function toString(ctx) {
+        var dtf = ctx._memoizeIntlObject(Intl.DateTimeFormat, this.opts);
+        return dtf.format(this.value);
+      };
 
       return FTLDateTime;
     }(FTLBase);
@@ -2885,39 +2721,35 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function FTLKeyword() {
         _classCallCheck(this, FTLKeyword);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(FTLKeyword).apply(this, arguments));
+        return _possibleConstructorReturn(this, _FTLBase4.apply(this, arguments));
       }
 
-      _createClass(FTLKeyword, [{
-        key: 'toString',
-        value: function toString() {
-          var _value = this.value;
-          var name = _value.name;
-          var namespace = _value.namespace;
+      FTLKeyword.prototype.toString = function toString() {
+        var _value = this.value;
+        var name = _value.name;
+        var namespace = _value.namespace;
 
-          return namespace ? namespace + ':' + name : name;
-        }
-      }, {
-        key: 'match',
-        value: function match(ctx, other) {
-          var _value2 = this.value;
-          var name = _value2.name;
-          var namespace = _value2.namespace;
+        return namespace ? namespace + ':' + name : name;
+      };
 
-          if (other instanceof FTLKeyword) {
-            return name === other.value.name && namespace === other.value.namespace;
-          } else if (namespace) {
-            return false;
-          } else if (typeof other === 'string') {
-            return name === other;
-          } else if (other instanceof FTLNumber) {
-            var pr = ctx._memoizeIntlObject(Intl.PluralRules, other.opts);
-            return name === pr.select(other.valueOf());
-          } else {
-            return false;
-          }
+      FTLKeyword.prototype.match = function match(ctx, other) {
+        var _value2 = this.value;
+        var name = _value2.name;
+        var namespace = _value2.namespace;
+
+        if (other instanceof FTLKeyword) {
+          return name === other.value.name && namespace === other.value.namespace;
+        } else if (namespace) {
+          return false;
+        } else if (typeof other === 'string') {
+          return name === other;
+        } else if (other instanceof FTLNumber) {
+          var pr = ctx._memoizeIntlObject(Intl.PluralRules, other.opts);
+          return name === pr.select(other.valueOf());
+        } else {
+          return false;
         }
-      }]);
+      };
 
       return FTLKeyword;
     }(FTLBase);
@@ -2928,20 +2760,17 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function FTLList() {
         _classCallCheck(this, FTLList);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(FTLList).apply(this, arguments));
+        return _possibleConstructorReturn(this, _Array.apply(this, arguments));
       }
 
-      _createClass(FTLList, [{
-        key: 'toString',
-        value: function toString(ctx) {
-          var lf = ctx._memoizeIntlObject(Intl.ListFormat // XXX add this.opts
-          );
-          var elems = this.map(function (elem) {
-            return elem.toString(ctx);
-          });
-          return lf.format(elems);
-        }
-      }]);
+      FTLList.prototype.toString = function toString(ctx) {
+        var lf = ctx._memoizeIntlObject(Intl.ListFormat // XXX add this.opts
+        );
+        var elems = this.map(function (elem) {
+          return elem.toString(ctx);
+        });
+        return lf.format(elems);
+      };
 
       return FTLList;
     }(Array);
@@ -2952,44 +2781,32 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
     var builtins = {
       'NUMBER': function NUMBER(_ref, opts) {
-        var _ref2 = _slicedToArray(_ref, 1);
-
+        var arg = _ref[0];
+        return new FTLNumber(arg.valueOf(), merge(arg.opts, opts));
+      },
+      'PLURAL': function PLURAL(_ref2, opts) {
         var arg = _ref2[0];
         return new FTLNumber(arg.valueOf(), merge(arg.opts, opts));
       },
-      'PLURAL': function PLURAL(_ref3, opts) {
-        var _ref4 = _slicedToArray(_ref3, 1);
-
-        var arg = _ref4[0];
-        return new FTLNumber(arg.valueOf(), merge(arg.opts, opts));
-      },
-      'DATETIME': function DATETIME(_ref5, opts) {
-        var _ref6 = _slicedToArray(_ref5, 1);
-
-        var arg = _ref6[0];
+      'DATETIME': function DATETIME(_ref3, opts) {
+        var arg = _ref3[0];
         return new FTLDateTime(arg.valueOf(), merge(arg.opts, opts));
       },
       'LIST': function LIST(args) {
         return FTLList.from(args);
       },
-      'LEN': function LEN(_ref7) {
-        var _ref8 = _slicedToArray(_ref7, 1);
-
-        var arg = _ref8[0];
+      'LEN': function LEN(_ref4) {
+        var arg = _ref4[0];
         return new FTLNumber(arg.valueOf().length);
       },
-      'TAKE': function TAKE(_ref9) {
-        var _ref10 = _slicedToArray(_ref9, 2);
-
-        var num = _ref10[0];
-        var arg = _ref10[1];
+      'TAKE': function TAKE(_ref5) {
+        var num = _ref5[0];
+        var arg = _ref5[1];
         return FTLList.from(arg.valueOf().slice(0, num.value));
       },
-      'DROP': function DROP(_ref11) {
-        var _ref12 = _slicedToArray(_ref11, 2);
-
-        var num = _ref12[0];
-        var arg = _ref12[1];
+      'DROP': function DROP(_ref6) {
+        var num = _ref6[0];
+        var arg = _ref6[1];
         return FTLList.from(arg.valueOf().slice(num.value));
       }
     };
@@ -3019,54 +2836,46 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         this.intls = new WeakMap();
       }
 
-      _createClass(MessageContext, [{
-        key: 'addMessages',
-        value: function addMessages(source) {
-          var _FTLRuntimeParser$par = FTLRuntimeParser.parseResource(source);
+      MessageContext.prototype.addMessages = function addMessages(source) {
+        var _FTLRuntimeParser$par = FTLRuntimeParser.parseResource(source);
 
-          var _FTLRuntimeParser$par2 = _slicedToArray(_FTLRuntimeParser$par, 2);
+        var entries = _FTLRuntimeParser$par[0];
+        var errors = _FTLRuntimeParser$par[1];
 
-          var entries = _FTLRuntimeParser$par2[0];
-          var errors = _FTLRuntimeParser$par2[1];
-
-          for (var id in entries) {
-            this.messages.set(id, entries[id]);
-          }
-
-          return errors;
+        for (var id in entries) {
+          this.messages.set(id, entries[id]);
         }
 
-        // format `entity` to a string or null
+        return errors;
+      };
 
-      }, {
-        key: 'formatToPrimitive',
-        value: function formatToPrimitive(entity, args) {
-          var result = _format(this, args, entity, optsPrimitive);
-          return result[0] instanceof FTLNone ? [null, result[1]] : result;
+      // format `entity` to a string or null
+
+
+      MessageContext.prototype.formatToPrimitive = function formatToPrimitive(entity, args) {
+        var result = _format(this, args, entity, optsPrimitive);
+        return result[0] instanceof FTLNone ? [null, result[1]] : result;
+      };
+
+      // format `entity` to a string
+
+
+      MessageContext.prototype.format = function format(entity, args) {
+        var result = _format(this, args, entity);
+        return [result[0].toString(), result[1]];
+      };
+
+      MessageContext.prototype._memoizeIntlObject = function _memoizeIntlObject(ctor, opts) {
+        var cache = this.intls.get(ctor) || {};
+        var id = JSON.stringify(opts);
+
+        if (!cache[id]) {
+          cache[id] = new ctor(this.lang, opts);
+          this.intls.set(ctor, cache);
         }
 
-        // format `entity` to a string
-
-      }, {
-        key: 'format',
-        value: function format(entity, args) {
-          var result = _format(this, args, entity);
-          return [result[0].toString(), result[1]];
-        }
-      }, {
-        key: '_memoizeIntlObject',
-        value: function _memoizeIntlObject(ctor, opts) {
-          var cache = this.intls.get(ctor) || {};
-          var id = JSON.stringify(opts);
-
-          if (!cache[id]) {
-            cache[id] = new ctor(this.lang, opts);
-            this.intls.set(ctor, cache);
-          }
-
-          return cache[id];
-        }
-      }]);
+        return cache[id];
+      };
 
       return MessageContext;
     }();
@@ -3121,409 +2930,357 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       attributeFilter: ['data-l10n-id', 'data-l10n-args', 'data-l10n-bundle']
     };
 
-    var LocalizationObserver = function (_Map) {
-      _inherits(LocalizationObserver, _Map);
-
+    var LocalizationObserver = function () {
       function LocalizationObserver() {
+        var _this8 = this;
+
         _classCallCheck(this, LocalizationObserver);
 
-        var _this8 = _possibleConstructorReturn(this, Object.getPrototypeOf(LocalizationObserver).call(this));
-
-        _this8.rootsByLocalization = new WeakMap();
-        _this8.localizationsByRoot = new WeakMap();
-        _this8.observer = new MutationObserver(function (mutations) {
+        this.localizations = new Map();
+        this.rootsByLocalization = new WeakMap();
+        this.localizationsByRoot = new WeakMap();
+        this.observer = new MutationObserver(function (mutations) {
           return _this8.translateMutations(mutations);
         });
-        return _this8;
       }
 
-      _createClass(LocalizationObserver, [{
-        key: 'handleEvent',
-        value: function handleEvent() {
-          return this.requestLanguages();
-        }
-      }, {
-        key: 'requestLanguages',
-        value: function requestLanguages(requestedLangs) {
-          var _this9 = this;
+      LocalizationObserver.prototype.has = function has(name) {
+        return this.localizations.has(name);
+      };
 
-          var localizations = Array.from(this.values());
-          return Promise.all(localizations.map(function (l10n) {
-            return l10n.requestLanguages(requestedLangs);
-          })).then(function () {
-            return _this9.translateAllRoots();
+      LocalizationObserver.prototype.get = function get(name) {
+        return this.localizations.get(name);
+      };
+
+      LocalizationObserver.prototype.set = function set(name, value) {
+        return this.localizations.set(name, value);
+      };
+
+      LocalizationObserver.prototype[Symbol.iterator] = regeneratorRuntime.mark(function _callee() {
+        return regeneratorRuntime.wrap(function _callee$(_context13) {
+          while (1) {
+            switch (_context13.prev = _context13.next) {
+              case 0:
+                return _context13.delegateYield(this.localizations, 't0', 1);
+
+              case 1:
+              case 'end':
+                return _context13.stop();
+            }
+          }
+        }, _callee, this);
+      });
+
+      LocalizationObserver.prototype.handleEvent = function handleEvent() {
+        return this.requestLanguages();
+      };
+
+      LocalizationObserver.prototype.requestLanguages = function requestLanguages(requestedLangs) {
+        var _this9 = this;
+
+        var localizations = Array.from(this.localizations.values());
+        return Promise.all(localizations.map(function (l10n) {
+          return l10n.requestLanguages(requestedLangs);
+        })).then(function () {
+          return _this9.translateAllRoots();
+        });
+      };
+
+      LocalizationObserver.prototype.setAttributes = function setAttributes(element, id, args) {
+        element.setAttribute('data-l10n-id', id);
+        if (args) {
+          element.setAttribute('data-l10n-args', JSON.stringify(args));
+        }
+        return element;
+      };
+
+      LocalizationObserver.prototype.getAttributes = function getAttributes(element) {
+        return {
+          id: element.getAttribute('data-l10n-id'),
+          args: JSON.parse(element.getAttribute('data-l10n-args'))
+        };
+      };
+
+      LocalizationObserver.prototype.observeRoot = function observeRoot(root) {
+        var l10n = arguments.length <= 1 || arguments[1] === undefined ? this.get('main') : arguments[1];
+
+        this.localizationsByRoot.set(root, l10n);
+        if (!this.rootsByLocalization.has(l10n)) {
+          this.rootsByLocalization.set(l10n, new Set());
+        }
+        this.rootsByLocalization.get(l10n).add(root);
+        this.observer.observe(root, observerConfig);
+      };
+
+      LocalizationObserver.prototype.disconnectRoot = function disconnectRoot(root) {
+        this.pause();
+        this.localizationsByRoot.delete(root);
+        for (var _iterator8 = this.localizations, _isArray8 = Array.isArray(_iterator8), _i8 = 0, _iterator8 = _isArray8 ? _iterator8 : _iterator8[Symbol.iterator]();;) {
+          var _ref27;
+
+          if (_isArray8) {
+            if (_i8 >= _iterator8.length) break;
+            _ref27 = _iterator8[_i8++];
+          } else {
+            _i8 = _iterator8.next();
+            if (_i8.done) break;
+            _ref27 = _i8.value;
+          }
+
+          var _ref28 = _ref27;
+          var name = _ref28[0];
+          var l10n = _ref28[1];
+
+          var roots = this.rootsByLocalization.get(l10n);
+          if (roots && roots.has(root)) {
+            roots.delete(root);
+            if (roots.size === 0) {
+              this.delete(name);
+              this.rootsByLocalization.delete(l10n);
+            }
+          }
+        }
+        this.resume();
+      };
+
+      LocalizationObserver.prototype.pause = function pause() {
+        this.observer.disconnect();
+      };
+
+      LocalizationObserver.prototype.resume = function resume() {
+        for (var _iterator9 = this.localizations.values(), _isArray9 = Array.isArray(_iterator9), _i9 = 0, _iterator9 = _isArray9 ? _iterator9 : _iterator9[Symbol.iterator]();;) {
+          var _ref29;
+
+          if (_isArray9) {
+            if (_i9 >= _iterator9.length) break;
+            _ref29 = _iterator9[_i9++];
+          } else {
+            _i9 = _iterator9.next();
+            if (_i9.done) break;
+            _ref29 = _i9.value;
+          }
+
+          var l10n = _ref29;
+
+          if (this.rootsByLocalization.has(l10n)) {
+            for (var _iterator10 = this.rootsByLocalization.get(l10n), _isArray10 = Array.isArray(_iterator10), _i10 = 0, _iterator10 = _isArray10 ? _iterator10 : _iterator10[Symbol.iterator]();;) {
+              var _ref30;
+
+              if (_isArray10) {
+                if (_i10 >= _iterator10.length) break;
+                _ref30 = _iterator10[_i10++];
+              } else {
+                _i10 = _iterator10.next();
+                if (_i10.done) break;
+                _ref30 = _i10.value;
+              }
+
+              var root = _ref30;
+
+              this.observer.observe(root, observerConfig);
+            }
+          }
+        }
+      };
+
+      LocalizationObserver.prototype.translateAllRoots = function translateAllRoots() {
+        var _this10 = this;
+
+        var localizations = Array.from(this.localizations.values());
+        return Promise.all(localizations.map(function (l10n) {
+          return _this10.translateRoots(l10n);
+        }));
+      };
+
+      LocalizationObserver.prototype.translateRoots = function translateRoots(l10n) {
+        var _this11 = this;
+
+        if (!this.rootsByLocalization.has(l10n)) {
+          return Promise.resolve();
+        }
+
+        var roots = Array.from(this.rootsByLocalization.get(l10n));
+        return Promise.all(roots.map(function (root) {
+          return _this11.translateRoot(root, l10n);
+        }));
+      };
+
+      LocalizationObserver.prototype.translateRoot = function translateRoot(root) {
+        var _this12 = this;
+
+        var l10n = arguments.length <= 1 || arguments[1] === undefined ? this.localizationsByRoot.get(root) : arguments[1];
+
+        return l10n.interactive.then(function (bundles) {
+          var langs = bundles.map(function (bundle) {
+            return bundle.lang;
           });
-        }
-      }, {
-        key: 'setAttributes',
-        value: function setAttributes(element, id, args) {
-          element.setAttribute('data-l10n-id', id);
-          if (args) {
-            element.setAttribute('data-l10n-args', JSON.stringify(args));
+
+          function setLangs() {
+            var wasLocalizedBefore = root.hasAttribute('langs');
+
+            root.setAttribute('langs', langs.join(' '));
+            root.setAttribute('lang', langs[0]);
+            root.setAttribute('dir', getDirection(langs[0]));
+
+            if (wasLocalizedBefore) {
+              root.dispatchEvent(new CustomEvent('DOMRetranslated', {
+                bubbles: false,
+                cancelable: false
+              }));
+            }
           }
-          return element;
-        }
-      }, {
-        key: 'getAttributes',
-        value: function getAttributes(element) {
-          return {
-            id: element.getAttribute('data-l10n-id'),
-            args: JSON.parse(element.getAttribute('data-l10n-args'))
-          };
-        }
-      }, {
-        key: 'observeRoot',
-        value: function observeRoot(root) {
-          var l10n = arguments.length <= 1 || arguments[1] === undefined ? this.get('main') : arguments[1];
 
-          this.localizationsByRoot.set(root, l10n);
-          if (!this.rootsByLocalization.has(l10n)) {
-            this.rootsByLocalization.set(l10n, new Set());
+          return _this12.translateRootContent(root).then(setLangs);
+        });
+      };
+
+      LocalizationObserver.prototype.translateMutations = function translateMutations(mutations) {
+        var targets = new Set();
+
+        for (var _iterator11 = mutations, _isArray11 = Array.isArray(_iterator11), _i11 = 0, _iterator11 = _isArray11 ? _iterator11 : _iterator11[Symbol.iterator]();;) {
+          var _ref31;
+
+          if (_isArray11) {
+            if (_i11 >= _iterator11.length) break;
+            _ref31 = _iterator11[_i11++];
+          } else {
+            _i11 = _iterator11.next();
+            if (_i11.done) break;
+            _ref31 = _i11.value;
           }
-          this.rootsByLocalization.get(l10n).add(root);
-          this.observer.observe(root, observerConfig);
-        }
-      }, {
-        key: 'disconnectRoot',
-        value: function disconnectRoot(root) {
-          this.pause();
-          this.localizationsByRoot.delete(root);
-          var _iteratorNormalCompletion8 = true;
-          var _didIteratorError8 = false;
-          var _iteratorError8 = undefined;
 
-          try {
-            for (var _iterator8 = this[Symbol.iterator](), _step8; !(_iteratorNormalCompletion8 = (_step8 = _iterator8.next()).done); _iteratorNormalCompletion8 = true) {
-              var _step8$value = _slicedToArray(_step8.value, 2);
+          var mutation = _ref31;
 
-              var name = _step8$value[0];
-              var l10n = _step8$value[1];
+          switch (mutation.type) {
+            case 'attributes':
+              targets.add(mutation.target);
+              break;
+            case 'childList':
+              for (var _iterator12 = mutation.addedNodes, _isArray12 = Array.isArray(_iterator12), _i12 = 0, _iterator12 = _isArray12 ? _iterator12 : _iterator12[Symbol.iterator]();;) {
+                var _ref32;
 
-              var roots = this.rootsByLocalization.get(l10n);
-              if (roots && roots.has(root)) {
-                roots.delete(root);
-                if (roots.size === 0) {
-                  this.delete(name);
-                  this.rootsByLocalization.delete(l10n);
+                if (_isArray12) {
+                  if (_i12 >= _iterator12.length) break;
+                  _ref32 = _iterator12[_i12++];
+                } else {
+                  _i12 = _iterator12.next();
+                  if (_i12.done) break;
+                  _ref32 = _i12.value;
+                }
+
+                var addedNode = _ref32;
+
+                if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
+                  if (addedNode.childElementCount) {
+                    this.getTranslatables(addedNode).forEach(targets.add.bind(targets));
+                  } else {
+                    if (addedNode.hasAttribute('data-l10n-id')) {
+                      targets.add(addedNode);
+                    }
+                  }
                 }
               }
-            }
-          } catch (err) {
-            _didIteratorError8 = true;
-            _iteratorError8 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion8 && _iterator8.return) {
-                _iterator8.return();
-              }
-            } finally {
-              if (_didIteratorError8) {
-                throw _iteratorError8;
-              }
-            }
-          }
-
-          this.resume();
-        }
-      }, {
-        key: 'pause',
-        value: function pause() {
-          this.observer.disconnect();
-        }
-      }, {
-        key: 'resume',
-        value: function resume() {
-          var _iteratorNormalCompletion9 = true;
-          var _didIteratorError9 = false;
-          var _iteratorError9 = undefined;
-
-          try {
-            for (var _iterator9 = this.values()[Symbol.iterator](), _step9; !(_iteratorNormalCompletion9 = (_step9 = _iterator9.next()).done); _iteratorNormalCompletion9 = true) {
-              var l10n = _step9.value;
-
-              if (this.rootsByLocalization.has(l10n)) {
-                var _iteratorNormalCompletion10 = true;
-                var _didIteratorError10 = false;
-                var _iteratorError10 = undefined;
-
-                try {
-                  for (var _iterator10 = this.rootsByLocalization.get(l10n)[Symbol.iterator](), _step10; !(_iteratorNormalCompletion10 = (_step10 = _iterator10.next()).done); _iteratorNormalCompletion10 = true) {
-                    var root = _step10.value;
-
-                    this.observer.observe(root, observerConfig);
-                  }
-                } catch (err) {
-                  _didIteratorError10 = true;
-                  _iteratorError10 = err;
-                } finally {
-                  try {
-                    if (!_iteratorNormalCompletion10 && _iterator10.return) {
-                      _iterator10.return();
-                    }
-                  } finally {
-                    if (_didIteratorError10) {
-                      throw _iteratorError10;
-                    }
-                  }
-                }
-              }
-            }
-          } catch (err) {
-            _didIteratorError9 = true;
-            _iteratorError9 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion9 && _iterator9.return) {
-                _iterator9.return();
-              }
-            } finally {
-              if (_didIteratorError9) {
-                throw _iteratorError9;
-              }
-            }
+              break;
           }
         }
-      }, {
-        key: 'translateAllRoots',
-        value: function translateAllRoots() {
-          var _this10 = this;
 
-          var localizations = Array.from(this.values());
-          return Promise.all(localizations.map(function (l10n) {
-            return _this10.translateRoots(l10n);
-          }));
+        if (targets.size === 0) {
+          return;
         }
-      }, {
-        key: 'translateRoots',
-        value: function translateRoots(l10n) {
-          var _this11 = this;
 
-          if (!this.rootsByLocalization.has(l10n)) {
-            return Promise.resolve();
+        this.translateElements(Array.from(targets));
+      };
+
+      LocalizationObserver.prototype.translateFragment = function translateFragment(frag) {
+        return this.translateElements(this.getTranslatables(frag));
+      };
+
+      LocalizationObserver.prototype.translateElements = function translateElements(elements) {
+        var _this13 = this;
+
+        var elemsByL10n = this.groupElementsByLocalization(elements);
+        return this.getElementsTranslation(elemsByL10n).then(function (translations) {
+          return _this13.applyTranslations(elemsByL10n, translations);
+        });
+      };
+
+      LocalizationObserver.prototype.applyTranslations = function applyTranslations(elemsByL10n, translationsByL10n) {
+        this.pause();
+        for (var _iterator13 = elemsByL10n, _isArray13 = Array.isArray(_iterator13), _i13 = 0, _iterator13 = _isArray13 ? _iterator13 : _iterator13[Symbol.iterator]();;) {
+          var _ref33;
+
+          if (_isArray13) {
+            if (_i13 >= _iterator13.length) break;
+            _ref33 = _iterator13[_i13++];
+          } else {
+            _i13 = _iterator13.next();
+            if (_i13.done) break;
+            _ref33 = _i13.value;
           }
 
-          var roots = Array.from(this.rootsByLocalization.get(l10n));
-          return Promise.all(roots.map(function (root) {
-            return _this11.translateRoot(root, l10n);
-          }));
-        }
-      }, {
-        key: 'translateRoot',
-        value: function translateRoot(root) {
-          var _this12 = this;
+          var _ref34 = _ref33;
+          var l10n = _ref34[0];
+          var elems = _ref34[1];
 
-          var l10n = arguments.length <= 1 || arguments[1] === undefined ? this.localizationsByRoot.get(root) : arguments[1];
-
-          return l10n.interactive.then(function (bundles) {
-            var langs = bundles.map(function (bundle) {
-              return bundle.lang;
-            });
-
-            function setLangs() {
-              var wasLocalizedBefore = root.hasAttribute('langs');
-
-              root.setAttribute('langs', langs.join(' '));
-              root.setAttribute('lang', langs[0]);
-              root.setAttribute('dir', getDirection(langs[0]));
-
-              if (wasLocalizedBefore) {
-                root.dispatchEvent(new CustomEvent('DOMRetranslated', {
-                  bubbles: false,
-                  cancelable: false
-                }));
-              }
-            }
-
-            return _this12.translateRootContent(root).then(setLangs);
-          });
-        }
-      }, {
-        key: 'translateMutations',
-        value: function translateMutations(mutations) {
-          var targets = new Set();
-
-          var _iteratorNormalCompletion11 = true;
-          var _didIteratorError11 = false;
-          var _iteratorError11 = undefined;
-
-          try {
-            for (var _iterator11 = mutations[Symbol.iterator](), _step11; !(_iteratorNormalCompletion11 = (_step11 = _iterator11.next()).done); _iteratorNormalCompletion11 = true) {
-              var mutation = _step11.value;
-
-              switch (mutation.type) {
-                case 'attributes':
-                  targets.add(mutation.target);
-                  break;
-                case 'childList':
-                  var _iteratorNormalCompletion12 = true;
-                  var _didIteratorError12 = false;
-                  var _iteratorError12 = undefined;
-
-                  try {
-                    for (var _iterator12 = mutation.addedNodes[Symbol.iterator](), _step12; !(_iteratorNormalCompletion12 = (_step12 = _iterator12.next()).done); _iteratorNormalCompletion12 = true) {
-                      var addedNode = _step12.value;
-
-                      if (addedNode.nodeType === addedNode.ELEMENT_NODE) {
-                        if (addedNode.childElementCount) {
-                          this.getTranslatables(addedNode).forEach(targets.add.bind(targets));
-                        } else {
-                          if (addedNode.hasAttribute('data-l10n-id')) {
-                            targets.add(addedNode);
-                          }
-                        }
-                      }
-                    }
-                  } catch (err) {
-                    _didIteratorError12 = true;
-                    _iteratorError12 = err;
-                  } finally {
-                    try {
-                      if (!_iteratorNormalCompletion12 && _iterator12.return) {
-                        _iterator12.return();
-                      }
-                    } finally {
-                      if (_didIteratorError12) {
-                        throw _iteratorError12;
-                      }
-                    }
-                  }
-
-                  break;
-              }
-            }
-          } catch (err) {
-            _didIteratorError11 = true;
-            _iteratorError11 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion11 && _iterator11.return) {
-                _iterator11.return();
-              }
-            } finally {
-              if (_didIteratorError11) {
-                throw _iteratorError11;
-              }
-            }
+          var translations = translationsByL10n.get(l10n);
+          for (var i = 0; i < elems.length; i++) {
+            l10n.overlayElement(elems[i], translations[i]);
           }
-
-          if (targets.size === 0) {
-            return;
-          }
-
-          this.translateElements(Array.from(targets));
         }
-      }, {
-        key: 'translateFragment',
-        value: function translateFragment(frag) {
-          return this.translateElements(this.getTranslatables(frag));
+        this.resume();
+      };
+
+      LocalizationObserver.prototype.groupElementsByLocalization = function groupElementsByLocalization(elements) {
+        var _this14 = this;
+
+        return Array.from(elements).reduce(function (seq, elem) {
+          var l10n = _this14.getLocalizationForElement(elem);
+          var group = (seq.get(l10n) || []).concat(elem);
+          return seq.set(l10n, group);
+        }, new Map());
+      };
+
+      LocalizationObserver.prototype.getTranslatables = function getTranslatables(element) {
+        var nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
+
+        if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
+          nodes.push(element);
         }
-      }, {
-        key: 'translateElements',
-        value: function translateElements(elements) {
-          var _this13 = this;
 
-          var elemsByL10n = this.groupElementsByLocalization(elements);
-          return this.getElementsTranslation(elemsByL10n).then(function (translations) {
-            return _this13.applyTranslations(elemsByL10n, translations);
-          });
-        }
-      }, {
-        key: 'applyTranslations',
-        value: function applyTranslations(elemsByL10n, translationsByL10n) {
-          this.pause();
-          var _iteratorNormalCompletion13 = true;
-          var _didIteratorError13 = false;
-          var _iteratorError13 = undefined;
+        return nodes;
+      };
 
-          try {
-            for (var _iterator13 = elemsByL10n[Symbol.iterator](), _step13; !(_iteratorNormalCompletion13 = (_step13 = _iterator13.next()).done); _iteratorNormalCompletion13 = true) {
-              var _step13$value = _slicedToArray(_step13.value, 2);
+      LocalizationObserver.prototype.getLocalizationForElement = function getLocalizationForElement(elem) {
+        return this.get(elem.getAttribute('data-l10n-bundle') || 'main');
+      };
 
-              var l10n = _step13$value[0];
-              var elems = _step13$value[1];
+      LocalizationObserver.prototype.getKeysForElements = function getKeysForElements(elems) {
+        return elems.map(function (elem) {
+          var id = elem.getAttribute('data-l10n-id');
+          var args = elem.getAttribute('data-l10n-args');
 
-              var translations = translationsByL10n.get(l10n);
-              for (var i = 0; i < elems.length; i++) {
-                l10n.overlayElement(elems[i], translations[i]);
-              }
-            }
-          } catch (err) {
-            _didIteratorError13 = true;
-            _iteratorError13 = err;
-          } finally {
-            try {
-              if (!_iteratorNormalCompletion13 && _iterator13.return) {
-                _iterator13.return();
-              }
-            } finally {
-              if (_didIteratorError13) {
-                throw _iteratorError13;
-              }
-            }
-          }
+          return args ? [id, JSON.parse(args.replace(reHtml, function (match) {
+            return htmlEntities[match];
+          }))] : id;
+        });
+      };
 
-          this.resume();
-        }
-      }, {
-        key: 'groupElementsByLocalization',
-        value: function groupElementsByLocalization(elements) {
-          var _this14 = this;
+      LocalizationObserver.prototype.getElementsTranslation = function getElementsTranslation(elemsByL10n) {
+        var _this15 = this;
 
-          return Array.from(elements).reduce(function (seq, elem) {
-            var l10n = _this14.getLocalizationForElement(elem);
-            var group = (seq.get(l10n) || []).concat(elem);
-            return seq.set(l10n, group);
+        return Promise.all(Array.from(elemsByL10n).map(function (_ref35) {
+          var l10n = _ref35[0];
+          var elems = _ref35[1];
+          return l10n.formatEntities(_this15.getKeysForElements(elems));
+        })).then(function (translationsList) {
+          return Array.from(elemsByL10n.keys()).reduce(function (seq, cur, idx) {
+            return seq.set(cur, translationsList[idx]);
           }, new Map());
-        }
-      }, {
-        key: 'getTranslatables',
-        value: function getTranslatables(element) {
-          var nodes = Array.from(element.querySelectorAll('[data-l10n-id]'));
-
-          if (typeof element.hasAttribute === 'function' && element.hasAttribute('data-l10n-id')) {
-            nodes.push(element);
-          }
-
-          return nodes;
-        }
-      }, {
-        key: 'getLocalizationForElement',
-        value: function getLocalizationForElement(elem) {
-          return this.get(elem.getAttribute('data-l10n-bundle') || 'main');
-        }
-      }, {
-        key: 'getKeysForElements',
-        value: function getKeysForElements(elems) {
-          return elems.map(function (elem) {
-            var id = elem.getAttribute('data-l10n-id');
-            var args = elem.getAttribute('data-l10n-args');
-
-            return args ? [id, JSON.parse(args.replace(reHtml, function (match) {
-              return htmlEntities[match];
-            }))] : id;
-          });
-        }
-      }, {
-        key: 'getElementsTranslation',
-        value: function getElementsTranslation(elemsByL10n) {
-          var _this15 = this;
-
-          return Promise.all(Array.from(elemsByL10n).map(function (_ref26) {
-            var _ref27 = _slicedToArray(_ref26, 2);
-
-            var l10n = _ref27[0];
-            var elems = _ref27[1];
-            return l10n.formatEntities(_this15.getKeysForElements(elems));
-          })).then(function (translationsList) {
-            return Array.from(elemsByL10n.keys()).reduce(function (seq, cur, idx) {
-              return seq.set(cur, translationsList[idx]);
-            }, new Map());
-          });
-        }
-      }]);
+        });
+      };
 
       return LocalizationObserver;
-    }(Map);
+    }();
 
     var ContentLocalizationObserver = function (_LocalizationObserver) {
       _inherits(ContentLocalizationObserver, _LocalizationObserver);
@@ -3531,15 +3288,12 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function ContentLocalizationObserver() {
         _classCallCheck(this, ContentLocalizationObserver);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(ContentLocalizationObserver).apply(this, arguments));
+        return _possibleConstructorReturn(this, _LocalizationObserver.apply(this, arguments));
       }
 
-      _createClass(ContentLocalizationObserver, [{
-        key: 'translateRootContent',
-        value: function translateRootContent(root) {
-          return this.translateFragment(root);
-        }
-      }]);
+      ContentLocalizationObserver.prototype.translateRootContent = function translateRootContent(root) {
+        return this.translateFragment(root);
+      };
 
       return ContentLocalizationObserver;
     }(LocalizationObserver);
@@ -3560,86 +3314,75 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         });
       }
 
-      _createClass(Localization, [{
-        key: 'requestLanguages',
-        value: function requestLanguages(requestedLangs) {
-          var _this18 = this;
+      Localization.prototype.requestLanguages = function requestLanguages(requestedLangs) {
+        var _this18 = this;
 
-          return this.interactive.then(function (bundles) {
-            return changeLanguages(_this18, bundles, requestedLangs);
+        return this.interactive.then(function (bundles) {
+          return changeLanguages(_this18, bundles, requestedLangs);
+        });
+      };
+
+      Localization.prototype.formatWithFallback = function formatWithFallback(bundles, keys, method, prev) {
+        var _this19 = this;
+
+        var ctx = contexts.get(bundles[0]);
+
+        if (!ctx) {
+          return prev.map(function (tuple) {
+            return tuple[0];
           });
         }
-      }, {
-        key: 'formatWithFallback',
-        value: function formatWithFallback(bundles, keys, method, prev) {
-          var _this19 = this;
 
-          var ctx = contexts.get(bundles[0]);
+        var _keysFromContext = keysFromContext(ctx, keys, method, prev);
 
-          if (!ctx) {
-            return prev.map(function (tuple) {
-              return tuple[0];
-            });
-          }
-
-          var _keysFromContext = keysFromContext(ctx, keys, method, prev);
-
-          var _keysFromContext2 = _slicedToArray(_keysFromContext, 2);
-
-          var translations = _keysFromContext2[0];
-          var errors = _keysFromContext2[1];
+        var translations = _keysFromContext[0];
+        var errors = _keysFromContext[1];
 
 
-          if (errors.length === 0) {
-            return translations.map(function (tuple) {
-              return tuple[0];
-            });
-          }
-
-          // XXX report/emit errors?
-          // errors.forEach(e => console.warn(e));
-
-          var _properties$get = properties.get(this);
-
-          var createContext = _properties$get.createContext;
-
-          return fetchFirstBundle(bundles.slice(1), createContext).then(function (bundles) {
-            return _this19.formatWithFallback(bundles, keys, method, translations);
+        if (errors.length === 0) {
+          return translations.map(function (tuple) {
+            return tuple[0];
           });
         }
-      }, {
-        key: 'formatEntities',
-        value: function formatEntities(keys) {
-          var _this20 = this;
 
-          return this.interactive.then(function (bundles) {
-            return _this20.formatWithFallback(bundles, keys, entityFromContext);
-          });
+        // XXX report/emit errors?
+        // errors.forEach(e => console.warn(e));
+
+        var _properties$get = properties.get(this);
+
+        var createContext = _properties$get.createContext;
+
+        return fetchFirstBundle(bundles.slice(1), createContext).then(function (bundles) {
+          return _this19.formatWithFallback(bundles, keys, method, translations);
+        });
+      };
+
+      Localization.prototype.formatEntities = function formatEntities(keys) {
+        var _this20 = this;
+
+        return this.interactive.then(function (bundles) {
+          return _this20.formatWithFallback(bundles, keys, entityFromContext);
+        });
+      };
+
+      Localization.prototype.formatValues = function formatValues() {
+        var _this21 = this;
+
+        for (var _len = arguments.length, keys = Array(_len), _key = 0; _key < _len; _key++) {
+          keys[_key] = arguments[_key];
         }
-      }, {
-        key: 'formatValues',
-        value: function formatValues() {
-          var _this21 = this;
 
-          for (var _len = arguments.length, keys = Array(_len), _key = 0; _key < _len; _key++) {
-            keys[_key] = arguments[_key];
-          }
+        return this.interactive.then(function (bundles) {
+          return _this21.formatWithFallback(bundles, keys, valueFromContext);
+        });
+      };
 
-          return this.interactive.then(function (bundles) {
-            return _this21.formatWithFallback(bundles, keys, valueFromContext);
-          });
-        }
-      }, {
-        key: 'formatValue',
-        value: function formatValue(id, args) {
-          return this.formatValues([id, args]).then(function (_ref30) {
-            var _ref31 = _slicedToArray(_ref30, 1);
-
-            var val = _ref31[0];
-            return val;
-          });
-        }
-      }]);
+      Localization.prototype.formatValue = function formatValue(id, args) {
+        return this.formatValues([id, args]).then(function (_ref38) {
+          var val = _ref38[0];
+          return val;
+        });
+      };
 
       return Localization;
     }();
@@ -3671,50 +3414,45 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
       function HTMLLocalization() {
         _classCallCheck(this, HTMLLocalization);
 
-        return _possibleConstructorReturn(this, Object.getPrototypeOf(HTMLLocalization).apply(this, arguments));
+        return _possibleConstructorReturn(this, _Localization.apply(this, arguments));
       }
 
-      _createClass(HTMLLocalization, [{
-        key: 'overlayElement',
-        value: function overlayElement(element, translation) {
-          return _overlayElement(this, element, translation);
-        }
+      HTMLLocalization.prototype.overlayElement = function overlayElement(element, translation) {
+        return _overlayElement(this, element, translation);
+      };
 
-        // XXX the allowed list should be amendable; https://bugzil.la/922573
+      // XXX the allowed list should be amendable; https://bugzil.la/922573
 
-      }, {
-        key: 'isElementAllowed',
-        value: function isElementAllowed(element) {
-          return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
+
+      HTMLLocalization.prototype.isElementAllowed = function isElementAllowed(element) {
+        return allowed.elements.indexOf(element.tagName.toLowerCase()) !== -1;
+      };
+
+      HTMLLocalization.prototype.isAttrAllowed = function isAttrAllowed(attr, element) {
+        var attrName = attr.name.toLowerCase();
+        var tagName = element.tagName.toLowerCase();
+        // is it a globally safe attribute?
+        if (allowed.attributes.global.indexOf(attrName) !== -1) {
+          return true;
         }
-      }, {
-        key: 'isAttrAllowed',
-        value: function isAttrAllowed(attr, element) {
-          var attrName = attr.name.toLowerCase();
-          var tagName = element.tagName.toLowerCase();
-          // is it a globally safe attribute?
-          if (allowed.attributes.global.indexOf(attrName) !== -1) {
-            return true;
-          }
-          // are there no allowed attributes for this element?
-          if (!allowed.attributes[tagName]) {
-            return false;
-          }
-          // is it allowed on this element?
-          // XXX the allowed list should be amendable; https://bugzil.la/922573
-          if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
-            return true;
-          }
-          // special case for value on inputs with type button, reset, submit
-          if (tagName === 'input' && attrName === 'value') {
-            var type = element.type.toLowerCase();
-            if (type === 'submit' || type === 'button' || type === 'reset') {
-              return true;
-            }
-          }
+        // are there no allowed attributes for this element?
+        if (!allowed.attributes[tagName]) {
           return false;
         }
-      }]);
+        // is it allowed on this element?
+        // XXX the allowed list should be amendable; https://bugzil.la/922573
+        if (allowed.attributes[tagName].indexOf(attrName) !== -1) {
+          return true;
+        }
+        // special case for value on inputs with type button, reset, submit
+        if (tagName === 'input' && attrName === 'value') {
+          var type = element.type.toLowerCase();
+          if (type === 'submit' || type === 'button' || type === 'reset') {
+            return true;
+          }
+        }
+        return false;
+      };
 
       return HTMLLocalization;
     }(Localization);
@@ -3730,20 +3468,17 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
         this.resIds = resIds;
       }
 
-      _createClass(ResourceBundle, [{
-        key: 'fetch',
-        value: function fetch() {
-          var _this23 = this;
+      ResourceBundle.prototype.fetch = function fetch() {
+        var _this23 = this;
 
-          if (!this.loaded) {
-            this.loaded = Promise.all(this.resIds.map(function (id) {
-              return fetchResource(id, _this23.lang);
-            }));
-          }
-
-          return this.loaded;
+        if (!this.loaded) {
+          this.loaded = Promise.all(this.resIds.map(function (id) {
+            return fetchResource(id, _this23.lang);
+          }));
         }
-      }]);
+
+        return this.loaded;
+      };
 
       return ResourceBundle;
     }();
@@ -3756,33 +3491,25 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 
       var defaultLang = _getMeta.defaultLang;
       var availableLangs = _getMeta.availableLangs;
-      var _iteratorNormalCompletion16 = true;
-      var _didIteratorError16 = false;
-      var _iteratorError16 = undefined;
 
-      try {
-        for (var _iterator16 = getResourceLinks(document.head)[Symbol.iterator](), _step16; !(_iteratorNormalCompletion16 = (_step16 = _iterator16.next()).done); _iteratorNormalCompletion16 = true) {
-          var _step16$value = _slicedToArray(_step16.value, 2);
+      for (var _iterator16 = getResourceLinks(document.head), _isArray16 = Array.isArray(_iterator16), _i16 = 0, _iterator16 = _isArray16 ? _iterator16 : _iterator16[Symbol.iterator]();;) {
+        var _ref42;
 
-          var name = _step16$value[0];
-          var resIds = _step16$value[1];
-
-          if (!document.l10n.has(name)) {
-            createLocalization(name, resIds, defaultLang, availableLangs);
-          }
+        if (_isArray16) {
+          if (_i16 >= _iterator16.length) break;
+          _ref42 = _iterator16[_i16++];
+        } else {
+          _i16 = _iterator16.next();
+          if (_i16.done) break;
+          _ref42 = _i16.value;
         }
-      } catch (err) {
-        _didIteratorError16 = true;
-        _iteratorError16 = err;
-      } finally {
-        try {
-          if (!_iteratorNormalCompletion16 && _iterator16.return) {
-            _iterator16.return();
-          }
-        } finally {
-          if (_didIteratorError16) {
-            throw _iteratorError16;
-          }
+
+        var _ref43 = _ref42;
+        var name = _ref43[0];
+        var resIds = _ref43[1];
+
+        if (!document.l10n.has(name)) {
+          createLocalization(name, resIds, defaultLang, availableLangs);
         }
       }
     });

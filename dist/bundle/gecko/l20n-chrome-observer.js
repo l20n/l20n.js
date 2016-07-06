@@ -21,9 +21,9 @@ const observerConfig = {
   attributeFilter: ['data-l10n-id', 'data-l10n-args', 'data-l10n-bundle']
 };
 
-class LocalizationObserver extends Map {
+class LocalizationObserver {
   constructor() {
-    super();
+    this.localizations = new Map();
     this.rootsByLocalization = new WeakMap();
     this.localizationsByRoot = new WeakMap();
     this.observer = new MutationObserver(
@@ -31,12 +31,28 @@ class LocalizationObserver extends Map {
     );
   }
 
+  has(name) {
+    return this.localizations.has(name);
+  }
+
+  get(name) {
+    return this.localizations.get(name);
+  }
+
+  set(name, value) {
+    return this.localizations.set(name, value);
+  }
+
+  *[Symbol.iterator]() {
+    yield* this.localizations;
+  }
+
   handleEvent() {
     return this.requestLanguages();
   }
 
   requestLanguages(requestedLangs) {
-    const localizations = Array.from(this.values());
+    const localizations = Array.from(this.localizations.values());
     return Promise.all(
       localizations.map(l10n => l10n.requestLanguages(requestedLangs))
     ).then(
@@ -71,7 +87,7 @@ class LocalizationObserver extends Map {
   disconnectRoot(root) {
     this.pause();
     this.localizationsByRoot.delete(root);
-    for (let [name, l10n] of this) {
+    for (let [name, l10n] of this.localizations) {
       const roots = this.rootsByLocalization.get(l10n);
       if (roots && roots.has(root)) {
         roots.delete(root);
@@ -89,7 +105,7 @@ class LocalizationObserver extends Map {
   }
 
   resume() {
-    for (let l10n of this.values()) {
+    for (let l10n of this.localizations.values()) {
       if (this.rootsByLocalization.has(l10n)) {
         for (let root of this.rootsByLocalization.get(l10n)) {
           this.observer.observe(root, observerConfig)
@@ -99,7 +115,7 @@ class LocalizationObserver extends Map {
   }
 
   translateAllRoots() {
-    const localizations = Array.from(this.values());
+    const localizations = Array.from(this.localizations.values());
     return Promise.all(
       localizations.map(
         l10n => this.translateRoots(l10n)
