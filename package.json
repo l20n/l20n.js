@@ -35,6 +35,7 @@
   "devDependencies": {
     "babel-cli": "^6.10.1",
     "babel-plugin-transform-es2015-modules-commonjs": "^6.7.7",
+    "babel-polyfill": "^6.9.1",
     "babel-preset-es2015": "^6.9.0",
     "babel-preset-es2015-loose": "^7.0.0",
     "babel-register": "^6.7.2",
@@ -47,7 +48,8 @@
     "karma-mocha": "^0.2.2",
     "mocha": "^2.4.5",
     "prettyjson": "^1.1.3",
-    "rollup": "^0.26.7"
+    "rollup": "^0.26.7",
+    "webcomponents.js": "^0.7.22"
   },
   "engine": {
     "node": ">=6"
