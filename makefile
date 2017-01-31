@@ -7,7 +7,7 @@ RUNTIMES := $(wildcard src/runtime/*)
 all: lint build
 
 build: $(RUNTIMES)
-	babel --presets es2015-loose --out-dir dist/compat/web dist/bundle/web
+	babel --presets es2015 --out-dir dist/compat/web dist/bundle/web
 
 $(RUNTIMES):
 	@$(MAKE) -s -C $@
