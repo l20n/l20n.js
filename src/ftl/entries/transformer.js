@@ -1,10 +1,13 @@
 function transformEntity(entity) {
   if (entity.traits.length === 0) {
-    return transformPattern(entity.value);
+    const val = transformPattern(entity.value);
+    return Array.isArray(val) ? { val } : val;
   }
 
+  const [traits, def] = transformMembers(entity.traits);
   const ret = {
-    traits: entity.traits.map(transformMember),
+    traits,
+    def
   };
 
   return entity.value !== null ?
@@ -52,10 +55,12 @@ function transformExpression(exp) {
         val: transformExpression(exp.value)
       };
     case 'SelectExpression':
+      const [vars, def] = transformMembers(exp.variants);
       return {
         type: 'sel',
         exp: transformExpression(exp.expression),
-        vars: exp.variants.map(transformMember)
+        vars,
+        def
       };
     case 'MemberExpression':
       return {
@@ -95,15 +100,20 @@ function transformPattern(pattern) {
   });
 }
 
+function transformMembers(members) {
+  let def = members.findIndex(member => member.default);
+  if (def === -1) {
+    def = undefined;
+  }
+  const traits = members.map(transformMember);
+  return [traits, def];
+}
+
 function transformMember(member) {
   const ret = {
     key: transformExpression(member.key),
     val: transformPattern(member.value),
   };
-
-  if (member.default) {
-    ret.def = true;
-  }
 
   return ret;
 }

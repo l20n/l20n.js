@@ -4,7 +4,8 @@ export OK := \033[32;01m✓\033[0m
 
 RUNTIMES := $(wildcard src/runtime/*)
 
-.PHONY: build $(RUNTIMES)
+all: lint build
+
 build: $(RUNTIMES)
 	babel --presets es2015-loose --out-dir dist/compat/web dist/bundle/web
 
@@ -17,16 +18,31 @@ clean:
 	@echo -e " $(OK) dist cleaned"
 
 lint:
-	eslint src/
+	@eslint --max-warnings 0 src/
+	@echo -e " $(OK) src/ linted"
 
 test-lib:
 	@mocha \
 	    --recursive \
 	    --reporter dot \
 	    --require ./test/compat \
-	    test/lib/parser/ftl
+	    test/lib/parser/ftl \
+	    test/lib/*_test.js \
+	    test/intl/**/*_test.js
 
 test-browser:
 	karma start test/karma.conf.js
+
+docs:
+	documentation build --shallow -f md \
+	    src/bindings/*.js > docs/bindings.md
+	documentation build --shallow -f md \
+	    src/lib/*.js > docs/localization.md
+	documentation build --shallow -f md \
+	    src/ftl/**/*.js > docs/parser.md
+	documentation build --shallow -f md \
+	    src/intl/*.js > docs/messagecontext.md
+
+.PHONY: $(RUNTIMES) docs
 
 include tools/perf/makefile

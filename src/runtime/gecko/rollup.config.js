@@ -1,6 +1,7 @@
 module.exports = {
-  intro: '{\n',
-  outro: '\n}',
+  banner: '{\n',
+  footer: '\n}\n',
   preferConst: true,
-  format: 'es6'
-}
+  format: 'es',
+  context: 'this'
+};

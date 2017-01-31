@@ -1,21 +1,21 @@
 // A document.ready shim
 // https://github.com/whatwg/html/issues/127
 export function documentReady() {
-  if (document.readyState !== 'loading') {
+  const rs = document.readyState;
+  if (rs === 'interactive' || rs === 'completed') {
     return Promise.resolve();
   }
 
-  return new Promise(resolve => {
-    document.addEventListener('readystatechange', function onrsc() {
-      document.removeEventListener('readystatechange', onrsc);
-      resolve();
-    });
-  });
+  return new Promise(
+    resolve => document.addEventListener(
+      'readystatechange', resolve, { once: true }
+    )
+  );
 }
 
-export function getResourceLinks(head) {
+export function getResourceLinks(elem) {
   return Array.prototype.map.call(
-    head.querySelectorAll('link[rel="localization"]'),
+    elem.querySelectorAll('link[rel="localization"]'),
     el => [el.getAttribute('href'), el.getAttribute('name') || 'main']
   ).reduce(
     (seq, [href, name]) => seq.set(name, (seq.get(name) || []).concat(href)),
@@ -34,7 +34,7 @@ export function getMeta(head) {
     'meta[name="defaultLanguage"],' +
     'meta[name="appVersion"]')
   );
-  for (let meta of metas) {
+  for (const meta of metas) {
     const name = meta.getAttribute('name');
     const content = meta.getAttribute('content').trim();
     switch (name) {

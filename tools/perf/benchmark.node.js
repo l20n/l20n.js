@@ -1,28 +1,9 @@
 var fs = require('fs');
 var L20n = require('../../dist/bundle/node/l20n');
 
-var ftlCode = fs.readFileSync(__dirname + '/example.ftl').toString();
+var ftlCode = fs.readFileSync(__dirname + '/workload-low.ftl').toString();
 
-var args = {
-  "brandShortName": "BRANDSHORTNAME",
-  "ssid": "SSID",
-  "capabilities": "CAPABILITIES",
-  "linkSpeed": "LINKSPEED",
-  "pin": "PIN",
-  "n": 3,
-  "name": "NAME",
-  "device": "DEVICE",
-  "code": "CODE",
-  "app": "APP",
-  "size": 100,
-  "unit": "UNIT",
-  "list": "LIST",
-  "level": "LEVEL",
-  "number": "NUMBER",
-  "link1": "LINK1",
-  "link2": "LINK2",
-  "count": 10,
-};
+var args = {};
 
 function micro(time) {
   // time is [seconds, nanoseconds]
@@ -41,11 +22,18 @@ var [entries] = L20n.FTLEntriesParser.parseResource(ftlCode);
 cumulative.ftlEntriesParseEnd = process.hrtime(start);
 
 var ctx = new Intl.MessageContext('en-US');
-ctx.addMessages(ftlCode);
+var errors = ctx.addMessages(ftlCode);
 
 cumulative.format = process.hrtime(start);
 for (let id of ctx.messages.keys()) {
-  ctx.format(ctx.messages.get(id), args);
+  const message = ctx.messages.get(id);
+
+  ctx.format(message, args, errors);
+  if (message.traits) {
+    for (let trait of message.traits) {
+      ctx.format(trait.val, args, errors)
+    }
+  }
 }
 cumulative.formatEnd = process.hrtime(start);
 

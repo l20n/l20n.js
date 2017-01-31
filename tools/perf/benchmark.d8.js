@@ -1,24 +1,7 @@
-load('../../dist/bundle/jsshell/l20n.js');
+load('../../dist/bundle/tooling/l20n.js');
 
-var ftlCode = read('./example.ftl');
-var args = {
-  "ssid": "SSID",
-  "capabilities": "CAPABILITIES",
-  "linkSpeed": "LINKSPEED",
-  "pin": "PIN",
-  "n": 3,
-  "name": "NAME",
-  "device": "DEVICE",
-  "code": "CODE",
-  "app": "APP",
-  "size": "SIZE",
-  "unit": "UNIT",
-  "list": "LIST",
-  "level": "LEVEL",
-  "number": "NUMBER",
-  "link1": "LINK1",
-  "link2": "LINK2"
-}
+var ftlCode = read('./workload-low.ftl');
+var args = {}
 
 function micro(time) {
   // time is in milliseconds
@@ -32,15 +15,22 @@ var [resource] = L20n.FTLASTParser.parseResource(ftlCode);
 times.ftlParseEnd = Date.now();
 
 times.ftlEntriesParseStart = Date.now();
-var [entries] = L20n.FTLEntriesParser.parse(null, ftlCode);
+var [entries] = L20n.FTLEntriesParser.parseResource(ftlCode);
 times.ftlEntriesParseEnd = Date.now();
 
 var ctx = new Intl.MessageContext('en-US');
-ctx.addMessages(ftlCode);
+var errors = ctx.addMessages(ftlCode);
 
 times.format = Date.now();
 for (let id of ctx.messages.keys()) {
-  ctx.format(ctx.messages.get(id), args);
+  const message = ctx.messages.get(id);
+
+  ctx.format(message, args, errors);
+  if (message.traits) {
+    for (let trait of message.traits) {
+      ctx.format(trait.val, args, errors)
+    }
+  }
 }
 times.formatEnd = Date.now();
 

@@ -1,5 +1,3 @@
-import { L10nError } from '../../lib/errors';
-
 const HTTP_STATUS_CODE_OK = 200;
 
 function load(url) {
@@ -15,13 +13,18 @@ function load(url) {
     xhr.addEventListener('load', e => {
       if (e.target.status === HTTP_STATUS_CODE_OK ||
           e.target.status === 0) {
-        resolve(e.target.response);
+        resolve(e.target.responseText);
       } else {
-        reject(new L10nError('Not found: ' + url));
+        reject(new Error(`${url} not found`));
       }
     });
-    xhr.addEventListener('error', reject);
-    xhr.addEventListener('timeout', reject);
+
+    xhr.addEventListener('error',
+      () => reject(new Error(`${url} failed to load`))
+    );
+    xhr.addEventListener('timeout',
+      () => reject(new Error(`${url} timed out`))
+    );
 
     xhr.send(null);
   });
@@ -29,5 +32,23 @@ function load(url) {
 
 export function fetchResource(res, lang) {
   const url = res.replace('{locale}', lang);
-  return load(url).catch(e => e);
+  return load(url).catch(() => null);
+}
+
+export class ResourceBundle {
+  constructor(lang, resIds) {
+    this.lang = lang;
+    this.loaded = false;
+    this.resIds = resIds;
+  }
+
+  fetch() {
+    if (!this.loaded) {
+      this.loaded = Promise.all(
+        this.resIds.map(resId => fetchResource(resId, this.lang))
+      );
+    }
+
+    return this.loaded;
+  }
 }

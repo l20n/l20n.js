@@ -57,8 +57,11 @@ about      = O { brand-name[locative] }
 settings   = Ustawienia { brand-name[genitive] }
 ```
 
-Visit [FTL by Example](http://l20n.org/learn) to learn more about FTL's 
-syntax.
+Visit [FTL by Example](http://l20n.org/learn) to learn more about the FTL 
+syntax.  If you're a tool author you may be interested in the formal 
+[EBNF grammar][].
+
+[EBNF grammar]: https://github.com/l20n/spec/blob/master/grammar.ebnf
 
 
 Localizing Web content with HTML Bindings
@@ -74,11 +77,11 @@ The JavaScript API and documentation
 ------------------------------------
 
 It is also possible to use L20n programmatically, for instance in order to 
-localize dynamic content.  Refer to [docs/node][] and [docs/view][] for more 
-details.
+localize dynamic content.  The API is exposed under `document.l10n`.  Refer to 
+[docs/observer][] and [docs/localization][] for more details.
 
-[docs/node]: https://github.com/l20n/l20n.js/blob/master/docs/node.md
-[docs/view]: https://github.com/l20n/l20n.js/blob/master/docs/view.md
+[docs/observer]: https://github.com/l20n/l20n.js/blob/master/docs/observer.md
+[docs/localization]: https://github.com/l20n/l20n.js/blob/master/docs/localization.md
 
 
 Discuss

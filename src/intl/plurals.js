@@ -1,4 +1,4 @@
-/*eslint no-magic-numbers: [0]*/
+/*  eslint no-magic-numbers: [0]  */
 
 const locales2rules = {
   'af': 3,
@@ -311,7 +311,7 @@ const pluralRules = {
   },
   '13': function(n) {
     if (n % 1 !== 0) {
-        return 'other';
+      return 'other';
     }
     if ((isBetween((n % 10), 2, 4)) && !(isBetween((n % 100), 12, 14))) {
       return 'few';
