@@ -1,7 +1,7 @@
 {
   "name": "l20n",
   "description": "A natural-language localization framework",
-  "version": "4.0.0-alpha.3",
+  "version": "4.0.0-beta.1",
   "homepage": "http://l20n.org",
   "repository": {
     "type": "git",

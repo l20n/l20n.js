@@ -4,7 +4,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 var fs = require('fs');
 
-/*eslint no-magic-numbers: [0]*/
+/*  eslint no-magic-numbers: [0]  */
 
 const locales2rules = {
   'af': 3,
@@ -317,7 +317,7 @@ const pluralRules = {
   },
   '13': function(n) {
     if (n % 1 !== 0) {
-        return 'other';
+      return 'other';
     }
     if ((isBetween((n % 10), 2, 4)) && !(isBetween((n % 100), 12, 14))) {
       return 'few';
@@ -461,6 +461,10 @@ function getPluralRule(code) {
   return pluralRules[index];
 }
 
+/**
+ * An `L10nError` with information about language and entity ID in which
+ * the error happened.
+ */
 class L10nError extends Error {
   constructor(message, id, lang) {
     super();
@@ -471,41 +475,43 @@ class L10nError extends Error {
   }
 }
 
-class ParseContext {
-  constructor(string) {
+/*  eslint no-magic-numbers: [0]  */
+
+const MAX_PLACEABLES = 100;
+
+/**
+ * The `Parser` class is responsible for parsing FTL resources.
+ *
+ * It's only public method is `getResource(source)` which takes an FTL
+ * string and returns a two element Array with an Object of entries
+ * generated from the source as the first element and an array of L10nError
+ * objects as the second.
+ *
+ * This parser is optimized for runtime performance.
+ *
+ * There is an equivalent of this parser in ftl/ast/parser which is
+ * generating full AST which is useful for FTL tools.
+ */
+class EntriesParser {
+  /**
+   * @param {string} string
+   * @returns {{}, []]}
+   */
+  getResource(string) {
     this._source = string;
     this._index = 0;
     this._length = string.length;
 
+    // This variable is used for error recovery and reporting.
     this._lastGoodEntryEnd = 0;
-  }
 
-  getResource() {
     const entries = {};
     const errors = [];
 
     this.getWS();
     while (this._index < this._length) {
       try {
-        const entry = this.getEntry();
-        if (!entry) {
-          this.getWS();
-          continue;
-        }
-
-        const id = entry.id;
-        entries[id] = {};
-
-        if (entry.traits !== null &&
-           entry.traits.length !== 0) {
-          entries[id].traits = entry.traits;
-          if (entry.value) {
-            entries[id].val = entry.value;
-          }
-        } else {
-          entries[id] = entry.value;
-        }
-        this._lastGoodEntryEnd = this._index;
+        this.getEntry(entries);
       } catch (e) {
         if (e instanceof L10nError) {
           errors.push(e);
@@ -520,25 +526,29 @@ class ParseContext {
     return [entries, errors];
   }
 
-  getEntry() {
+  getEntry(entries) {
+    // The pointer here should either be at the beginning of the file
+    // or right after new line.
     if (this._index !== 0 &&
         this._source[this._index - 1] !== '\n') {
       throw this.error('Expected new line and a new entry');
     }
 
-    if (this._source[this._index] === '#') {
+    const ch = this._source[this._index];
+
+    // We don't care about comments or sections at runtime
+    if (ch === '#') {
       this.getComment();
       return;
     }
 
-    if (this._source[this._index] === '[') {
+    if (ch === '[') {
       this.getSection();
       return;
     }
 
-    if (this._index < this._length &&
-        this._source[this._index] !== '\n') {
-      return this.getEntity();
+    if (ch !== '\n') {
+      this.getEntity(entries);
     }
   }
 
@@ -565,11 +575,8 @@ class ParseContext {
     return undefined;
   }
 
-  getEntity() {
+  getEntity(entries) {
     const id = this.getIdentifier();
-
-    let traits = null;
-    let value = null;
 
     this.getLineWS();
 
@@ -578,14 +585,17 @@ class ParseContext {
     if (ch !== '=') {
       throw this.error('Expected "=" after Entity ID');
     }
-    ch = this._source[++this._index];
+
+    this._index++;
 
     this.getLineWS();
 
-    value = this.getPattern();
+    const val = this.getPattern();
 
     ch = this._source[this._index];
 
+    // In the scenario when the pattern is quote-delimited
+    // the pattern ends with the closing quote.
     if (ch === '\n') {
       this._index++;
       this.getLineWS();
@@ -594,18 +604,25 @@ class ParseContext {
 
     if ((ch === '[' && this._source[this._index + 1] !== '[') ||
         ch === '*') {
-      traits = this.getMembers();
-    } else if (value === null) {
+
+      const members = this.getMembers();
+      entries[id] = {
+        traits: members[0],
+        def: members[1],
+        val
+      };
+
+    } else if (typeof val === 'string') {
+      entries[id] = val;
+    } else if (val === undefined) {
       throw this.error(
         'Expected a value (like: " = value") or a trait (like: "[key] value")'
       );
+    } else {
+      entries[id] = {
+        val
+      };
     }
-
-    return {
-      id,
-      value,
-      traits
-    };
   }
 
   getWS() {
@@ -625,8 +642,6 @@ class ParseContext {
   }
 
   getIdentifier() {
-    let name = '';
-
     const start = this._index;
     let cc = this._source.charCodeAt(this._index);
 
@@ -634,7 +649,7 @@ class ParseContext {
         (cc >= 65 && cc <= 90) ||  // A-Z
         cc === 95) {               // _
       cc = this._source.charCodeAt(++this._index);
-    } else if (name.length === 0) {
+    } else {
       throw this.error('Expected an identifier (starting with [a-zA-Z_])');
     }
 
@@ -645,15 +660,30 @@ class ParseContext {
       cc = this._source.charCodeAt(++this._index);
     }
 
-    name += this._source.slice(start, this._index);
-
-    return name;
+    return this._source.slice(start, this._index);
   }
 
   getKeyword() {
     let name = '';
     let namespace = this.getIdentifier();
 
+    // If the first character after identifier string is '/', it means
+    // that what we collected so far is actually a namespace.
+    //
+    // But if it is not '/', that means that what we collected so far
+    // is just the beginning of the keyword and we should continue collecting
+    // it.
+    // In that scenario, we're going to move charcters collected so far
+    // from namespace variable to name variable and set namespace to null.
+    //
+    // For example, if the keyword is "Foo bar", at this point we only
+    // collected "Foo", the index character is not "/", so we're going
+    // to move on and see if the next character is allowed in the name.
+    //
+    // Because it's a space, it is and we'll continue collecting the name.
+    //
+    // In case the keyword is "Foo/bar", we're going to keep what we collected
+    // so far as `namespace`, bump the index and start collecting the name.
     if (this._source[this._index] === '/') {
       this._index++;
     } else if (namespace) {
@@ -679,13 +709,27 @@ class ParseContext {
       cc = this._source.charCodeAt(++this._index);
     }
 
-    name += this._source.slice(start, this._index).trimRight();
+    // If we encountered the end of name, we want to test is the last
+    // collected character is a space.
+    // If it is, we will backtrack to the last non-space character because
+    // the keyword cannot end with a space character.
+    while (this._source.charCodeAt(this._index - 1) === 32) {
+      this._index--;
+    }
+
+    name += this._source.slice(start, this._index);
 
     return namespace ?
       { type: 'kw', ns: namespace, name } :
       { type: 'kw', name };
   }
 
+  // We're going to first try to see if the pattern is simple.
+  // If it is a simple, not quote-delimited string,
+  // we can just look for the end of the line and read the string.
+  //
+  // Then, if either the line contains a placeable opening `{` or the
+  // next line starts with a pipe `|`, we switch to complex pattern.
   getPattern() {
     const start = this._index;
     if (this._source[start] === '"') {
@@ -697,33 +741,41 @@ class ParseContext {
       eol = this._length;
     }
 
-    const line = this._source.slice(start, eol);
+    const line = start !== eol ?
+      this._source.slice(start, eol) : undefined;
 
-    if (line.indexOf('{') !== -1) {
+    if (line !== undefined && line.includes('{')) {
       return this.getComplexPattern();
     }
 
     this._index = eol + 1;
 
-    this.getWS();
+    this.getLineWS();
 
     if (this._source[this._index] === '|') {
       this._index = start;
       return this.getComplexPattern();
     }
 
-    return this._source.slice(start, eol);
+    return line;
   }
 
+  /* eslint-disable complexity */
   getComplexPattern() {
     let buffer = '';
     const content = [];
+    let placeables = 0;
+
+    // We actually use all three possible states of this variable:
+    // true and false indicate if we're within a quote-delimited string
+    // null indicates that the string is not quote-delimited
     let quoteDelimited = null;
     let firstLine = true;
 
     let ch = this._source[this._index];
 
-
+    // If the string starts with \", \{ or \\ skip the first `\` and add the
+    // following character to the buffer without interpreting it.
     if (ch === '\\' &&
       (this._source[this._index + 1] === '"' ||
        this._source[this._index + 1] === '{' ||
@@ -732,12 +784,16 @@ class ParseContext {
       this._index += 2;
       ch = this._source[this._index];
     } else if (ch === '"') {
+      // If the first character of the string is `"`, mark the string
+      // as quote delimited.
       quoteDelimited = true;
       this._index++;
       ch = this._source[this._index];
     }
 
     while (this._index < this._length) {
+      // This block handles multi-line strings combining strings seaprated
+      // by new line and `|` character at the beginning of the next one.
       if (ch === '\n') {
         if (quoteDelimited) {
           throw this.error('Unclosed string');
@@ -761,6 +817,8 @@ class ParseContext {
         ch = this._source[this._index];
         continue;
       } else if (ch === '\\') {
+        // We only handle `{` as a character that can be escaped in a string
+        // and `"` if the string is quote delimited.
         const ch2 = this._source[this._index + 1];
         if ((quoteDelimited && ch2 === '"') ||
             ch2 === '{') {
@@ -772,12 +830,18 @@ class ParseContext {
         quoteDelimited = false;
         break;
       } else if (ch === '{') {
+        // Push the buffer to content array right before placeable
         if (buffer.length) {
           content.push(buffer);
         }
-        buffer = ''
+        if (placeables > MAX_PLACEABLES - 1) {
+          throw this.error(
+            `Too many placeables, maximum allowed is ${MAX_PLACEABLES}`);
+        }
+        buffer = '';
         content.push(this.getPlaceable());
         ch = this._source[this._index];
+        placeables++;
         continue;
       }
 
@@ -792,25 +856,20 @@ class ParseContext {
       throw this.error('Unclosed string');
     }
 
+    if (content.length === 0) {
+      if (quoteDelimited !== null) {
+        return buffer.length ? buffer : '';
+      }
+      return buffer.length ? buffer : undefined;
+    }
+
     if (buffer.length) {
       content.push(buffer);
     }
 
-    if (content.length === 0) {
-      if (quoteDelimited !== null) {
-        return '';
-      } else {
-        return null;
-      }
-    }
-
-    if (content.length === 1 &&
-        typeof content[0] === 'string') {
-      return content[0];
-    }
-
     return content;
   }
+  /* eslint-enable complexity */
 
   getPlaceable() {
     this._index++;
@@ -826,11 +885,11 @@ class ParseContext {
       } catch (e) {
         throw this.error(e.description, start);
       }
-      this.getWS();
-      if (this._source[this._index] === '}') {
+      const ch = this._source[this._index];
+      if (ch === '}') {
         this._index++;
         break;
-      } else if (this._source[this._index] === ',') {
+      } else if (ch === ',') {
         this._index++;
         this.getWS();
       } else {
@@ -843,14 +902,16 @@ class ParseContext {
 
   getPlaceableExpression() {
     const selector = this.getCallExpression();
-    let members = null;
+    let members;
 
     this.getWS();
 
-    if (this._source[this._index] !== '}' &&
-        this._source[this._index] !== ',') {
-      if (this._source[this._index] !== '-' ||
-          this._source[this._index + 1] !== '>') {
+    const ch = this._source[this._index];
+
+    // If the expression is followed by `->` we're going to collect
+    // its members and return it as a select expression.
+    if (ch !== '}' && ch !== ',') {
+      if (ch !== '-' || this._source[this._index + 1] !== '>') {
         throw this.error('Expected "}", "," or "->"');
       }
       this._index += 2; // ->
@@ -865,18 +926,19 @@ class ParseContext {
 
       members = this.getMembers();
 
-      if (members.length === 0) {
+      if (members[0].length === 0) {
         throw this.error('Expected members for the select expression');
       }
     }
 
-    if (members === null) {
+    if (members === undefined) {
       return selector;
     }
     return {
       type: 'sel',
       exp: selector,
-      vars: members
+      vars: members[0],
+      def: members[1]
     };
   }
 
@@ -893,7 +955,7 @@ class ParseContext {
 
     this._index++;
 
-    if (exp.type = 'ref') {
+    if (exp.type === 'ref') {
       exp.type = 'fun';
     }
 
@@ -916,6 +978,8 @@ class ParseContext {
 
       const exp = this.getCallExpression();
 
+      // EntityReference in this place may be an entity reference, like:
+      // `call(foo)`, or, if it's followed by `:` it will be a key-value pair.
       if (exp.type !== 'ref' ||
          exp.namespace !== undefined) {
         args.push(exp);
@@ -928,17 +992,27 @@ class ParseContext {
 
           const val = this.getCallExpression();
 
-          if (val.type === 'ref' ||
-              val.type === 'member') {
-            this._index = this._source.lastIndexOf('=', this._index) + 1;
-            throw this.error('Expected string in quotes');
+          // If the expression returned as a value of the argument
+          // is not a quote delimited string, number or
+          // external argument, throw an error.
+          //
+          // We don't have to check here if the pattern is quote delimited
+          // because that's the only type of string allowed in expressions.
+          if (typeof val === 'string' ||
+              Array.isArray(val) ||
+              val.type === 'num' ||
+              val.type === 'ext') {
+            args.push({
+              type: 'kv',
+              name: exp.name,
+              val
+            });
+          } else {
+            this._index = this._source.lastIndexOf(':', this._index) + 1;
+            throw this.error(
+              'Expected string in quotes, number or external argument');
           }
 
-          args.push({
-            type: 'kv',
-            name: exp.name,
-            val
-          });
         } else {
           args.push(exp);
         }
@@ -962,28 +1036,34 @@ class ParseContext {
     let num = '';
     let cc = this._source.charCodeAt(this._index);
 
+    // The number literal may start with negative sign `-`.
     if (cc === 45) {
       num += '-';
       cc = this._source.charCodeAt(++this._index);
     }
 
+    // next, we expect at least one digit
     if (cc < 48 || cc > 57) {
       throw this.error(`Unknown literal "${num}"`);
     }
 
+    // followed by potentially more digits
     while (cc >= 48 && cc <= 57) {
       num += this._source[this._index++];
       cc = this._source.charCodeAt(this._index);
     }
 
+    // followed by an optional decimal separator `.`
     if (cc === 46) {
       num += this._source[this._index++];
       cc = this._source.charCodeAt(this._index);
 
+      // followed by at least one digit
       if (cc < 48 || cc > 57) {
         throw this.error(`Unknown literal "${num}"`);
       }
 
+      // and optionally more digits
       while (cc >= 48 && cc <= 57) {
         num += this._source[this._index++];
         cc = this._source.charCodeAt(this._index);
@@ -999,7 +1079,10 @@ class ParseContext {
   getMemberExpression() {
     let exp = this.getLiteral();
 
-    while (this._source[this._index] === '[') {
+    // the obj element of the member expression
+    // must be either an entity reference or another member expression.
+    while (['ref', 'mem'].includes(exp.type) &&
+      this._source[this._index] === '[') {
       const keyword = this.getMemberKey();
       exp = {
         type: 'mem',
@@ -1013,17 +1096,19 @@ class ParseContext {
 
   getMembers() {
     const members = [];
+    let index = 0;
+    let defaultIndex;
 
     while (this._index < this._length) {
-      if ((this._source[this._index] !== '[' ||
-           this._source[this._index + 1] === '[') &&
-          this._source[this._index] !== '*') {
+      const ch = this._source[this._index];
+
+      if ((ch !== '[' || this._source[this._index + 1] === '[') &&
+          ch !== '*') {
         break;
       }
-      let def = false;
-      if (this._source[this._index] === '*') { 
+      if (ch === '*') {
         this._index++;
-        def = true;
+        defaultIndex = index;
       }
 
       if (this._source[this._index] !== '[') {
@@ -1034,23 +1119,19 @@ class ParseContext {
 
       this.getLineWS();
 
-      const value = this.getPattern();
-
       const member = {
         key,
-        val: value
+        val: this.getPattern()
       };
-      if (def) {
-        member.def = true;
-      }
-      members.push(member);
+      members[index++] = member;
 
       this.getWS();
     }
 
-    return members;
+    return [members, defaultIndex];
   }
 
+  // MemberKey may be a Keyword or Number
   getMemberKey() {
     this._index++;
 
@@ -1091,6 +1172,8 @@ class ParseContext {
     };
   }
 
+  // At runtime, we don't care about comments so we just have
+  // to parse them properly and skip their content.
   getComment() {
     let eol = this._source.indexOf('\n', this._index);
 
@@ -1111,7 +1194,7 @@ class ParseContext {
     }
   }
 
-  error(message, start=null) {
+  error(message, start = null) {
     const pos = this._index;
 
     if (start === null) {
@@ -1121,8 +1204,8 @@ class ParseContext {
 
     const context = this._source.slice(start, pos + 10);
 
-    const msg = '\n\n  ' + message +
-      '\nat pos ' + pos + ':\n------\n…' + context + '\n------';
+    const msg =
+      `\n\n  ${message}\nat pos ${pos}:\n------\n…${context}\n------`;
     const err = new L10nError(msg);
 
     const row = this._source.slice(0, pos).split('\n').length;
@@ -1203,67 +1286,62 @@ class ParseContext {
 
 var FTLRuntimeParser = {
   parseResource: function(string) {
-    const parseContext = new ParseContext(string);
-    return parseContext.getResource();
+    const parser = new EntriesParser();
+    return parser.getResource(string);
   },
 };
 
-class ReadWrite {
-  constructor(fn) {
-    this.fn = fn;
-  }
+/**
+ * The `FTLType` class is the base of FTL's type system.
+ *
+ * FTL types wrap JavaScript values and store additional configuration for
+ * them, which can then be used in the `toString` method together with a proper
+ * `Intl` formatter.
+ */
+class FTLType {
 
-  run(ctx) {
-    return this.fn(ctx);
-  }
-
-  flatMap(fn) {
-    return new ReadWrite(ctx => {
-      const [cur, curErrs] = this.run(ctx);
-      const [val, valErrs] = fn(cur).run(ctx);
-      return [val, [...curErrs, ...valErrs]];
-    });
-  }
-}
-
-function ask() {
-  return new ReadWrite(ctx => [ctx, []]);
-}
-
-function tell(log) {
-  return new ReadWrite(() => [null, [log]]);
-}
-
-function unit(val) {
-  return new ReadWrite(() => [val, []]);
-}
-
-function resolve(iter) {
-  return function step(resume) {
-    const {value, done} = iter.next(resume);
-    const rw = (value instanceof ReadWrite) ?
-      value : unit(value);
-    return done ? rw : rw.flatMap(step);
-  }();
-}
-
-class FTLBase {
+  /**
+   * Create an `FTLType` instance.
+   *
+   * @param   {Any}    value - JavaScript value to wrap.
+   * @param   {Object} opts  - Configuration.
+   * @returns {FTLType}
+   */
   constructor(value, opts) {
     this.value = value;
     this.opts = opts;
   }
+
+  /**
+   * Get the JavaScript value wrapped by this `FTLType` instance.
+   *
+   * @returns {Any}
+   */
   valueOf() {
     return this.value;
   }
+
+  /**
+   * Stringify an instance of `FTLType`.
+   *
+   * This method can use `Intl` formatters memoized by the `MessageContext`
+   * instance passed as an argument.
+   *
+   * @param   {MessageContext} ctx
+   * @returns {string}
+   */
+  toString(ctx) {
+    return this.value.toString(ctx);
+  }
 }
 
-class FTLNone extends FTLBase {
+class FTLNone extends FTLType {
   toString() {
     return this.value || '???';
   }
 }
 
-class FTLNumber extends FTLBase {
+class FTLNumber extends FTLType {
   constructor(value, opts) {
     super(parseFloat(value), opts);
   }
@@ -1275,7 +1353,7 @@ class FTLNumber extends FTLBase {
   }
 }
 
-class FTLDateTime extends FTLBase {
+class FTLDateTime extends FTLType {
   constructor(value, opts) {
     super(new Date(value), opts);
   }
@@ -1287,7 +1365,7 @@ class FTLDateTime extends FTLBase {
   }
 }
 
-class FTLKeyword extends FTLBase {
+class FTLKeyword extends FTLType {
   toString() {
     const { name, namespace } = this.value;
     return namespace ? `${namespace}:${name}` : name;
@@ -1305,9 +1383,8 @@ class FTLKeyword extends FTLBase {
         Intl.PluralRules, other.opts
       );
       return name === pr.select(other.valueOf());
-    } else {
-      return false;
     }
+    return false;
   }
 }
 
@@ -1323,18 +1400,27 @@ class FTLList extends Array {
   }
 }
 
-// each builtin takes two arguments:
-//  - args = an array of positional args
-//  - opts  = an object of key-value args
-
+/**
+ * @module
+ *
+ * The FTL resolver ships with a number of functions built-in.
+ *
+ * Each function take two arguments:
+ *   - args - an array of positional args
+ *   - opts - an object of key-value args
+ *
+ * Arguments to functions are guaranteed to already be instances of `FTLType`.
+ * Functions must return `FTLType` objects as well.  For this reason it may be
+ * necessary to unwrap the JavaScript value behind the FTL Value and to merge
+ * the configuration of the argument with the configuration of the return
+ * value.
+ */
 var builtins = {
   'NUMBER': ([arg], opts) =>
     new FTLNumber(arg.valueOf(), merge(arg.opts, opts)),
-  'PLURAL': ([arg], opts) =>
-    new FTLNumber(arg.valueOf(), merge(arg.opts, opts)),
   'DATETIME': ([arg], opts) =>
     new FTLDateTime(arg.valueOf(), merge(arg.opts, opts)),
-  'LIST': (args) => FTLList.from(args),
+  'LIST': args => FTLList.from(args),
   'LEN': ([arg]) => new FTLNumber(arg.valueOf().length),
   'TAKE': ([num, arg]) => FTLList.from(arg.valueOf().slice(0, num.value)),
   'DROP': ([num, arg]) => FTLList.from(arg.valueOf().slice(num.value)),
@@ -1351,109 +1437,183 @@ function valuesOf(opts) {
     }), {});
 }
 
-// Unicode bidi isolation characters
+/**
+ * @module
+ *
+ * The role of the FTL resolver is to format a translation object to an
+ * instance of `FTLType`.
+ *
+ * Translations can contain references to other entities or external arguments,
+ * conditional logic in form of select expressions, traits which describe their
+ * grammatical features, and can use FTL builtins which make use of the `Intl`
+ * formatters to format numbers, dates, lists and more into the context's
+ * language.  See the documentation of the FTL syntax for more information.
+ *
+ * In case of errors the resolver will try to salvage as much of the
+ * translation as possible.  In rare situations where the resolver didn't know
+ * how to recover from an error it will return an instance of `FTLNone`.
+ *
+ * `EntityReference`, `MemberExpression` and `SelectExpression` resolve to raw
+ * Runtime Entries objects and the result of the resolution needs to be passed
+ * into `Value` to get their real value.  This is useful for composing
+ * expressions.  Consider:
+ *
+ *     brand-name[nominative]
+ *
+ * which is a `MemberExpression` with properties `obj: EntityReference` and
+ * `key: Keyword`.  If `EntityReference` was resolved eagerly, it would
+ * instantly resolve to the value of the `brand-name` entity.  Instead, we want
+ * to get the entity object and look for its `nominative` trait.
+ *
+ * All other expressions (except for `FunctionReference` which is only used in
+ * `CallExpression`) resolve to an instance of `FTLType`, which must then be
+ * sringified with its `toString` method by the caller.
+ */
+
+// Prevent expansion of too long placeables.
+const MAX_PLACEABLE_LENGTH = 2500;
+
+// Unicode bidi isolation characters.
 const FSI = '\u2068';
 const PDI = '\u2069';
 
-const MAX_PLACEABLE_LENGTH = 2500;
 
-function* mapValues(arr) {
-  let values = new FTLList();
-  for (let elem of arr) {
-    values.push(yield* Value(elem));
+/**
+ * Map an array of JavaScript values into FTL Values.
+ *
+ * Used for external arguments of Array type and for implicit Lists in
+ * placeables.
+ *
+ * @private
+ */
+function mapValues(env, arr) {
+  const values = new FTLList();
+  for (const elem of arr) {
+    values.push(Value(env, elem));
   }
   return values;
 }
 
-// Helper for choosing entity value
-function* DefaultMember(members, allowNoDefault = false) {
-  for (let member of members) {
-    if (member.def) {
-      return member;
-    }
+/**
+ * Helper for choosing the default value from a set of members.
+ *
+ * Used in SelectExpressions and Value.
+ *
+ * @private
+ */
+function DefaultMember(env, members, def) {
+  if (members[def]) {
+    return members[def];
   }
 
-  if (!allowNoDefault) {
-    yield tell(new RangeError('No default'));
-  }
-
-  return { val: new FTLNone() };
+  const { errors } = env;
+  errors.push(new RangeError('No default'));
+  return new FTLNone();
 }
 
 
-// Half-resolved expressions evaluate to raw Runtime AST nodes
-
-function* EntityReference({name}) {
-  const { ctx } = yield ask();
+/**
+ * Resolve a reference to an entity to the entity object.
+ *
+ * @private
+ */
+function EntityReference(env, {name}) {
+  const { ctx, errors } = env;
   const entity = ctx.messages.get(name);
 
   if (!entity) {
-    yield tell(new ReferenceError(`Unknown entity: ${name}`));
+    errors.push(new ReferenceError(`Unknown entity: ${name}`));
     return new FTLNone(name);
   }
 
   return entity;
 }
 
-function* MemberExpression({obj, key}) {
-  const entity = yield* EntityReference(obj);
+/**
+ * Resolve a member expression to the member object.
+ *
+ * @private
+ */
+function MemberExpression(env, {obj, key}) {
+  const entity = EntityReference(env, obj);
   if (entity instanceof FTLNone) {
-    return { val: entity };
+    return entity;
   }
 
-  const { ctx } = yield ask();
-  const keyword = yield* Value(key);
+  const { ctx, errors } = env;
+  const keyword = Value(env, key);
 
-  for (let member of entity.traits) {
-    const memberKey = yield* Value(member.key);
-    if (keyword.match(ctx, memberKey)) {
-      return member;
+  if (entity.traits) {
+    // Match the specified key against keys of each trait, in order.
+    for (const member of entity.traits) {
+      const memberKey = Value(env, member.key);
+      if (keyword.match(ctx, memberKey)) {
+        return member;
+      }
     }
   }
 
-  yield tell(new ReferenceError(`Unknown trait: ${keyword.toString(ctx)}`));
-  return {
-    val: yield* Entity(entity)
-  };
+  errors.push(new ReferenceError(`Unknown trait: ${keyword.toString(ctx)}`));
+  return Value(env, entity);
 }
 
-function* SelectExpression({exp, vars}) {
-  const selector = yield* Value(exp);
+/**
+ * Resolve a select expression to the member object.
+ *
+ * @private
+ */
+function SelectExpression(env, {exp, vars, def}) {
+  const selector = Value(env, exp);
   if (selector instanceof FTLNone) {
-    return yield* DefaultMember(vars);
+    return DefaultMember(env, vars, def);
   }
 
-  for (let variant of vars) {
-    const key = yield* Value(variant.key);
+  // Match the selector against keys of each variant, in order.
+  for (const variant of vars) {
+    const key = Value(env, variant.key);
 
+    // XXX A special case of numbers to avoid code repetition in types.js.
     if (key instanceof FTLNumber &&
         selector instanceof FTLNumber &&
         key.valueOf() === selector.valueOf()) {
       return variant;
     }
 
-    const { ctx } = yield ask();
+    const { ctx } = env;
 
-    if (key instanceof FTLKeyword &&
-        key.match(ctx, selector)) {
+    if (key instanceof FTLKeyword && key.match(ctx, selector)) {
       return variant;
     }
   }
 
-  return yield* DefaultMember(vars);
+  return DefaultMember(env, vars, def);
 }
 
 
-// Fully-resolved expressions evaluate to FTL types
-
-function* Value(expr) {
+/**
+ * Resolve expression to an FTL type.
+ *
+ * JavaScript strings are a special case.  Since they natively have the
+ * `toString` method they can be used as if they were an FTL type without
+ * paying the cost of creating a instance of one.
+ *
+ * @param   {Object} expr
+ * @returns {FTLType}
+ * @private
+ */
+function Value(env, expr) {
+  // A fast-path for strings which are the most common case, and for `FTLNone`
+  // which doesn't require any additional logic.
   if (typeof expr === 'string' || expr instanceof FTLNone) {
     return expr;
   }
 
+  // The Runtime AST (Entries) encodes patterns (complex strings with
+  // placeables) as Arrays.
   if (Array.isArray(expr)) {
-    return yield* Pattern(expr);
+    return Pattern(env, expr);
   }
+
 
   switch (expr.type) {
     case 'kw':
@@ -1461,39 +1621,57 @@ function* Value(expr) {
     case 'num':
       return new FTLNumber(expr.val);
     case 'ext':
-      return yield* ExternalArgument(expr);
+      return ExternalArgument(env, expr);
     case 'fun':
-      return yield* FunctionReference(expr);
+      return FunctionReference(env, expr);
     case 'call':
-      return yield* CallExpression(expr);
-    case 'ref':
-      const ref = yield* EntityReference(expr);
-      return yield* Entity(ref);
-    case 'mem':
-      const mem = yield* MemberExpression(expr);
-      return yield* Value(mem.val);
-    case 'sel':
-      const sel = yield* SelectExpression(expr);
-      return yield* Value(sel.val);
+      return CallExpression(env, expr);
+    case 'ref': {
+      const entity = EntityReference(env, expr);
+      return Value(env, entity);
+    }
+    case 'mem': {
+      const member = MemberExpression(env, expr);
+      return Value(env, member);
+    }
+    case 'sel': {
+      const member = SelectExpression(env, expr);
+      return Value(env, member);
+    }
+    case undefined: {
+      // If it's a node with a value, resolve the value.
+      if (expr.val !== undefined) {
+        return Value(env, expr.val);
+      }
+
+      const def = DefaultMember(env, expr.traits, expr.def);
+      return Value(env, def);
+    }
     default:
-      return yield* Value(expr.val);
+      return new FTLNone();
   }
 }
 
-function* ExternalArgument({name}) {
-  const { args } = yield ask();
+/**
+ * Resolve a reference to an external argument.
+ *
+ * @private
+ */
+function ExternalArgument(env, {name}) {
+  const { args, errors } = env;
 
   if (!args || !args.hasOwnProperty(name)) {
-    yield tell(new ReferenceError(`Unknown external: ${name}`));
+    errors.push(new ReferenceError(`Unknown external: ${name}`));
     return new FTLNone(name);
   }
 
   const arg = args[name];
 
-  if (arg instanceof FTLBase) {
+  if (arg instanceof FTLType) {
     return arg;
   }
 
+  // Convert the argument to an FTL type.
   switch (typeof arg) {
     case 'string':
       return arg;
@@ -1501,38 +1679,50 @@ function* ExternalArgument({name}) {
       return new FTLNumber(arg);
     case 'object':
       if (Array.isArray(arg)) {
-        return yield* mapValues(arg);
+        return mapValues(env, arg);
       }
       if (arg instanceof Date) {
         return new FTLDateTime(arg);
       }
     default:
-      yield tell(
+      errors.push(
         new TypeError(`Unsupported external type: ${name}, ${typeof arg}`)
       );
       return new FTLNone(name);
   }
 }
 
-function* FunctionReference({name}) {
-  const { ctx: { functions } } = yield ask();
+/**
+ * Resolve a reference to a function.
+ *
+ * @private
+ */
+function FunctionReference(env, {name}) {
+  // Some functions are built-in.  Others may be provided by the runtime via
+  // the `MessageContext` constructor.
+  const { ctx: { functions }, errors } = env;
   const func = functions[name] || builtins[name];
 
   if (!func) {
-    yield tell(new ReferenceError(`Unknown built-in: ${name}()`));
+    errors.push(new ReferenceError(`Unknown function: ${name}()`));
     return new FTLNone(`${name}()`);
   }
 
-  if (!(func instanceof Function)) {
-    yield tell(new TypeError(`Function ${name}() is not callable`));
+  if (typeof func !== 'function') {
+    errors.push(new TypeError(`Function ${name}() is not callable`));
     return new FTLNone(`${name}()`);
   }
 
   return func;
 }
 
-function* CallExpression({name, args}) {
-  const callee = yield* FunctionReference(name);
+/**
+ * Resolve a call to a Function with positional and key-value arguments.
+ *
+ * @private
+ */
+function CallExpression(env, {name, args}) {
+  const callee = FunctionReference(env, name);
 
   if (callee instanceof FTLNone) {
     return callee;
@@ -1541,47 +1731,60 @@ function* CallExpression({name, args}) {
   const posargs = [];
   const keyargs = [];
 
-  for (let arg of args) {
+  for (const arg of args) {
     if (arg.type === 'kv') {
-      keyargs[arg.name] = yield* Value(arg.val);
+      keyargs[arg.name] = Value(env, arg.val);
     } else {
-      posargs.push(yield* Value(arg));
+      posargs.push(Value(env, arg));
     }
   }
 
-  // XXX builtins should also returns [val, errs] tuples
+  // XXX functions should also report errors
   return callee(posargs, keyargs);
 }
 
-function* Pattern(ptn) {
-  const { ctx, dirty } = yield ask();
+/**
+ * Resolve a pattern (a complex string with placeables).
+ *
+ * @private
+ */
+function Pattern(env, ptn) {
+  const { ctx, dirty, errors } = env;
 
   if (dirty.has(ptn)) {
-    yield tell(new RangeError('Cyclic reference'));
+    errors.push(new RangeError('Cyclic reference'));
     return new FTLNone();
   }
 
+  // Tag the pattern as dirty for the purpose of the current resolution.
   dirty.add(ptn);
   let result = '';
 
-  for (let part of ptn) {
+  for (const part of ptn) {
     if (typeof part === 'string') {
       result += part;
     } else {
+      // Optimize the most common case: the placeable only has one expression.
+      // Otherwise map its expressions to Values.
       const value = part.length === 1 ?
-        yield* Value(part[0]) : yield* mapValues(part);
+        Value(env, part[0]) : mapValues(env, part);
 
-      const str = value.toString(ctx);
+      let str = value.toString(ctx);
+
       if (str.length > MAX_PLACEABLE_LENGTH) {
-        yield tell(
+        errors.push(
           new RangeError(
             'Too many characters in placeable ' +
             `(${str.length}, max allowed is ${MAX_PLACEABLE_LENGTH})`
           )
         );
-        result += FSI + str.substr(0, MAX_PLACEABLE_LENGTH) + PDI;
+        str = str.substr(0, MAX_PLACEABLE_LENGTH);
+      }
+
+      if (ctx.useIsolating) {
+        result += `${FSI}${str}${PDI}`;
       } else {
-        result += FSI + str + PDI;
+        result += str;
       }
     }
   }
@@ -1590,74 +1793,154 @@ function* Pattern(ptn) {
   return result;
 }
 
-function* Entity(entity, allowNoDefault = false) {
-  if (entity.val !== undefined) {
-    return yield* Value(entity.val);
-  }
-
-  if (!entity.traits) {
-    return yield* Value(entity);
-  }
-
-  const def = yield* DefaultMember(entity.traits, allowNoDefault);
-  return yield* Value(def);
+/**
+ * Format a translation into an `FTLType`.
+ *
+ * The return value must be sringified with its `toString` method by the
+ * caller.
+ *
+ * @param   {MessageContext} ctx
+ * @param   {Object}         args
+ * @param   {Object}         entity
+ * @param   {Array}          errors
+ * @returns {FTLType}
+ */
+function resolve(ctx, args, entity, errors = []) {
+  const env = {
+    ctx, args, errors, dirty: new WeakSet()
+  };
+  return Value(env, entity);
 }
 
-// evaluate `entity` to an FTL Value type: string or FTLNone
-function* toFTLType(entity, opts) {
-  if (entity === undefined) {
-    return new FTLNone();
-  }
-
-  return yield* Entity(entity, opts.allowNoDefault);
-}
-
-const _opts = {
-  allowNoDefault: false
-};
-
-function format(ctx, args, entity, opts = _opts) {
-  // optimization: many translations are simple strings and we can very easily 
-  // avoid the cost of a proper resolution by having this shortcut here
-  if (typeof entity === 'string') {
-    return [entity, []];
-  }
-
-  return resolve(toFTLType(entity, opts)).run({
-    ctx, args, dirty: new WeakSet()
-  });
-}
-
-const optsPrimitive = { allowNoDefault: true };
-
+/**
+ * Message contexts are single-language stores of translations.  They are
+ * responsible for parsing translation resources in the FTL syntax and can
+ * format translation units (entities) to strings.
+ *
+ * Always use `MessageContext.format` to retrieve translation units from
+ * a context.  Translations can contain references to other entities or
+ * external arguments, conditional logic in form of select expressions, traits
+ * which describe their grammatical features, and can use FTL builtins which
+ * make use of the `Intl` formatters to format numbers, dates, lists and more
+ * into the context's language.  See the documentation of the FTL syntax for
+ * more information.
+ */
 class MessageContext {
-  constructor(lang, { functions } = {}) {
+
+  /**
+   * Create an instance of `MessageContext`.
+   *
+   * The `lang` argument is used to instantiate `Intl` formatters used by
+   * translations.  The `options` object can be used to configure the context.
+   *
+   * Examples:
+   *
+   *     const ctx = new MessageContext(lang);
+   *
+   *     const ctx = new MessageContext(lang, { useIsolating: false });
+   *
+   *     const ctx = new MessageContext(lang, {
+   *       useIsolating: true,
+   *       functions: {
+   *         NODE_ENV: () => process.env.NODE_ENV
+   *       }
+   *     });
+   *
+   * Available options:
+   *
+   *   - `functions` - an object of additional functions available to
+   *                   translations as builtins.
+   *
+   *   - `useIsolating` - boolean specifying whether to use Unicode isolation
+   *                    marks (FSI, PDI) for bidi interpolations.
+   *
+   * @param   {string} lang      - Language of the context.
+   * @param   {Object} [options]
+   * @returns {MessageContext}
+   */
+  constructor(lang, { functions = {}, useIsolating = true } = {}) {
     this.lang = lang;
-    this.functions = functions || {}
+    this.functions = functions;
+    this.useIsolating = useIsolating;
     this.messages = new Map();
     this.intls = new WeakMap();
   }
 
+  /**
+   * Add a translation resource to the context.
+   *
+   * The translation resource must use the FTL syntax.  It will be parsed by
+   * the context and each translation unit (entity) will be available in the
+   * `messages` map by its identifier.
+   *
+   *     ctx.addMessages('foo = Foo');
+   *     ctx.messages.get('foo');
+   *
+   *     // Returns a raw representation of the 'foo' entity.
+   *
+   * Parsed entities should be formatted with the `format` method in case they
+   * contain logic (references, select expressions etc.).
+   *
+   * @param   {string} source - Text resource with translations.
+   * @returns {Array<Error>}
+   */
   addMessages(source) {
     const [entries, errors] = FTLRuntimeParser.parseResource(source);
-    for (let id in entries) {
+    for (const id in entries) {
       this.messages.set(id, entries[id]);
     }
 
     return errors;
   }
 
-  // format `entity` to a string or null
-  formatToPrimitive(entity, args) {
-    const result = format(this, args, entity, optsPrimitive);
-    return (result[0] instanceof FTLNone) ?
-      [null, result[1]] : result;
-  }
+  /**
+   * Format an entity to a string or null.
+   *
+   * Format a raw `entity` from the context's `messages` map into a string (or
+   * a null if it has a null value).  `args` will be used to resolve references
+   * to external arguments inside of the translation.
+   *
+   * In case of errors `format` will try to salvage as much of the translation
+   * as possible and will still return a string.  For performance reasons, the
+   * encountered errors are not returned but instead are appended to the
+   * `errors` array passed as the third argument.
+   *
+   *     const errors = [];
+   *     ctx.addMessages('hello = Hello, { $name }!');
+   *     const hello = ctx.messages.get('hello');
+   *     ctx.format(hello, { name: 'Jane' }, errors);
+   *
+   *     // Returns 'Hello, Jane!' and `errors` is empty.
+   *
+   *     ctx.format(hello, undefined, errors);
+   *
+   *     // Returns 'Hello, name!' and `errors` is now:
+   *
+   *     [<ReferenceError: Unknown external: name>]
+   *
+   * @param   {Object | string}    entity
+   * @param   {Object | undefined} args
+   * @param   {Array}              errors
+   * @returns {?string}
+   */
+  format(entity, args, errors) {
+    // optimize entities which are simple strings with no traits
+    if (typeof entity === 'string') {
+      return entity;
+    }
 
-  // format `entity` to a string
-  format(entity, args) {
-    const result = format(this, args, entity);
-    return [result[0].toString(), result[1]];
+    // optimize entities whose value is a simple string, and traits
+    if (typeof entity.val === 'string') {
+      return entity.val;
+    }
+
+    // optimize entities with null values and no default traits
+    if (entity.val === undefined && entity.def === undefined) {
+      return null;
+    }
+
+    const result = resolve(this, args, entity, errors);
+    return result instanceof FTLNone ? null : result;
   }
 
   _memoizeIntlObject(ctor, opts) {
@@ -1671,7 +1954,6 @@ class MessageContext {
 
     return cache[id];
   }
-
 }
 
 Intl.MessageContext = MessageContext;
@@ -1685,7 +1967,7 @@ if (!Intl.NumberFormat) {
         return n;
       }
     };
-  }
+  };
 }
 
 if (!Intl.PluralRules) {
@@ -1696,7 +1978,7 @@ if (!Intl.PluralRules) {
         return fn(n);
       }
     };
-  }
+  };
 }
 
 if (!Intl.ListFormat) {
@@ -1706,19 +1988,201 @@ if (!Intl.ListFormat) {
         return list.join(', ');
       }
     };
-  }
+  };
 }
+
+var serializer = {
+  serialize: function({body, comment}) {
+    let string = '';
+    if (comment !== null) {
+      string += `${this.dumpComment(comment)}\n\n`;
+    }
+    for (const entry of body) {
+      string += this.dumpEntry(entry);
+    }
+    return string;
+  },
+
+  dumpEntry: function(entry) {
+    switch (entry.type) {
+      case 'Entity':
+        return `${this.dumpEntity(entry)}\n`;
+      case 'Comment':
+        return `${this.dumpComment(entry)}\n\n`;
+      case 'Section':
+        return `${this.dumpSection(entry)}\n`;
+      case 'JunkEntry':
+        return '';
+      default:
+        throw new L10nError('Unknown entry type.');
+    }
+  },
+
+  dumpEntity: function(entity) {
+    let str = '';
+
+    if (entity.comment) {
+      str += `\n${this.dumpComment(entity.comment)}\n`;
+    }
+
+    const id = this.dumpIdentifier(entity.id);
+    str += `${id} =`;
+
+    if (entity.value) {
+      const value = this.dumpPattern(entity.value);
+      str += ` ${value}`;
+    }
+
+    if (entity.traits.length) {
+      const traits = this.dumpMembers(entity.traits, 2);
+      str += `\n${traits}`;
+    }
+
+    return str;
+  },
+
+  dumpComment: function(comment) {
+    return `# ${comment.content.replace(/\n/g, '\n# ')}`;
+  },
+
+  dumpSection: function(section) {
+    let str = '\n\n';
+    if (section.comment) {
+      str += `${this.dumpComment(section.comment)}\n`;
+    }
+    str += `[[ ${this.dumpKeyword(section.key)} ]]\n\n`;
+
+    for (const entry of section.body) {
+      str += this.dumpEntry(entry);
+    }
+    return str;
+  },
+
+  dumpIdentifier: function(id) {
+    return id.name;
+  },
+
+  dumpKeyword: function(kw) {
+    if (kw.namespace) {
+      return `${kw.namespace}/${kw.name}`;
+    }
+    return kw.name;
+  },
+
+  dumpPattern: function(pattern) {
+    if (pattern === null) {
+      return '';
+    }
+
+    let str = '';
+
+    pattern.elements.forEach(elem => {
+      if (elem.type === 'TextElement') {
+        if (elem.value.includes('\n')) {
+          str += `\n  | ${elem.value.replace(/\n/g, '\n  | ')}`;
+        } else {
+          str += elem.value;
+        }
+      } else if (elem.type === 'Placeable') {
+        str += this.dumpPlaceable(elem);
+      }
+    });
+
+    if (pattern.quoted) {
+      return `"${str.replace('"', '\\"')}"`;
+    }
+
+    return str;
+  },
+
+  dumpPlaceable: function(placeable) {
+    const source = placeable.expressions.map(exp => {
+      return this.dumpExpression(exp);
+    }).join(', ');
+
+    if (source.endsWith('\n')) {
+      return `{ ${source}}`;
+    }
+    return `{ ${source} }`;
+  },
+
+  dumpExpression: function(exp) {
+    switch (exp.type) {
+      case 'Identifier':
+      case 'FunctionReference':
+      case 'EntityReference':
+        return this.dumpIdentifier(exp);
+      case 'ExternalArgument':
+        return `$${this.dumpIdentifier(exp)}`;
+      case 'SelectExpression':
+        const sel = this.dumpExpression(exp.expression);
+        const variants = this.dumpMembers(exp.variants, 2);
+        return `${sel} ->\n${variants}\n`;
+      case 'CallExpression':
+        const id = this.dumpExpression(exp.callee);
+        const args = this.dumpCallArgs(exp.args);
+        return `${id}(${args})`;
+      case 'Pattern':
+        return this.dumpPattern(exp);
+      case 'Number':
+        return exp.value;
+      case 'Keyword':
+        return this.dumpKeyword(exp);
+      case 'MemberExpression':
+        const obj = this.dumpExpression(exp.object);
+        const key = this.dumpExpression(exp.keyword);
+        return `${obj}[${key}]`;
+      default:
+        throw new L10nError(`Unknown expression type ${exp.type}`);
+    }
+  },
+
+  dumpCallArgs: function(args) {
+    return args.map(arg => {
+      if (arg.type === 'KeyValueArg') {
+        return `${arg.name}: ${this.dumpExpression(arg.value)}`;
+      }
+      return this.dumpExpression(arg);
+    }).join(', ');
+  },
+
+  dumpMembers: function(members, indent) {
+    return members.map(member => {
+      const key = this.dumpExpression(member.key);
+      const value = this.dumpPattern(member.value);
+      const prefix = member.default ?
+        `${' '.repeat(indent - 1)}*` :
+        `${' '.repeat(indent)}`;
+      return `${prefix}[${key}] ${value}`;
+    }).join('\n');
+  }
+};
 
 class Node {
   constructor() {}
 }
 
-class Resource extends Node {
+class NodeList extends Node {
   constructor(body = [], comment = null) {
     super();
-    this.type = 'Resource';
+    this.type = 'NodeList';
     this.body = body;
     this.comment = comment;
+  }
+}
+
+class Resource extends NodeList {
+  constructor(body = [], comment = null) {
+    super(body, comment);
+    this.type = 'Resource';
+  }
+}
+
+class Section extends NodeList {
+  constructor(key, body = [], comment = null) {
+    super(body, comment);
+    this.type = 'Section';
+    this.key = key;
   }
 }
 
@@ -1737,22 +2201,13 @@ class Identifier extends Node {
   }
 }
 
-class Section extends Node {
-  constructor(key, body = [], comment = null) {
-    super();
-    this.type = 'Section';
-    this.key = key;
-    this.body = body;
-    this.comment = comment;
-  }
-}
-
 class Pattern$1 extends Node {
-  constructor(source, elements) {
+  constructor(source, elements, quoted = false) {
     super();
     this.type = 'Pattern';
     this.source = source;
     this.elements = elements;
+    this.quoted = quoted;
   }
 }
 
@@ -1766,7 +2221,7 @@ class Member extends Node {
   }
 }
 
-class Entity$1 extends Entry {
+class Entity extends Entry {
   constructor(id, value = null, traits = [], comment = null) {
     super();
     this.type = 'Entity';
@@ -1844,7 +2299,7 @@ class FunctionReference$1 extends Identifier {
 }
 
 class Keyword extends Identifier {
-  constructor(name, namespace=null) {
+  constructor(name, namespace = null) {
     super(name);
     this.type = 'Keyword';
     this.namespace = namespace;
@@ -1888,7 +2343,7 @@ var AST = {
   Pattern: Pattern$1,
   Member,
   Identifier,
-  Entity: Entity$1,
+  Entity,
   Section,
   Resource,
   Placeable,
@@ -1906,50 +2361,88 @@ var AST = {
   JunkEntry
 };
 
-class ParseContext$1 {
-  constructor(string) {
+/*  eslint no-magic-numbers: [0]  */
+
+const MAX_PLACEABLES$1 = 100;
+
+function isIdentifierStart(cc) {
+  return ((cc >= 97 && cc <= 122) || // a-z
+          (cc >= 65 && cc <= 90) ||  // A-Z
+           cc === 95);               // _
+}
+
+/**
+ * The `Parser` class is responsible for parsing FTL resources.
+ *
+ * It's only public method is `getResource(source)` which takes an FTL
+ * string and returns a two element Array with FTL AST
+ * generated from the source as the first element and an array of L10nError
+ * objects as the second.
+ *
+ * This parser is aiming for generating full AST which is useful for FTL tools.
+ *
+ * There is an equivalent of this parser in ftl/entries/parser which is meant
+ * for runtime performance and generates an optimized entries object.
+ */
+class Parser {
+  constructor(withSource = true) {
+    this.withSource = withSource;
+  }
+
+  /**
+   * @param {string} string
+   * @returns {[AST.Resource, []]}
+   */
+  getResource(string) {
     this._source = string;
     this._index = 0;
     this._length = string.length;
 
+    // This variable is used for error recovery and reporting.
     this._lastGoodEntryEnd = 0;
-  }
 
-  _isIdentifierStart(cc) {
-    return ((cc >= 97 && cc <= 122) || // a-z
-            (cc >= 65 && cc <= 90) ||  // A-Z
-             cc === 95);               // _
-  }
-
-  getResource() {
     const resource = new AST.Resource();
     const errors = [];
     let comment = null;
 
+    // Indicates which section entries should be added to.
+    // At the moment it may be either Resource.body, or Section.body
     let section = resource.body;
 
+    // If the file starts with a comment not followed immediatelly by
+    // an entry, the comment is going to be assigned to the Resource
     if (this._source[this._index] === '#') {
       comment = this.getComment();
 
       const cc = this._source.charCodeAt(this._index);
-      if (!this._isIdentifierStart(cc)) {
+      if (!isIdentifierStart(cc)) {
         resource.comment = comment;
         comment = null;
       }
     }
 
     this.getWS();
+
     while (this._index < this._length) {
       try {
         const entry = this.getEntry(comment);
-        if (entry.type === 'Section') {
+
+        // If retrieved entry is a Section, switch the section pointer to it.
+        if (entry instanceof AST.Section) {
           resource.body.push(entry);
           section = entry.body;
         } else {
           section.push(entry);
         }
         this._lastGoodEntryEnd = this._index;
-        comment = null;
+
+        // If there was a comment at the beginning of the file, and it was
+        // immediatelly followed by an Entity, we passed the comment to getEntry
+        // and now we want to mark it as null to prevent it from being
+        // fed to the next entry.
+        if (comment !== null) {
+          comment = null;
+        }
       } catch (e) {
         if (e instanceof L10nError) {
           errors.push(e);
@@ -1965,6 +2458,8 @@ class ParseContext$1 {
   }
 
   getEntry(comment = null) {
+    // The pointer here should either be at the beginning of the file
+    // or right after new line.
     if (this._index !== 0 &&
         this._source[this._index - 1] !== '\n') {
       throw this.error('Expected new line and a new entry');
@@ -1974,14 +2469,11 @@ class ParseContext$1 {
       comment = this.getComment();
     }
 
-    this.getLineWS();
-
     if (this._source[this._index] === '[') {
       return this.getSection(comment);
     }
 
-    if (this._index < this._length &&
-        this._source[this._index] !== '\n') {
+    if (this._source[this._index] !== '\n') {
       return this.getEntity(comment);
     }
     return comment;
@@ -2024,7 +2516,8 @@ class ParseContext$1 {
     if (ch !== '=') {
       throw this.error('Expected "=" after Entity ID');
     }
-    ch = this._source[++this._index];
+
+    this._index++;
 
     this.getLineWS();
 
@@ -2032,6 +2525,8 @@ class ParseContext$1 {
 
     ch = this._source[this._index];
 
+    // In the scenario when the pattern is quote-delimited
+    // the pattern ends with the closing quote.
     if (ch === '\n') {
       this._index++;
       this.getLineWS();
@@ -2067,14 +2562,12 @@ class ParseContext$1 {
   }
 
   getIdentifier() {
-    let name = '';
-
     const start = this._index;
     let cc = this._source.charCodeAt(this._index);
 
-    if (this._isIdentifierStart(cc)) {
+    if (isIdentifierStart(cc)) {
       cc = this._source.charCodeAt(++this._index);
-    } else if (name.length === 0) {
+    } else {
       throw this.error('Expected an identifier (starting with [a-zA-Z_])');
     }
 
@@ -2085,7 +2578,7 @@ class ParseContext$1 {
       cc = this._source.charCodeAt(++this._index);
     }
 
-    name += this._source.slice(start, this._index);
+    const name = this._source.slice(start, this._index);
 
     return new AST.Identifier(name);
   }
@@ -2094,6 +2587,23 @@ class ParseContext$1 {
     let name = '';
     let namespace = this.getIdentifier().name;
 
+    // If the first character after identifier string is '/', it means
+    // that what we collected so far is actually a namespace.
+    //
+    // But if it is not '/', that means that what we collected so far
+    // is just the beginning of the keyword and we should continue collecting
+    // it.
+    // In that scenario, we're going to move charcters collected so far
+    // from namespace variable to name variable and set namespace to null.
+    //
+    // For example, if the keyword is "Foo bar", at this point we only
+    // collected "Foo", the index character is not "/", so we're going
+    // to move on and see if the next character is allowed in the name.
+    //
+    // Because it's a space, it is and we'll continue collecting the name.
+    //
+    // In case the keyword is "Foo/bar", we're going to keep what we collected
+    // so far as `namespace`, bump the index and start collecting the name.
     if (this._source[this._index] === '/') {
       this._index++;
     } else if (namespace) {
@@ -2104,7 +2614,7 @@ class ParseContext$1 {
     const start = this._index;
     let cc = this._source.charCodeAt(this._index);
 
-    if (this._isIdentifierStart(cc)) {
+    if (isIdentifierStart(cc)) {
       cc = this._source.charCodeAt(++this._index);
     } else if (name.length === 0) {
       throw this.error('Expected an identifier (starting with [a-zA-Z_])');
@@ -2117,21 +2627,36 @@ class ParseContext$1 {
       cc = this._source.charCodeAt(++this._index);
     }
 
-    name += this._source.slice(start, this._index).trimRight();
+    // If we encountered the end of name, we want to test is the last
+    // collected character is a space.
+    // If it is, we will backtrack to the last non-space character because
+    // the keyword cannot end with a space character.
+    while (this._source.charCodeAt(this._index - 1) === 32) {
+      this._index--;
+    }
+
+    name += this._source.slice(start, this._index);
 
     return new AST.Keyword(name, namespace);
   }
 
+  /* eslint-disable complexity */
   getPattern() {
     let buffer = '';
     let source = '';
+    let placeables = 0;
     const content = [];
+    // We actually use all three possible states of this variable:
+    // true and false indicate if we're within a quote-delimited string
+    // null indicates that the string is not quote-delimited
     let quoteDelimited = null;
     let firstLine = true;
 
     let ch = this._source[this._index];
 
 
+    // If the string starts with \", \{ or \\ skip the first `\` and add the
+    // following character to the buffer without interpreting it.
     if (ch === '\\' &&
       (this._source[this._index + 1] === '"' ||
        this._source[this._index + 1] === '{' ||
@@ -2140,12 +2665,16 @@ class ParseContext$1 {
       this._index += 2;
       ch = this._source[this._index];
     } else if (ch === '"') {
+      // If the first character of the string is `"`, mark the string
+      // as quote delimited.
       quoteDelimited = true;
       this._index++;
       ch = this._source[this._index];
     }
 
     while (this._index < this._length) {
+      // This block handles multi-line strings combining strings seaprated
+      // by new line and `|` character at the beginning of the next one.
       if (ch === '\n') {
         if (quoteDelimited) {
           throw this.error('Unclosed string');
@@ -2170,6 +2699,8 @@ class ParseContext$1 {
         continue;
       } else if (ch === '\\') {
         const ch2 = this._source[this._index + 1];
+        // We only handle `{` as a character that can be escaped in a string
+        // and `"` if the string is quote delimited.
         if ((quoteDelimited && ch2 === '"') ||
             ch2 === '{') {
           ch = ch2;
@@ -2180,15 +2711,21 @@ class ParseContext$1 {
         quoteDelimited = false;
         break;
       } else if (ch === '{') {
+        // Push the buffer to content array right before placeable
         if (buffer.length) {
           content.push(new AST.TextElement(buffer));
         }
+        if (placeables > MAX_PLACEABLES$1 - 1) {
+          throw this.error(
+            `Too many placeables, maximum allowed is ${MAX_PLACEABLES$1}`);
+        }
         source += buffer;
-        buffer = ''
+        buffer = '';
         const start = this._index;
         content.push(this.getPlaceable());
         source += this._source.substring(start, this._index);
         ch = this._source[this._index];
+        placeables++;
         continue;
       }
 
@@ -2216,10 +2753,11 @@ class ParseContext$1 {
       }
     }
 
-    const pattern = new AST.Pattern(source, content);
-    pattern._quoteDelim = quoteDelimited !== null;
-    return pattern;
+    return new AST.Pattern(
+      this.withSource ? source : null, content, quoteDelimited !== null
+    );
   }
+  /* eslint-enable complexity */
 
   getPlaceable() {
     this._index++;
@@ -2256,6 +2794,8 @@ class ParseContext$1 {
 
     this.getWS();
 
+    // If the expression is followed by `->` we're going to collect
+    // its members and return it as a select expression.
     if (this._source[this._index] !== '}' &&
         this._source[this._index] !== ',') {
       if (this._source[this._index] !== '-' ||
@@ -2317,6 +2857,8 @@ class ParseContext$1 {
 
       const exp = this.getCallExpression();
 
+      // EntityReference in this place may be an entity reference, like:
+      // `call(foo)`, or, if it's followed by `:` it will be a key-value pair.
       if (!(exp instanceof AST.EntityReference)) {
         args.push(exp);
       } else {
@@ -2328,13 +2870,23 @@ class ParseContext$1 {
 
           const val = this.getCallExpression();
 
-          if (val instanceof AST.EntityReference ||
-              val instanceof AST.MemberExpression) {
-            this._index = this._source.lastIndexOf('=', this._index) + 1;
-            throw this.error('Expected string in quotes');
+          // If the expression returned as a value of the argument
+          // is not a quote delimited string, number or
+          // external argument, throw an error.
+          //
+          // We don't have to check here if the pattern is quote delimited
+          // because that's the only type of string allowed in expressions.
+          if (val instanceof AST.Pattern ||
+              val instanceof AST.Number ||
+              val instanceof AST.ExternalArgument) {
+            args.push(new AST.KeyValueArg(exp.name, val));
+          } else {
+            // If we encountered an error, get back to the last kvp separator
+            // and throw an error from there.
+            this._index = this._source.lastIndexOf(':', this._index) + 1;
+            throw this.error(
+              'Expected string in quotes, number or external argument');
           }
-
-          args.push(new AST.KeyValueArg(exp.name, val));
         } else {
           args.push(exp);
         }
@@ -2358,28 +2910,34 @@ class ParseContext$1 {
     let num = '';
     let cc = this._source.charCodeAt(this._index);
 
+    // The number literal may start with negative sign `-`.
     if (cc === 45) {
       num += '-';
       cc = this._source.charCodeAt(++this._index);
     }
 
+    // next, we expect at least one digit
     if (cc < 48 || cc > 57) {
       throw this.error(`Unknown literal "${num}"`);
     }
 
+    // followed by potentially more digits
     while (cc >= 48 && cc <= 57) {
       num += this._source[this._index++];
       cc = this._source.charCodeAt(this._index);
     }
 
+    // followed by an optional decimal separator `.`
     if (cc === 46) {
       num += this._source[this._index++];
       cc = this._source.charCodeAt(this._index);
 
+      // followed by at least one digit
       if (cc < 48 || cc > 57) {
         throw this.error(`Unknown literal "${num}"`);
       }
 
+      // and optionally more digits
       while (cc >= 48 && cc <= 57) {
         num += this._source[this._index++];
         cc = this._source.charCodeAt(this._index);
@@ -2392,7 +2950,11 @@ class ParseContext$1 {
   getMemberExpression() {
     let exp = this.getLiteral();
 
-    while (this._source[this._index] === '[') {
+    // the obj element of the member expression
+    // must be either an entity reference or another member expression.
+    while ((exp instanceof AST.EntityReference ||
+            exp instanceof AST.MemberExpression) &&
+            this._source[this._index] === '[') {
       const keyword = this.getMemberKey();
       exp = new AST.MemberExpression(exp, keyword);
     }
@@ -2410,7 +2972,7 @@ class ParseContext$1 {
         break;
       }
       let def = false;
-      if (this._source[this._index] === '*') { 
+      if (this._source[this._index] === '*') {
         this._index++;
         def = true;
       }
@@ -2435,6 +2997,7 @@ class ParseContext$1 {
     return members;
   }
 
+  // MemberKey may be a Keyword or Number
   getMemberKey() {
     this._index++;
 
@@ -2457,7 +3020,7 @@ class ParseContext$1 {
 
   getLiteral() {
     const cc = this._source.charCodeAt(this._index);
-    if ((cc >= 48 && cc <= 57) || cc === 45) {
+    if ((cc >= 48 && cc <= 57) || cc === 45) { // 0-9, -
       return this.getNumber();
     } else if (cc === 34) { // "
       return this.getPattern();
@@ -2473,15 +3036,15 @@ class ParseContext$1 {
 
   getComment() {
     this._index++;
+
+    // We ignore the first white space of each line
     if (this._source[this._index] === ' ') {
       this._index++;
     }
 
-    let content = '';
-
     let eol = this._source.indexOf('\n', this._index);
 
-    content += this._source.substring(this._index, eol);
+    let content = this._source.substring(this._index, eol);
 
     while (eol !== -1 && this._source[eol + 1] === '#') {
       this._index = eol + 2;
@@ -2496,7 +3059,7 @@ class ParseContext$1 {
         break;
       }
 
-      content += '\n' + this._source.substring(this._index, eol);
+      content += `\n${this._source.substring(this._index, eol)}`;
     }
 
     if (eol === -1) {
@@ -2508,7 +3071,7 @@ class ParseContext$1 {
     return new AST.Comment(content);
   }
 
-  error(message, start=null) {
+  error(message, start = null) {
     const pos = this._index;
 
     if (start === null) {
@@ -2518,8 +3081,8 @@ class ParseContext$1 {
 
     const context = this._source.slice(start, pos + 10);
 
-    const msg = '\n\n  ' + message +
-      '\nat pos ' + pos + ':\n------\n…' + context + '\n------';
+    const msg =
+      `\n\n  ${message}\nat pos ${pos}:\n------\n…${context}\n------`;
     const err = new L10nError(msg);
 
     const row = this._source.slice(0, pos).split('\n').length;
@@ -2564,7 +3127,7 @@ class ParseContext$1 {
       }
       const cc = this._source.charCodeAt(start + 1);
 
-      if (this._isIdentifierStart(cc)) {
+      if (isIdentifierStart(cc)) {
         start++;
         break;
       }
@@ -2581,7 +3144,7 @@ class ParseContext$1 {
           this._source[start - 1] === '\n') {
         const cc = this._source.charCodeAt(start);
 
-        if (this._isIdentifierStart(cc) || cc === 35 || cc === 91) {
+        if (isIdentifierStart(cc) || cc === 35 || cc === 91) {
           break;
         }
       }
@@ -2599,19 +3162,22 @@ class ParseContext$1 {
 }
 
 var parser = {
-  parseResource: function(string) {
-    const parseContext = new ParseContext$1(string);
-    return parseContext.getResource();
+  parseResource: function(string, { withSource = true } = {}) {
+    const parser = new Parser(withSource);
+    return parser.getResource(string);
   },
 };
 
 function transformEntity(entity) {
   if (entity.traits.length === 0) {
-    return transformPattern(entity.value);
+    const val = transformPattern(entity.value);
+    return Array.isArray(val) ? { val } : val;
   }
 
+  const [traits, def] = transformMembers(entity.traits);
   const ret = {
-    traits: entity.traits.map(transformMember),
+    traits,
+    def
   };
 
   return entity.value !== null ?
@@ -2659,10 +3225,12 @@ function transformExpression(exp) {
         val: transformExpression(exp.value)
       };
     case 'SelectExpression':
+      const [vars, def] = transformMembers(exp.variants);
       return {
         type: 'sel',
         exp: transformExpression(exp.expression),
-        vars: exp.variants.map(transformMember)
+        vars,
+        def
       };
     case 'MemberExpression':
       return {
@@ -2702,15 +3270,20 @@ function transformPattern(pattern) {
   });
 }
 
+function transformMembers(members) {
+  let def = members.findIndex(member => member.default);
+  if (def === -1) {
+    def = undefined;
+  }
+  const traits = members.map(transformMember);
+  return [traits, def];
+}
+
 function transformMember(member) {
   const ret = {
     key: transformExpression(member.key),
     val: transformPattern(member.value),
   };
-
-  if (member.default) {
-    ret.def = true;
-  }
 
   return ret;
 }
@@ -2732,11 +3305,13 @@ function createEntriesFromAST([resource, errors]) {
   return [entities, errors];
 }
 
+/* jshint node:true */
+
 function load(url) {
   return new Promise((resolve, reject) => {
     fs.readFile(url, (err, data) => {
       if (err) {
-        reject(new L10nError(err.message));
+        reject(err);
       } else {
         resolve(data.toString());
       }
@@ -2746,9 +3321,10 @@ function load(url) {
 
 function fetchResource(res, { code }) {
   const url = res.replace('{locale}', code);
-  return load(url).catch(e => e);
+  return load(url).catch(() => null);
 }
 
+exports.FTLASTSerializer = serializer;
 exports.FTLASTParser = parser;
 exports.FTLEntriesParser = FTLRuntimeParser;
 exports.createEntriesFromAST = createEntriesFromAST;
