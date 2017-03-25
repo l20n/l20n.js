@@ -22,8 +22,7 @@
   "directories": {
     "lib": "./src"
   },
-  "main": "./dist/bundle/node/l20n.js",
-  "browser": "./dist/bundle/web/l20n-common.js",
+  "main": "./dist/web/l20n.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/l20n/l20n.js.git"

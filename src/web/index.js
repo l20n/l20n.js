@@ -3,8 +3,8 @@ import './polyfill';
 import { MessageContext } from 'fluent';
 import negotiateLanguages from 'fluent-langneg';
 
-import DOMLocalization from '../../bindings/dom_localization';
-import DocumentLocalization from '../../bindings/document_localization';
+import DOMLocalization from '../dom_localization';
+import DocumentLocalization from '..//document_localization';
 
 import { ResourceBundle } from './io';
 import { documentReady, getResourceLinks, getMeta } from './util';

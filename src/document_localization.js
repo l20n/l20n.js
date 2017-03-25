@@ -1,4 +1,4 @@
-import { L10nError } from '../lib/errors';
+import { L10nError } from './errors';
 
 import DOMLocalization from './dom_localization';
 

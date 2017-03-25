@@ -1,4 +1,4 @@
-DIST := $(CURDIR)/../../../dist/bundle/$(shell basename $(CURDIR))
+DIST := $(CURDIR)/../../dist/$(shell basename $(CURDIR))
 
 build:
 	rollup IntlMessageContext.jsm \

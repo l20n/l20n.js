@@ -16,7 +16,7 @@ module.exports = function(config) {
     // list of files / patterns to load in the browser
     files: [
       'node_modules/intl-pluralrules/polyfill.js',
-      'dist/bundle/testing/*.js',
+      'dist/testing/*.js',
       'test/*_test.js'
     ],
 

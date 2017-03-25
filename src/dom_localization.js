@@ -1,4 +1,4 @@
-import Localization from '../lib/localization';
+import Localization from './localization';
 import overlayElement from './overlay';
 
 // A regexp to sanitize HTML tags and entities.

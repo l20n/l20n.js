@@ -2,7 +2,7 @@ export SHELL := /bin/bash
 export PATH  := $(CURDIR)/node_modules/.bin:$(PATH)
 export OK := \033[32;01m✓\033[0m
 
-RUNTIMES := $(wildcard src/runtime/*)
+RUNTIMES := src/gecko src/testing src/web
 
 all: lint build
 
@@ -25,8 +25,10 @@ test:
 
 docs:
 	documentation build --shallow -f md \
-	    src/bindings/*.js > docs/bindings.md
+	    src/localization.js > docs/localization.md
 	documentation build --shallow -f md \
-	    src/lib/*.js > docs/localization.md
+	    src/dom_localization.js > docs/dom_localization.md
+	documentation build --shallow -f md \
+	    src/document_localization.js > docs/document_localization.md
 
 .PHONY: $(RUNTIMES) test docs

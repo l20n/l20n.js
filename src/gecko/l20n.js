@@ -1,5 +1,5 @@
-import DOMLocalization from '../../bindings/dom_localization';
-import DocumentLocalization from '../../bindings/document_localization';
+import DOMLocalization from '../dom_localization';
+import DocumentLocalization from '../document_localization';
 
 import { ChromeResourceBundle } from './io';
 import { documentReady, getResourceLinks } from '../web/util';
