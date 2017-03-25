@@ -1,4 +1,3 @@
-import { getDirection } from '../intl/locale';
 import Localization from '../lib/localization';
 import overlayElement from './overlay';
 
@@ -9,6 +8,12 @@ const htmlEntities = {
   '<': '&lt;',
   '>': '&gt;',
 };
+
+function getDirection(code) {
+  const tag = code.split('-')[0];
+  return ['ar', 'he', 'fa', 'ps', 'ur'].indexOf(tag) >= 0 ?
+    'rtl' : 'ltr';
+}
 
 /**
  * The `DOMLocalization` class localizes DOM trees.

@@ -1,4 +1,4 @@
-import { MessageContext } from '../../intl/context';
+import { MessageContext } from 'fluent';
 
 this.EXPORTED_SYMBOLS = ['MessageContext'];
 

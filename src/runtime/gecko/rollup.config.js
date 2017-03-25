@@ -1,7 +1,10 @@
-module.exports = {
+import nodeResolve from 'rollup-plugin-node-resolve';
+
+export default {
+  format: 'es',
   banner: '{\n',
   footer: '\n}\n',
-  preferConst: true,
-  format: 'es',
-  context: 'this'
+  plugins: [
+    nodeResolve(),
+  ]
 };

@@ -1,12 +1,26 @@
 'use strict';
 
-import assert from 'assert';
+function ftl(strings) {
+  const [code] = strings;
+  return code.replace(/^\s*/mg, '');
+}
 
-import '../../src/intl/polyfill';
-import Localization from '../../src/lib/localization';
+class MockResourceBundle {
+  constructor(lang) {
+    this.lang = lang;
+  }
 
-import { ftl } from '../util';
-import MockResourceBundle, { withData } from './mock_resource_bundle';
+  fetch() {
+    return this.loaded;
+  }
+}
+
+function withData(data) {
+  return function(bundle) {
+    bundle.loaded = Promise.resolve(data);
+    return bundle;
+  }
+}
 
 function createLocalization(data) {
   function requestBundles() {
@@ -20,10 +34,10 @@ function createLocalization(data) {
   }
 
   function createContext(lang) {
-    return new Intl.MessageContext(lang, { useIsolating: false });
+    return new L20n.MessageContext(lang, { useIsolating: false });
   }
 
-  return new Localization(requestBundles, createContext);
+  return new L20n.Localization(requestBundles, createContext);
 }
 
 describe('No fallback - best case scenario', function() {

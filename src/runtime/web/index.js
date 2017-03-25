@@ -1,6 +1,7 @@
 import './polyfill';
-import '../../intl/polyfill';
-import { prioritizeLocales } from '../../intl/locale';
+
+import { MessageContext } from 'fluent';
+import negotiateLanguages from 'fluent-langneg';
 
 import DOMLocalization from '../../bindings/dom_localization';
 import DocumentLocalization from '../../bindings/document_localization';
@@ -12,16 +13,16 @@ import { documentReady, getResourceLinks, getMeta } from './util';
 // used to create new `MessageContext` objects for a given `lang` with selected
 // builtin functions.
 function createContext(lang) {
-  return new Intl.MessageContext(lang);
+  return new MessageContext(lang);
 }
 
 // Called for every named Localization declared via <link name=…> elements.
-function createLocalization(defaultLang, availableLangs, resIds, name) {
+function createLocalization(defaultLocale, availableLangs, resIds, name) {
   // This function is called by `Localization` class to retrieve an array of
   // `ResourceBundle`s.
   function requestBundles(requestedLangs = navigator.languages) {
-    const newLangs = prioritizeLocales(
-      availableLangs, requestedLangs, defaultLang
+    const newLangs = negotiateLanguages(
+      availableLangs, requestedLangs, { defaultLocale }
     );
 
     const bundles = newLangs.map(

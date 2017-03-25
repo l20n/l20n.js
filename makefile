@@ -20,16 +20,7 @@ lint:
 	@eslint --max-warnings 0 src/
 	@echo -e " $(OK) src/ linted"
 
-test-lib:
-	@mocha \
-	    --recursive \
-	    --reporter dot \
-	    --require ./test/compat \
-	    test/lib/parser/ftl \
-	    test/lib/*_test.js \
-	    test/intl/**/*_test.js
-
-test-browser:
+test:
 	karma start test/karma.conf.js
 
 docs:
@@ -37,11 +28,5 @@ docs:
 	    src/bindings/*.js > docs/bindings.md
 	documentation build --shallow -f md \
 	    src/lib/*.js > docs/localization.md
-	documentation build --shallow -f md \
-	    src/ftl/**/*.js > docs/parser.md
-	documentation build --shallow -f md \
-	    src/intl/*.js > docs/messagecontext.md
 
-.PHONY: $(RUNTIMES) docs
-
-include tools/perf/makefile
+.PHONY: $(RUNTIMES) test docs
