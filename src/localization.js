@@ -304,19 +304,12 @@ export default class Localization {
       attrs: null,
     };
 
-    if (entity.traits) {
-      formatted.attrs = [];
-      for (let i = 0, trait; (trait = entity.traits[i]); i++) {
-        if (!trait.key.hasOwnProperty('ns')) {
-          continue;
-        }
-        const attr = ctx.format(trait, args, errors);
+    if (entity.attrs) {
+      formatted.attrs = {};
+      for (const name in entity.attrs) {
+        const attr = ctx.format(entity.attrs[name], args, errors);
         if (attr !== null) {
-          formatted.attrs.push([
-            trait.key.ns,
-            trait.key.name,
-            attr
-          ]);
+          formatted.attrs[name] = attr;
         }
       }
     }

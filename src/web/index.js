@@ -1,3 +1,4 @@
+import 'intl-pluralrules';
 import './polyfill';
 
 import { MessageContext } from 'fluent';

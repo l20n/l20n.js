@@ -203,7 +203,8 @@
   },
   "dependencies": {
     "documentation": "^4.0.0-beta10",
-    "fluent": "^0.3.0",
-    "fluent-langneg": "0.0.1"
+    "fluent": "^0.3.1",
+    "fluent-langneg": "0.0.2",
+    "intl-pluralrules": "^0.1.0"
   }
 }
