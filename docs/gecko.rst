@@ -128,14 +128,14 @@ allowed in the translation as well. Consider the following source HTML::
 Assume the following malicious translation::
 
     save =
-        | <input value="Save" type="text"> or
-        | <a
-        |     href="http://myevilwebsite.com"
-        |     onclick="alert('pwnd!')"
-        |     title="Back to the homepage"
-        | >
-        |     cancel
-        | </a>.
+        <input value="Save" type="text"> or
+        <a
+            href="http://myevilwebsite.com"
+            onclick="alert('pwnd!')"
+            title="Back to the homepage"
+        >
+            cancel
+        </a>.
 
 The result will be::
 
