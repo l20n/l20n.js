@@ -21,7 +21,7 @@ lint:
 	@echo -e " $(OK) src/ linted"
 
 test:
-	karma start test/karma.conf.js
+	@karma start test/karma.conf.js
 
 docs:
 	documentation build --shallow -f md \
