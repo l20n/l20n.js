@@ -4,6 +4,7 @@ export default {
   format: 'es',
   intro: '{\n',
   outro: '\n}',
+  context: 'this',
   plugins: [
     nodeResolve(),
   ]
