@@ -1,6 +1,7 @@
 DIST := $(CURDIR)/../../dist/$(shell basename $(CURDIR))
 
 build:
-	rollup index.js \
-	    -c ./bundle_config.js \
-	    -o $(DIST)/l20n.js
+	@mkdir -p $(DIST)
+	@rollup index.js \
+	    --config ./bundle_config.js \
+	    --output $(DIST)/l20n.js
