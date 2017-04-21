@@ -23,7 +23,7 @@ function createLocalization(defaultLocale, availableLangs, resIds, name) {
   // `ResourceBundle`s.
   function requestBundles(requestedLangs = navigator.languages) {
     const newLangs = negotiateLanguages(
-      availableLangs, requestedLangs, { defaultLocale }
+      requestedLangs, availableLangs, { defaultLocale }
     );
 
     const bundles = newLangs.map(
