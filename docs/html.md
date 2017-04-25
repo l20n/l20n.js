@@ -17,7 +17,7 @@ l20n.js file as the first deferred script in the `head` element.
 ```html
 <head>
   …
-  <script defer src="./node_modules/l20n/dist/bundle/web/l20n.js"></script>
+  <script defer src="./node_modules/l20n/dist/web/l20n.js"></script>
 </head>
 ```
 
@@ -113,7 +113,7 @@ The JavaScript API
 ------------------
 
 It is also possible to use L20n programmatically, for instance in order to 
-localize dynamic content.  The API is exposed under `document.l10n`.  Refer to 
-[docs/bindings][] for more details.
+localize dynamic content.  The API is exposed under `document.l10n`.  Refer to
+the [docs/][] directory for more details.
 
-[docs/bindings]: https://github.com/l20n/l20n.js/blob/master/docs/bindings.md
+[docs/]: https://github.com/l20n/l20n.js/blob/master/docs/
