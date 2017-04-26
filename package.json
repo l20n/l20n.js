@@ -1,7 +1,7 @@
 {
   "name": "l20n",
-  "description": "A localization library for Firefox OS",
-  "version": "4.0.0-pre",
+  "description": "A localization library for HTML documents",
+  "version": "5.0.0",
   "homepage": "http://l20n.org",
   "author": "Mozilla <l10n-drivers@mozilla.org>",
   "license": "Apache-2.0",
@@ -15,7 +15,6 @@
       "email": "stas@mozilla.com"
     }
   ],
-  "bugs": "https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20OS&component=Gaia::L10n",
   "scripts": {
     "test": "make src/testing && make test"
   },

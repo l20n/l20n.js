@@ -5,12 +5,14 @@ L20n: Localization 2.0 [![Build Status][travisimage]][travislink]
 [travislink]: https://travis-ci.org/l20n/l20n.js
 
 L20n is an opinionated localization library for the Web.  It builds on top of
-Project Fluent which was designed to unleash the expressive power of the
+[Project Fluent][] which was designed to unleash the expressive power of the
 natural language.
 
 L20n.js is a good choice for websites which want to offer a best-in-class
 translation experience for their users.  L20n takes advantage of modern web
 technologies to offer a fast and lean localization of HTML and JavaScript.
+
+[Project Fluent]: http://projectfluent.io
 
 
 How to use L20n
