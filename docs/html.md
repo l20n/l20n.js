@@ -21,11 +21,6 @@ l20n.js file as the first deferred script in the `head` element.
 </head>
 ```
 
-L20n is targeted at modern browsers.  See [docs/compat][] for documentation on 
-how to enable support for legacy browsers.
-
-[docs/compat]: https://github.com/l20n/l20n.js/blob/master/docs/compat.md
-
 
 Configure Languages
 -------------------
@@ -117,3 +112,22 @@ localize dynamic content.  The API is exposed under `document.l10n`.  Refer to
 the [docs/][] directory for more details.
 
 [docs/]: https://github.com/l20n/l20n.js/blob/master/docs/
+
+
+Compatibility
+-------------
+
+Released builds of l20n.js are transpiled using Babel. L20n.js should work well
+in majority of modern browsers (Firefox, Chrome, Edge, Safari), provided that
+you also include the [Babel Polyfill][] in your app.
+
+If you care about IE11 you'll need the [HTMLTemplateElement polyfill][].
+L20n.js uses HTMLTemplateElements (`<template>`) to safely set contents of DOM
+nodes.
+
+Optionally you may also want to use [Intl.js][] which provides the locale data
+for correct number and date formatting.
+
+[Babel Polyfill]: https://babeljs.io/docs/usage/polyfill/
+[HTMLTemplateElement polyfill]: https://github.com/webcomponents/template
+[Intl.js]: https://github.com/andyearnshaw/Intl.js

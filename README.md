@@ -42,11 +42,6 @@ the [docs/][] directory for more details.
 
 [docs/]: https://github.com/l20n/l20n.js/blob/master/docs/
 
-L20n is targeted at modern browsers.  See [docs/compat][] for documentation on 
-how to enable support for legacy browsers.
-
-[docs/compat]: https://github.com/l20n/l20n.js/blob/master/docs/compat.md
-
 
 Learn the FTL syntax
 --------------------

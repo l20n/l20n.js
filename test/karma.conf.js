@@ -14,7 +14,7 @@ module.exports = function(config) {
     colors: true,
     logLevel: config.LOG_INFO,
     autoWatch: false,
-    browsers: ['Firefox', 'Chrome'],
+    browsers: ['Chrome', 'Firefox'],
     customLaunchers: {
       ChromeTravis: {
         base: 'Chrome',
@@ -26,7 +26,7 @@ module.exports = function(config) {
   };
 
   if (TRAVIS) {
-    conf.browsers = ['Firefox', 'ChromeTravis'];
+    conf.browsers = ['ChromeTravis', 'Firefox'];
   }
 
   config.set(conf);
