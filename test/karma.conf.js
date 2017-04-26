@@ -15,18 +15,12 @@ module.exports = function(config) {
     logLevel: config.LOG_INFO,
     autoWatch: false,
     browsers: ['Chrome', 'Firefox'],
-    customLaunchers: {
-      ChromeTravis: {
-        base: 'Chrome',
-        flags: ['--no-sandbox']
-      }
-    },
     singleRun: true,
     concurrency: Infinity
   };
 
   if (TRAVIS) {
-    conf.browsers = ['ChromeTravis', 'Firefox'];
+    conf.browsers = ['Firefox'];
   }
 
   config.set(conf);
