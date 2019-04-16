@@ -1,5 +1,17 @@
 # Changelog
 
+## l20n 6.0.0 (Deprecated)
+
+L20n.js has been deprecated and is no longer maintained. Please use
+[Fluent](https://projectfluent.org), the successor to L20n developed by the
+same team at Mozilla. Fluent is a mature localization system currently used in
+Firefox and in many other Mozilla projects.
+
+Code-wise, `l20n.js` 6.0.0 is the same as 5.0.0. We're publishing it as a major
+version to reduce disruptions which may result from the deprecation. Only
+version 6.0.0 has been deprecated on npm. Existing projects using earlier
+versions won't receive deprecation warnings when running `npm install`.
+
 ## l20n 5.0.0
 
 Starting with this release, `l20n` is built on top of Project Fluent. `l20n`
@@ -27,7 +39,7 @@ As of this release (v5), the version of `fluent` used is `0.3.1`.  There are a f
 updates to the syntax compared to `l20n` v4:
 
   - Multiline text is now simply indented and doesn't require the pipe `|`
-    prefix. See http://projectfluent.io/fluent/guide/text.html.
+    prefix. See http://projectfluent.org/fluent/guide/text.html.
 
     Before:
 
@@ -43,7 +55,7 @@ updates to the syntax compared to `l20n` v4:
 
   - Attributes are now written using the dot `.` prefix instead of the square
     brackets. The placement of the equals sign `=` is also different. See
-    http://projectfluent.io/fluent/guide/attributes.html.
+    http://projectfluent.org/fluent/guide/attributes.html.
 
     Before:
 
@@ -56,7 +68,7 @@ updates to the syntax compared to `l20n` v4:
             .title = Hello, world!
 
   - Comments are now written with the double forward slash `//` prefix instead
-    of the hash `#`.  See http://projectfluent.io/fluent/guide/comments.html
+    of the hash `#`.  See http://projectfluent.org/fluent/guide/comments.html
 
     Before:
 
@@ -70,7 +82,7 @@ updates to the syntax compared to `l20n` v4:
 
   - Select expressions must now define the default variant. The whole body of
     the expression must be intended too (we might lift this requirement in the
-    future). See http://projectfluent.io/fluent/guide/selectors.html.
+    future). See http://projectfluent.org/fluent/guide/selectors.html.
 
     Before:
 
@@ -96,7 +108,7 @@ updates to the syntax compared to `l20n` v4:
 
   - Traits were removed in favor of attributes (see above) and variants known
     from select expressions. See
-    http://projectfluent.io/fluent/guide/variants.html
+    http://projectfluent.org/fluent/guide/variants.html
 
     Before:
 

@@ -1,18 +1,22 @@
-L20n: Localization 2.0 [![Build Status][travisimage]][travislink]
-=================================================================
+L20n: Localization 2.0 (Deprecated)
+===================================
 
-[travisimage]: https://travis-ci.org/l20n/l20n.js.svg?branch=master
-[travislink]: https://travis-ci.org/l20n/l20n.js
+__L20n.js has been deprecated and is no longer maintained. Please use
+[Fluent][], the successor to L20n developed by the same team at Mozilla.
+Fluent is a mature localization system currently used in Firefox and in many
+other Mozilla projects.__
 
-L20n is an opinionated localization library for the Web.  It builds on top of
-[Project Fluent][] which was designed to unleash the expressive power of the
-natural language.
+---
+
+L20n is an opinionated localization library for the Web. It builds on top of
+[Fluent][] which was designed to unleash the expressive power of the natural
+language.
 
 L20n.js is a good choice for websites which want to offer a best-in-class
 translation experience for their users.  L20n takes advantage of modern web
 technologies to offer a fast and lean localization of HTML and JavaScript.
 
-[Project Fluent]: http://projectfluent.io
+[Fluent]: http://projectfluent.org
 
 
 How to use L20n
@@ -61,5 +65,5 @@ and others.
 [Read the Fluent Syntax Guide][] in order to learn more about the syntax.  If
 you're a tool author you may be interested in the formal [EBNF grammar][].
 
-[Read the Fluent Syntax Guide]: http://projectfluent.io/fluent/guide/
+[Read the Fluent Syntax Guide]: http://projectfluent.org/fluent/guide/
 [EBNF grammar]: https://github.com/projectfluent/fluent/tree/master/spec
